@@ -105,6 +105,15 @@ export function UserMenu() {
                         </Link>
 
                         <Link
+                            href="/admin/moderation"
+                            className="flex items-center px-4 py-2 text-sm text-base-content hover:bg-base-200 transition-colors"
+                            onClick={() => setIsOpen(false)}
+                        >
+                            <i className="fa-solid fa-duotone fa-shield-check w-4 h-4 mr-3 text-base-content/60"></i>
+                            Moderation
+                        </Link>
+
+                        <Link
                             href="/saved"
                             className="flex items-center px-4 py-2 text-sm text-base-content hover:bg-base-200 transition-colors"
                             onClick={() => setIsOpen(false)}

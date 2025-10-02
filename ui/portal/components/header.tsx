@@ -8,27 +8,46 @@ import { SignInButton } from './sign-in-button';
 import Logo from './ui/logo';
 import { UserMenu } from './user-menu';
 
-const navigation = [
-    { name: 'Stumble', href: '/stumble' },
-    { name: 'Submit', href: '/submit' },
-    { name: 'Lists', href: '/lists' },
-    { name: 'Saved', href: '/saved' },
-    { name: 'Analytics', href: '/analytics' },
-    { name: 'About', href: '/about' },
+const authenticatedNavigation = [
+    { name: 'Stumble', href: '/stumble', icon: 'fa-shuffle' },
+    { name: 'Submit', href: '/submit', icon: 'fa-plus' },
+    { name: 'Lists', href: '/lists', icon: 'fa-list' },
+    { name: 'Saved', href: '/saved', icon: 'fa-bookmark' },
+    { name: 'Analytics', href: '/analytics', icon: 'fa-chart-bar' },
+    { name: 'About', href: '/about', icon: 'fa-info-circle' },
+];
+
+const publicNavigation = [
+    { name: 'About', href: '/about', icon: 'fa-info-circle' },
 ];
 
 function AuthSection() {
     const { isSignedIn } = useUser();
 
     return (
-        <div className="flex items-center">
-            {isSignedIn ? <UserMenu /> : <SignInButton />}
+        <div className="flex items-center gap-2">
+            {isSignedIn ? (
+                <UserMenu />
+            ) : (
+                <>
+                    <Link
+                        href="/sign-up"
+                        className="btn btn-ghost btn-sm sm:btn-md px-3 sm:px-4 text-xs sm:text-sm"
+                    >
+                        <span>Sign Up</span>
+                    </Link>
+                    <SignInButton />
+                </>
+            )}
         </div>
     );
 }
 
 export function Header() {
     const pathname = usePathname();
+    const { isSignedIn } = useUser();
+
+    const navigation = isSignedIn ? authenticatedNavigation : publicNavigation;
 
     return (
         <header className="sticky top-0 z-50 bg-base-100/80 backdrop-blur-sm border-b border-base-300">
@@ -64,12 +83,7 @@ export function Header() {
                                     >
                                         <span className="hidden sm:inline">{item.name}</span>
                                         <span className="sm:hidden">
-                                            {item.name === 'Stumble' && <i className="fa-solid fa-duotone fa-shuffle"></i>}
-                                            {item.name === 'Submit' && <i className="fa-solid fa-duotone fa-plus"></i>}
-                                            {item.name === 'Lists' && <i className="fa-solid fa-duotone fa-list"></i>}
-                                            {item.name === 'Saved' && <i className="fa-solid fa-duotone fa-bookmark"></i>}
-                                            {item.name === 'Analytics' && <i className="fa-solid fa-duotone fa-chart-bar"></i>}
-                                            {item.name === 'About' && <i className="fa-solid fa-duotone fa-info-circle"></i>}
+                                            <i className={`fa-solid fa-duotone ${item.icon}`}></i>
                                         </span>
                                     </Link>
                                 );
