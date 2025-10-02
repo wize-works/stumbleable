@@ -26,11 +26,6 @@ spec:
           name: http
           protocol: TCP
         env:
-        - name: PORT
-          valueFrom:
-            configMapKeyRef:
-              name: stumbleable-config
-              key: CRAWLER_PORT
         - name: NODE_ENV
           valueFrom:
             configMapKeyRef:

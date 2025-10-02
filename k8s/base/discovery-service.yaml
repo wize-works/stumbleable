@@ -26,11 +26,6 @@ spec:
           name: http
           protocol: TCP
         env:
-        - name: PORT
-          valueFrom:
-            configMapKeyRef:
-              name: stumbleable-config
-              key: DISCOVERY_PORT
         - name: NODE_ENV
           valueFrom:
             configMapKeyRef:
