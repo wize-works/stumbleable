@@ -6,7 +6,8 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-RUN npm ci --only=production
+# Install all dependencies (including devDependencies needed for build)
+RUN npm ci
 
 # Stage 2: Builder
 FROM node:20-alpine AS builder
@@ -23,7 +24,16 @@ ENV NODE_ENV=production
 # Build the application
 RUN npm run build
 
-# Stage 3: Runner
+# Stage 3: Production dependencies
+FROM node:20-alpine AS prod-deps
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+# Copy package files and install only production dependencies
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Stage 4: Runner
 FROM node:20-alpine AS runner
 WORKDIR /app
 
