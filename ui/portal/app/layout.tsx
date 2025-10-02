@@ -13,12 +13,13 @@ export const dynamic = 'force-dynamic';
 export const metadata = {
     title: 'Stumbleable',
     description: 'One button. Curated randomness. Human taste + AI vibes.',
-    viewport: {
-        width: 'device-width',
-        initialScale: 1,
-        maximumScale: 1,
-        userScalable: false,
-    },
+};
+
+export const viewport = {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
 };
 
 const fontAwesomeKitUrl = process.env.NEXT_PUBLIC_FONTAWESOME_KIT_URL || "https://kit.fontawesome.com/fab812572f.js";

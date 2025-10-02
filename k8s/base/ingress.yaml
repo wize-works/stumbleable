@@ -14,10 +14,68 @@ spec:
           ingress:
             class: nginx
 ---
+# UI Ingress (no rewrite - Next.js needs original paths for static assets)
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: stumbleable-ingress
+  name: stumbleable-ui-ingress
+  namespace: stumbleable
+  annotations:
+    # NGINX Ingress Controller annotations
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    
+    # Rate limiting
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+    nginx.ingress.kubernetes.io/limit-connections: "50"
+    
+    # Timeouts
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "30"
+    
+    # Body size (for content uploads)
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    
+    # Certificate management (cert-manager)
+    cert-manager.io/cluster-issuer: "stumbleable-encrypt"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - stumbleable.com
+    - www.stumbleable.com
+    secretName: stumbleable-tls
+  rules:
+  # Main application
+  - host: stumbleable.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: ui-portal
+            port:
+              number: 3000
+  
+  # WWW redirect
+  - host: www.stumbleable.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: ui-portal
+            port:
+              number: 3000
+---
+# API Ingress (with rewrite for clean API paths)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: stumbleable-api-ingress
   namespace: stumbleable
   annotations:
     # NGINX Ingress Controller annotations
@@ -47,35 +105,9 @@ spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - stumbleable.com
-    - www.stumbleable.com
     - api.stumbleable.com
     secretName: stumbleable-tls
   rules:
-  # Main application
-  - host: stumbleable.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: ui-portal
-            port:
-              number: 3000
-  
-  # WWW redirect
-  - host: www.stumbleable.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: ui-portal
-            port:
-              number: 3000
-  
   # API Gateway
   - host: api.stumbleable.com
     http:
