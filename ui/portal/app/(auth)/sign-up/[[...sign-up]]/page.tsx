@@ -46,13 +46,13 @@ export default function SignUpPage() {
 
                                     <Clerk.Field name="emailAddress" className="fieldset">
                                         <Clerk.Label>What is your email?</Clerk.Label>
-                                        <Clerk.Input type="email" className="input w-full" placeholder="explorer@discovery.com" />
+                                        <Clerk.Input type="email" className="input w-full" placeholder="explorer@stumbleable.com" />
                                         <Clerk.FieldError />
                                     </Clerk.Field>
 
                                     <Clerk.Field name="password" className="fieldset">
                                         <Clerk.Label>What do you want your password to be?</Clerk.Label>
-                                        <Clerk.Input type="password" className="input w-full" placeholder="StumbleAround123!" />
+                                        <Clerk.Input type="password" className="input w-full" placeholder="***********" />
                                         <Clerk.FieldError />
                                     </Clerk.Field>
 

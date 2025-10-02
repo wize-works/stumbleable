@@ -30,7 +30,7 @@ export default function SignInPage() {
                                 <Clerk.GlobalError />
                                 <Clerk.Field name="identifier" className="fieldset">
                                     <Clerk.Label>What is your email?</Clerk.Label>
-                                    <Clerk.Input className="input w-full" placeholder="explorer@discovery.com" />
+                                    <Clerk.Input className="input w-full" placeholder="explorer@stumbleable.com" />
                                     <Clerk.FieldError />
                                 </Clerk.Field>
 
