@@ -21,7 +21,7 @@ metadata:
   namespace: stumbleable
   annotations:
     # NGINX Ingress Controller annotations
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     
@@ -81,8 +81,8 @@ spec:
     http:
       paths:
       # Discovery Service
-      - path: /discovery
-        pathType: Prefix
+      - path: /discovery(/|$)(.*)
+        pathType: ImplementationSpecific
         backend:
           service:
             name: discovery-service
@@ -90,8 +90,8 @@ spec:
               number: 8080
       
       # Interaction Service
-      - path: /interaction
-        pathType: Prefix
+      - path: /interaction(/|$)(.*)
+        pathType: ImplementationSpecific
         backend:
           service:
             name: interaction-service
@@ -99,8 +99,8 @@ spec:
               number: 8080
       
       # User Service
-      - path: /user
-        pathType: Prefix
+      - path: /user(/|$)(.*)
+        pathType: ImplementationSpecific
         backend:
           service:
             name: user-service
@@ -108,8 +108,8 @@ spec:
               number: 8080
       
       # Crawler Service (admin only - consider separate ingress or IP whitelist)
-      - path: /crawler
-        pathType: Prefix
+      - path: /crawler(/|$)(.*)
+        pathType: ImplementationSpecific
         backend:
           service:
             name: crawler-service
@@ -117,8 +117,8 @@ spec:
               number: 8080
       
       # Moderation Service (admin/moderator only)
-      - path: /moderation
-        pathType: Prefix
+      - path: /moderation(/|$)(.*)
+        pathType: ImplementationSpecific
         backend:
           service:
             name: moderation-service
