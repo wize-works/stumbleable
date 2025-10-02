@@ -2,6 +2,10 @@ import { useAuth, useUser } from '@clerk/nextjs';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { UserAPI } from './api-client';
 
+// Use environment variable for Interaction API URL
+const INTERACTION_API_URL = process.env.NEXT_PUBLIC_INTERACTION_API_URL || 'http://localhost:7002';
+const INTERACTION_API = `${INTERACTION_API_URL}/api`;
+
 interface SessionData {
     sessionId: string;
     startTime: string;
@@ -55,7 +59,7 @@ export function useSessionTracking(): UseSessionTrackingReturn {
             console.log('Got user profile:', userProfile.id, 'for session start');
 
             // Start session tracking
-            const response = await fetch('http://localhost:7002/api/sessions/start', {
+            const response = await fetch(`${INTERACTION_API}/sessions/start`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -98,7 +102,7 @@ export function useSessionTracking(): UseSessionTrackingReturn {
         if (!session?.sessionId || !session.isActive) return;
 
         try {
-            const response = await fetch('http://localhost:7002/api/sessions/update', {
+            const response = await fetch(`${INTERACTION_API}/sessions/update`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -133,7 +137,7 @@ export function useSessionTracking(): UseSessionTrackingReturn {
         if (!session?.sessionId || !session.isActive) return;
 
         try {
-            const response = await fetch('http://localhost:7002/api/sessions/update', {
+            const response = await fetch(`${INTERACTION_API}/sessions/update`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -168,7 +172,7 @@ export function useSessionTracking(): UseSessionTrackingReturn {
         if (!session?.sessionId || !session.isActive) return;
 
         try {
-            const response = await fetch('http://localhost:7002/api/sessions/end', {
+            const response = await fetch(`${INTERACTION_API}/sessions/end`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -216,7 +220,7 @@ export function useSessionTracking(): UseSessionTrackingReturn {
         return () => {
             if (sessionIdRef.current) {
                 // End session on cleanup
-                fetch('http://localhost:7002/api/sessions/end', {
+                fetch(`${INTERACTION_API}/sessions/end`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -264,10 +268,10 @@ export function useSessionTracking(): UseSessionTrackingReturn {
                     const data = JSON.stringify({
                         sessionId: sessionIdRef.current
                     });
-                    navigator.sendBeacon('http://localhost:7002/api/sessions/end', data);
+                    navigator.sendBeacon(`${INTERACTION_API}/sessions/end`, data);
                 } else {
                     // Fallback for browsers without beacon support
-                    fetch('http://localhost:7002/api/sessions/end', {
+                    fetch(`${INTERACTION_API}/sessions/end`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
