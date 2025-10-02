@@ -245,7 +245,9 @@ apis/new-service/
 7. **ALWAYS** add required dependencies: `@supabase/supabase-js`, `dotenv`, etc.
 
 #### Service Development Standards:
-- Use **port 7001+** for API services (7001=discovery, 7002=interaction, 7003=user, etc.)
+- **Container port**: ALL services MUST use **8080** as default internal port (override via PORT env var)
+- **Service ports**: External service addressing uses logical ports (7001=discovery, 7002=interaction, 7003=user, 7004=crawler)
+- **Port mapping**: Kubernetes maps external ports to internal 8080 via `targetPort`
 - **API endpoints**: ALL services MUST use `/api` prefix for API routes (register routes with `{ prefix: '/api' }`)
 - **Health check endpoint**: Use `/health` (no prefix) for service health checks
 - **Route structure**: Routes define resource paths (e.g., `/saved`, `/users/:id`, `/topics`) combined with `/api` prefix
@@ -528,6 +530,150 @@ NEXT_PUBLIC_USER_API_URL=http://localhost:7003
 7. **❌ Database connection sharing**: Each service should have its own Supabase client
 8. **❌ Missing type validation**: Use Zod schemas for all API endpoints
 9. **❌ Inconsistent API prefixes**: ALL services must use `/api` prefix for API endpoints, health checks use `/health` without prefix
+10. **❌ Localhost-only binding**: Services MUST bind to `0.0.0.0` not `127.0.0.1` for Kubernetes health probes to work
+
+---
+
+## 🔐 Environment Variable & Secret Naming Standards
+
+**CRITICAL**: Follow consistent naming conventions across all services to maintain portability and avoid confusion when services are separated into independent repositories.
+
+### Standard Pattern for Backend API Services
+
+```typescript
+// ✅ CORRECT - Standard naming for backend services
+const clerkPublishableKey = process.env.CLERK_PUBLISHABLE_KEY;
+const clerkSecretKey = process.env.CLERK_SECRET_KEY;
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+```
+
+### Frontend-Only Special Cases
+
+```typescript
+// ✅ CORRECT - Next.js client-side variables use NEXT_PUBLIC_ prefix
+const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+```
+
+### Naming Convention Rules
+
+1. **Backend API Services**: Use **standard names** without framework prefixes
+   - ✅ `CLERK_PUBLISHABLE_KEY` (NOT `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`)
+   - ✅ `CLERK_SECRET_KEY`
+   - ✅ `SUPABASE_URL`
+   - ✅ `SUPABASE_SERVICE_KEY`
+
+2. **Frontend (Next.js)**: Use `NEXT_PUBLIC_` prefix ONLY for client-side variables
+   - ✅ `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (exposed to browser)
+   - ✅ `CLERK_SECRET_KEY` (server-side only, no prefix)
+
+3. **Kubernetes Secrets**: Match the environment variable names services expect
+   ```yaml
+   # ✅ CORRECT - Secret keys match what services use
+   - name: CLERK_PUBLISHABLE_KEY
+     valueFrom:
+       secretKeyRef:
+         name: stumbleable-secrets
+         key: CLERK_PUBLISHABLE_KEY  # Same name
+   ```
+
+4. **GitHub Secrets**: Use the same names as Kubernetes secret keys
+   ```yaml
+   # ✅ CORRECT - GitHub secret → K8s secret → Pod env var
+   --from-literal=CLERK_PUBLISHABLE_KEY="${{ secrets.CLERK_PUBLISHABLE_KEY }}"
+   ```
+
+### Verification Before Changing Names
+
+**ALWAYS verify existing patterns before renaming environment variables:**
+
+```bash
+# Step 1: Check what the workflow creates
+grep "from-literal" .github/workflows/deploy-aks.yml
+
+# Step 2: Check what K8s YAMLs reference  
+grep "CLERK_PUBLISHABLE_KEY" k8s/base/*-service.yaml
+
+# Step 3: Check what the code uses
+grep "process.env.CLERK" apis/*/src/server.ts
+
+# Step 4: Verify they all match before suggesting changes
+```
+
+### Why This Matters
+
+- **Portability**: When services move to separate repos, standard names work everywhere
+- **Clarity**: No confusion about which prefix applies to which service type
+- **Maintainability**: Team members understand conventions without documentation
+- **Consistency**: Same variable name throughout the stack (GitHub → K8s → Pod → Code)
+
+### ❌ WRONG Examples
+
+```typescript
+// ❌ Don't use Next.js conventions in backend APIs
+const key = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY; // Wrong!
+
+// ❌ Don't mix naming conventions
+secretKeyRef:
+  key: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY  // For backend API? Wrong!
+  
+// ❌ Don't rename without verifying existing usage
+// Before suggesting to change CLERK_PUBLISHABLE_KEY to something else,
+// check what's actually being used in the workflow and code!
+```
+
+---
+
+## 🐳 Kubernetes & Docker Standards
+
+### Container Host Binding
+
+**CRITICAL**: All API services MUST bind to `0.0.0.0` for Kubernetes health probes:
+
+```typescript
+// ✅ CORRECT - Kubernetes-compatible
+const host = process.env.HOST || '0.0.0.0';
+await app.listen({ port, host });
+
+// ❌ WRONG - Health probes will fail
+const host = process.env.HOST || '127.0.0.1';  // Localhost only!
+```
+
+**Why?** Kubernetes probes connect from outside the container via the pod's IP. Services bound to `127.0.0.1` only accept connections from within the same container.
+
+### Network Flow
+```
+Kubernetes Probe → Pod IP (10.240.x.x) → Container (0.0.0.0:8080) → App ✅
+Kubernetes Probe → Pod IP (10.240.x.x) → Container (127.0.0.1:8080) ❌ Connection refused
+```
+
+### Port Mapping Architecture
+
+**Container Internal Port**: 8080 (standard)
+- All services bind to port 8080 inside the container
+- Can be overridden via PORT environment variable
+- Makes containers portable and reusable
+
+**Kubernetes Service Ports**: 7001-7004 (logical addressing)
+```yaml
+# Service definition maps external to internal
+service:
+  port: 7001           # External: discovery-service:7001
+  targetPort: 8080     # Internal: container listens on 8080
+```
+
+**Why This Matters**:
+- ✅ **Portability**: Same container can run anywhere (local Docker, K8s, Cloud Run, ECS)
+- ✅ **Convention**: 8080 is the standard HTTP service port
+- ✅ **Separation**: Container doesn't need to know its service identity
+- ✅ **Flexibility**: K8s handles external port mapping without rebuilding images
+
+**Example Flow**:
+```
+Frontend → discovery-service:7001 (K8s Service)
+  → Pod:8080 (Container)
+    → App listening on 0.0.0.0:8080
+```
 
 ---
 

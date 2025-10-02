@@ -22,7 +22,7 @@ spec:
       - name: user-service
         image: ${ACR_NAME}.azurecr.io/stumbleable-user:${IMAGE_TAG}
         ports:
-        - containerPort: 7003
+        - containerPort: 8080
           name: http
           protocol: TCP
         env:
@@ -71,7 +71,7 @@ spec:
         livenessProbe:
           httpGet:
             path: /health
-            port: 7003
+            port: 8080
           initialDelaySeconds: 20
           periodSeconds: 30
           timeoutSeconds: 5
@@ -79,13 +79,11 @@ spec:
         readinessProbe:
           httpGet:
             path: /health
-            port: 7003
+            port: 8080
           initialDelaySeconds: 10
           periodSeconds: 10
           timeoutSeconds: 3
           failureThreshold: 3
-      imagePullSecrets:
-      - name: acr-secret
 ---
 apiVersion: v1
 kind: Service
@@ -98,7 +96,7 @@ spec:
   type: ClusterIP
   ports:
   - port: 7003
-    targetPort: 7003
+    targetPort: 8080
     protocol: TCP
     name: http
   selector:

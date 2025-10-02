@@ -176,7 +176,7 @@ async function buildApp() {
 async function start() {
     try {
         const app = await buildApp();
-        const port = parseInt(process.env.PORT || '7003', 10);
+        const port = parseInt(process.env.PORT || '8080', 10);
         const host = process.env.HOST || '0.0.0.0';
 
         await app.listen({ port, host });
