@@ -39,18 +39,7 @@ async function buildApp() {
         credentials: true
     });
 
-    // Clerk authentication
-    console.log('🔑 Clerk keys:', {
-        publishableKey: process.env.CLERK_PUBLISHABLE_KEY ? '✅ Set' : '❌ Missing',
-        secretKey: process.env.CLERK_SECRET_KEY ? '✅ Set' : '❌ Missing'
-    });
-
-    await fastify.register(clerkPlugin as any, {
-        publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
-        secretKey: process.env.CLERK_SECRET_KEY,
-    });
-
-    // Health check endpoint (no auth required)
+    // Health check endpoint (MUST be registered BEFORE Clerk plugin to avoid authentication)
     fastify.get('/health', async () => {
         return {
             status: 'healthy',
@@ -58,6 +47,22 @@ async function buildApp() {
             timestamp: new Date().toISOString(),
         };
     });
+
+    // Clerk authentication (registered AFTER health check to avoid requiring auth for health)
+    console.log('🔑 Clerk keys:', {
+        publishableKey: process.env.CLERK_PUBLISHABLE_KEY ? '✅ Set' : '❌ Missing',
+        secretKey: process.env.CLERK_SECRET_KEY ? '✅ Set' : '❌ Missing'
+    });
+
+    // Only register Clerk if keys are provided (allows health checks to work without Clerk)
+    if (process.env.CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY) {
+        await fastify.register(clerkPlugin as any, {
+            publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
+            secretKey: process.env.CLERK_SECRET_KEY,
+        });
+    } else {
+        console.warn('⚠️  Clerk not configured - authentication will not be available');
+    }
 
     // Register routes (with auth protection)
     await fastify.register(sourceRoutes, { prefix: '/api' });

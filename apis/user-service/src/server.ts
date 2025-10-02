@@ -91,29 +91,7 @@ async function buildApp() {
         }
     });
 
-    // Clerk authentication
-    console.log('🔑 Clerk keys:', {
-        publishableKey: process.env.CLERK_PUBLISHABLE_KEY ? '✅ Set' : '❌ Missing',
-        secretKey: process.env.CLERK_SECRET_KEY ? '✅ Set' : '❌ Missing'
-    });
-
-    await fastify.register(clerkPlugin as any, {
-        publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
-        secretKey: process.env.CLERK_SECRET_KEY,
-    });
-
-    // Security headers
-    await fastify.register(fastifyHelmet, {
-        contentSecurityPolicy: false // Allow for development
-    });
-
-    // CORS
-    await fastify.register(fastifyCors, {
-        origin: (process.env.ALLOWED_ORIGINS || 'http://localhost:3000').split(','),
-        credentials: true
-    });
-
-    // Health check (no rate limit)
+    // Health check (MUST be registered BEFORE Clerk to avoid authentication requirement)
     fastify.get('/health', {
         config: {
             rateLimit: false // Disable rate limiting for health checks
@@ -130,6 +108,33 @@ async function buildApp() {
                 windowMs: parseInt(process.env.RATE_LIMIT_WINDOW || '60000', 10)
             }
         };
+    });
+
+    // Clerk authentication (registered AFTER health check)
+    console.log('🔑 Clerk keys:', {
+        publishableKey: process.env.CLERK_PUBLISHABLE_KEY ? '✅ Set' : '❌ Missing',
+        secretKey: process.env.CLERK_SECRET_KEY ? '✅ Set' : '❌ Missing'
+    });
+
+    // Only register Clerk if keys are provided
+    if (process.env.CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY) {
+        await fastify.register(clerkPlugin as any, {
+            publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
+            secretKey: process.env.CLERK_SECRET_KEY,
+        });
+    } else {
+        console.warn('⚠️  Clerk not configured - authentication will not be available');
+    }
+
+    // Security headers
+    await fastify.register(fastifyHelmet, {
+        contentSecurityPolicy: false // Allow for development
+    });
+
+    // CORS
+    await fastify.register(fastifyCors, {
+        origin: (process.env.ALLOWED_ORIGINS || 'http://localhost:3000').split(','),
+        credentials: true
     });
 
     // Register routes

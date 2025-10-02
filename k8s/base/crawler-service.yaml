@@ -51,6 +51,11 @@ spec:
             secretKeyRef:
               name: stumbleable-secrets
               key: SUPABASE_SERVICE_KEY
+        - name: CLERK_PUBLISHABLE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: stumbleable-secrets
+              key: CLERK_PUBLISHABLE_KEY
         - name: CLERK_SECRET_KEY
           valueFrom:
             secretKeyRef:
