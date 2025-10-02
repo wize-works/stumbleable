@@ -719,7 +719,7 @@ export class UserRepository {
         const completed = allRequests?.filter(r => r.status === 'completed').length || 0;
 
         const recentTotal = recentRequests?.length || 0;
-        const last7Days = recentRequests?.filter(r => 
+        const last7Days = recentRequests?.filter(r =>
             new Date(r.requested_at) >= sevenDaysAgo
         ).length || 0;
 

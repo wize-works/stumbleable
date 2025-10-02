@@ -349,7 +349,7 @@ export default function DeletionRequestDetailPage({ params }: { params: { reques
                 <div className="modal modal-open">
                     <div className="modal-box">
                         <h3 className="font-bold text-lg mb-4">Extend Grace Period</h3>
-                        
+
                         <div className="form-control mb-4">
                             <label className="label">
                                 <span className="label-text font-semibold">Additional Days</span>
@@ -393,7 +393,7 @@ export default function DeletionRequestDetailPage({ params }: { params: { reques
                 <div className="modal modal-open">
                     <div className="modal-box">
                         <h3 className="font-bold text-lg mb-4">Add Admin Note</h3>
-                        
+
                         <div className="form-control mb-6">
                             <label className="label">
                                 <span className="label-text font-semibold">Note</span>

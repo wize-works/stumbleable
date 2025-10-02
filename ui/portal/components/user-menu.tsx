@@ -1,10 +1,10 @@
 'use client';
 
+import { AdminAPI } from '@/lib/api-client';
 import { useAuth, useClerk, useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { AdminAPI } from '@/lib/api-client';
 
 export function UserMenu() {
     const { user } = useUser();
@@ -19,11 +19,11 @@ export function UserMenu() {
     useEffect(() => {
         async function checkAdminAccess() {
             if (!user) return;
-            
+
             try {
                 const token = await getToken();
                 if (!token) return;
-                
+
                 // Try to call admin API - if it succeeds, user has admin access
                 await AdminAPI.listDeletionRequests({ limit: 1 }, token);
                 setIsAdmin(true);
@@ -139,7 +139,7 @@ export function UserMenu() {
                         {isAdmin && (
                             <>
                                 <div className="border-t border-base-300 my-1"></div>
-                                
+
                                 <Link
                                     href="/admin/deletion-requests"
                                     className="flex items-center px-4 py-2 text-sm text-warning hover:bg-base-200 transition-colors"
