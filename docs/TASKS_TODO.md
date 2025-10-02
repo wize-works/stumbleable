@@ -120,6 +120,19 @@
 
 ## 🎯 **HIGH PRIORITY** (v1 - Full Release)
 
+### **Email Features**
+- [ ] **H1. Email Notifications**
+  - [ ] H1.1: Build email service integration (e.g., Resend)
+  - [ ] H1.2: Create email templates for key notifications
+  - [ ] H1.3: Implement welcome email on sign-up
+  - [ ] H1.4: Add weekly digest of saved content
+  - [ ] H1.5: Contact us form should send email to support
+  - [ ] H1.6: Implement unsubscribe and email preferences
+  - [ ] H1.7: Add email verification step on sign-up (if we need to with Clerk)
+  - [ ] H1.8: Implement password reset email flow (if we need to with Clerk)
+  - [ ] H1.9: Add email notifications for content approval/rejection (for creators)
+
+
 ### **Content Management**
 - ✅ **H1. Content Crawler System** *(COMPLETED)*
   - ✅ H1.1: Build polite web crawler respecting robots.txt

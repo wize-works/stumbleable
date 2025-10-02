@@ -436,6 +436,206 @@ export class UserAPI {
         );
         return response;
     }
+
+    /**
+     * Request account deletion (starts 30-day grace period)
+     */
+    static async requestDeletion(userId: string, token: string): Promise<{
+        deletionRequest: {
+            id: string;
+            requestedAt: string;
+            scheduledDeletionAt: string;
+            status: string;
+        };
+        message: string;
+    }> {
+        const response = await apiRequest<{
+            deletionRequest: {
+                id: string;
+                requestedAt: string;
+                scheduledDeletionAt: string;
+                status: string;
+            };
+            message: string;
+        }>(
+            `${USER_API}/users/${userId}/deletion-request`,
+            {
+                method: 'POST',
+            },
+            token
+        );
+        return response;
+    }
+
+    /**
+     * Cancel deletion request (restore account during grace period)
+     */
+    static async cancelDeletion(userId: string, token: string): Promise<{
+        message: string;
+        user: { id: string; preferredTopics: string[]; wildness: number; guidelinesAcceptedAt?: string };
+    }> {
+        const response = await apiRequest<{
+            message: string;
+            user: { id: string; preferredTopics: string[]; wildness: number; guidelinesAcceptedAt?: string };
+        }>(
+            `${USER_API}/users/${userId}/cancel-deletion`,
+            {
+                method: 'POST',
+            },
+            token
+        );
+        return response;
+    }
+
+    /**
+     * Get deletion request status
+     */
+    static async getDeletionStatus(userId: string, token: string): Promise<{
+        deletionRequest: {
+            id: string;
+            requestedAt: string;
+            scheduledDeletionAt: string;
+            status: string;
+        };
+    } | null> {
+        try {
+            const response = await apiRequest<{
+                deletionRequest: {
+                    id: string;
+                    requestedAt: string;
+                    scheduledDeletionAt: string;
+                    status: string;
+                };
+            }>(
+                `${USER_API}/users/${userId}/deletion-request`,
+                {},
+                token
+            );
+            return response;
+        } catch (error) {
+            if (error instanceof ApiError && error.status === 404) {
+                return null;
+            }
+            throw error;
+        }
+    }
+}
+
+/**
+ * Admin API for managing deletion requests and user accounts
+ */
+export class AdminAPI {
+    /**
+     * List deletion requests with filters and pagination
+     */
+    static async listDeletionRequests(
+        filters: {
+            status?: 'pending' | 'cancelled' | 'completed' | 'all';
+            search?: string;
+            startDate?: string;
+            endDate?: string;
+            limit?: number;
+            offset?: number;
+        },
+        token: string
+    ): Promise<{ requests: any[]; total: number; limit: number; offset: number }> {
+        const params = new URLSearchParams();
+        if (filters.status) params.append('status', filters.status);
+        if (filters.search) params.append('search', filters.search);
+        if (filters.startDate) params.append('startDate', filters.startDate);
+        if (filters.endDate) params.append('endDate', filters.endDate);
+        if (filters.limit) params.append('limit', filters.limit.toString());
+        if (filters.offset) params.append('offset', filters.offset.toString());
+
+        const response = await apiRequest<{ requests: any[]; total: number; limit: number; offset: number }>(
+            `${USER_API}/admin/deletion-requests?${params.toString()}`,
+            {},
+            token
+        );
+        return response;
+    }
+
+    /**
+     * Get detailed deletion request by ID
+     */
+    static async getDeletionRequest(requestId: string, token: string): Promise<{ request: any }> {
+        const response = await apiRequest<{ request: any }>(
+            `${USER_API}/admin/deletion-requests/${requestId}`,
+            {},
+            token
+        );
+        return response;
+    }
+
+    /**
+     * Admin cancel deletion request
+     */
+    static async cancelDeletionRequest(
+        requestId: string,
+        reason: string,
+        token: string
+    ): Promise<{ message: string; request: any }> {
+        const response = await apiRequest<{ message: string; request: any }>(
+            `${USER_API}/admin/deletion-requests/${requestId}/cancel`,
+            {
+                method: 'POST',
+                body: JSON.stringify({ reason }),
+            },
+            token
+        );
+        return response;
+    }
+
+    /**
+     * Extend grace period for deletion request
+     */
+    static async extendGracePeriod(
+        requestId: string,
+        additionalDays: number,
+        reason: string,
+        token: string
+    ): Promise<{ message: string; request: any }> {
+        const response = await apiRequest<{ message: string; request: any }>(
+            `${USER_API}/admin/deletion-requests/${requestId}/extend`,
+            {
+                method: 'POST',
+                body: JSON.stringify({ additionalDays, reason }),
+            },
+            token
+        );
+        return response;
+    }
+
+    /**
+     * Add note to deletion request
+     */
+    static async addNote(
+        requestId: string,
+        note: string,
+        token: string
+    ): Promise<{ message: string; note: any }> {
+        const response = await apiRequest<{ message: string; note: any }>(
+            `${USER_API}/admin/deletion-requests/${requestId}/notes`,
+            {
+                method: 'POST',
+                body: JSON.stringify({ note }),
+            },
+            token
+        );
+        return response;
+    }
+
+    /**
+     * Get deletion analytics summary
+     */
+    static async getDeletionAnalytics(token: string): Promise<{ analytics: any }> {
+        const response = await apiRequest<{ analytics: any }>(
+            `${USER_API}/admin/deletion-requests/analytics/summary`,
+            {},
+            token
+        );
+        return response;
+    }
 }
 
 /**

@@ -1,16 +1,40 @@
 'use client';
 
-import { useClerk, useUser } from '@clerk/nextjs';
+import { useAuth, useClerk, useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+import { AdminAPI } from '@/lib/api-client';
 
 export function UserMenu() {
     const { user } = useUser();
+    const { getToken } = useAuth();
     const { signOut } = useClerk();
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
+
+    // Check if user has admin access
+    useEffect(() => {
+        async function checkAdminAccess() {
+            if (!user) return;
+            
+            try {
+                const token = await getToken();
+                if (!token) return;
+                
+                // Try to call admin API - if it succeeds, user has admin access
+                await AdminAPI.listDeletionRequests({ limit: 1 }, token);
+                setIsAdmin(true);
+            } catch (error) {
+                // User doesn't have admin access, that's ok
+                setIsAdmin(false);
+            }
+        }
+
+        checkAdminAccess();
+    }, [user, getToken]);
 
     // Close menu when clicking outside
     useEffect(() => {
@@ -94,6 +118,14 @@ export function UserMenu() {
 
                     {/* Menu Items */}
                     <div className="py-1">
+                        <Link
+                            href="/dashboard"
+                            className="flex items-center px-4 py-2 text-sm text-base-content hover:bg-base-200 transition-colors"
+                            onClick={() => setIsOpen(false)}
+                        >
+                            <i className="fa-solid fa-duotone fa-gauge w-4 h-4 mr-3 text-base-content/60"></i>
+                            Dashboard
+                        </Link>
 
                         <Link
                             href="/onboarding"
@@ -104,14 +136,31 @@ export function UserMenu() {
                             Preferences
                         </Link>
 
-                        <Link
-                            href="/admin/moderation"
-                            className="flex items-center px-4 py-2 text-sm text-base-content hover:bg-base-200 transition-colors"
-                            onClick={() => setIsOpen(false)}
-                        >
-                            <i className="fa-solid fa-duotone fa-shield-check w-4 h-4 mr-3 text-base-content/60"></i>
-                            Moderation
-                        </Link>
+                        {isAdmin && (
+                            <>
+                                <div className="border-t border-base-300 my-1"></div>
+                                
+                                <Link
+                                    href="/admin/deletion-requests"
+                                    className="flex items-center px-4 py-2 text-sm text-warning hover:bg-base-200 transition-colors"
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    <i className="fa-solid fa-duotone fa-shield-check w-4 h-4 mr-3"></i>
+                                    Admin Dashboard
+                                </Link>
+
+                                <Link
+                                    href="/admin/moderation"
+                                    className="flex items-center px-4 py-2 text-sm text-warning hover:bg-base-200 transition-colors"
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    <i className="fa-solid fa-duotone fa-flag w-4 h-4 mr-3"></i>
+                                    Moderation
+                                </Link>
+                            </>
+                        )}
+
+                        <div className="border-t border-base-300 my-1"></div>
 
                         <Link
                             href="/saved"

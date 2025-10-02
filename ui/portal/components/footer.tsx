@@ -142,6 +142,16 @@ export function Footer() {
                                     DMCA
                                 </Link>
                             </li>
+                            <li>
+                                <Link href="/data-export" className="text-sm text-base-content/60 hover:text-primary transition-colors">
+                                    Export Your Data
+                                </Link>
+                            </li>
+                            <li>
+                                <Link href="/data-deletion" className="text-sm text-base-content/60 hover:text-primary transition-colors">
+                                    Delete My Data
+                                </Link>
+                            </li>
                         </ul>
                     </div>
                 </div>

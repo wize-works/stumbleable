@@ -6,6 +6,7 @@ export type UserRole = 'user' | 'moderator' | 'admin';
 
 export interface User {
     id: string; // Clerk user ID
+    email?: string; // User email address
     preferredTopics: string[];
     wildness: number; // 0-100 exploration level
     role: UserRole; // User's role for RBAC

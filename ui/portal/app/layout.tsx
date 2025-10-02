@@ -28,6 +28,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <ClerkProvider>
             <html lang="en" suppressHydrationWarning>
                 <head>
+                    <meta name="helpninja-verification" content="e2f6f6f7-0bf6-453f-b630-472d371db6b6" />
                     <script
                         dangerouslySetInnerHTML={{
                             __html: `

@@ -6,6 +6,7 @@ import fastifyRateLimit from '@fastify/rate-limit';
 import 'dotenv/config';
 import Fastify from 'fastify';
 
+import { adminRoutes } from './routes/admin';
 import { listsRoutes } from './routes/lists';
 import { roleRoutes } from './routes/roles';
 import { topicsRoutes } from './routes/topics';
@@ -142,6 +143,7 @@ async function buildApp() {
     await fastify.register(topicsRoutes, { prefix: '/api' });
     await fastify.register(roleRoutes, { prefix: '/api' });
     await fastify.register(listsRoutes, { prefix: '/api' });
+    await fastify.register(adminRoutes, { prefix: '/api' });
 
     // Global error handler
     fastify.setErrorHandler((error, request, reply) => {
