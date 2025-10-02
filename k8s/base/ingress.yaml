@@ -22,7 +22,7 @@ metadata:
   namespace: stumbleable
   annotations:
     # NGINX Ingress Controller annotations
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    # NOTE: NO rewrite-target annotation - Next.js handles its own routing
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     
@@ -96,9 +96,13 @@ metadata:
     # Body size (for content uploads)
     nginx.ingress.kubernetes.io/proxy-body-size: "10m"
     
-    # CORS (if needed)
+    # CORS (allow both www and non-www domains)
     nginx.ingress.kubernetes.io/enable-cors: "true"
-    nginx.ingress.kubernetes.io/cors-allow-origin: "https://stumbleable.com"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://stumbleable.com,https://www.stumbleable.com"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+    nginx.ingress.kubernetes.io/cors-max-age: "3600"
     
     # Certificate management (cert-manager)
     cert-manager.io/cluster-issuer: "stumbleable-encrypt"

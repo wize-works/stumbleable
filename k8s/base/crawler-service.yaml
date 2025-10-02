@@ -56,6 +56,21 @@ spec:
             secretKeyRef:
               name: stumbleable-secrets
               key: CLERK_SECRET_KEY
+        - name: ALLOWED_ORIGINS
+          valueFrom:
+            configMapKeyRef:
+              name: stumbleable-config
+              key: ALLOWED_ORIGINS
+        - name: RATE_LIMIT_MAX
+          valueFrom:
+            configMapKeyRef:
+              name: stumbleable-config
+              key: RATE_LIMIT_MAX
+        - name: RATE_LIMIT_WINDOW
+          valueFrom:
+            configMapKeyRef:
+              name: stumbleable-config
+              key: RATE_LIMIT_WINDOW
         resources:
           requests:
             memory: "256Mi"

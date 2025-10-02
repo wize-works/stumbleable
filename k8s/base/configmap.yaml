@@ -30,6 +30,13 @@ data:
   NEXT_PUBLIC_CRAWLER_API_URL: "https://api.stumbleable.com/crawler"
   NEXT_PUBLIC_MODERATION_API_URL: "https://api.stumbleable.com/moderation"
   
+  # CORS - Allow both www and non-www domains
+  ALLOWED_ORIGINS: "https://stumbleable.com,https://www.stumbleable.com"
+  
+  # Rate limiting (requests per minute per user/IP)
+  RATE_LIMIT_MAX: "100"
+  RATE_LIMIT_WINDOW: "60000"
+  
   # Feature flags
   NEXT_TELEMETRY_DISABLED: "1"
   
