@@ -1,6 +1,5 @@
 import { getAuth } from '@clerk/fastify';
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import { supabase } from '../lib/supabase';
 
 /**
  * Extended request type with authentication data
@@ -92,52 +91,4 @@ export function hasRole(request: AuthenticatedRequest, role: string): boolean {
     }
 
     return request.auth.orgRole === role;
-}
-
-/**
- * Middleware to require admin role
- * Crawler management should only be accessible to admins
- */
-export async function requireAdmin(request: AuthenticatedRequest, reply: FastifyReply) {
-    // First ensure user is authenticated
-    await requireAuth(request, reply);
-
-    try {
-        // Get user from database to check role
-        const { data: user, error } = await supabase
-            .from('users')
-            .select('id, clerk_user_id, role')
-            .eq('clerk_user_id', request.auth!.userId)
-            .single();
-
-        if (error || !user) {
-            request.log.warn({ clerkUserId: request.auth!.userId }, 'User not found in database');
-            return reply.status(403).send({
-                error: 'Forbidden',
-                message: 'User not found or not authorized'
-            });
-        }
-
-        if (user.role !== 'admin') {
-            request.log.warn({
-                clerkUserId: request.auth!.userId,
-                role: user.role
-            }, 'Non-admin user attempted to access crawler management');
-
-            return reply.status(403).send({
-                error: 'Forbidden',
-                message: 'Admin access required. Only administrators can manage crawler sources.'
-            });
-        }
-
-        // Store user info in request for later use
-        request.user = user;
-
-    } catch (error) {
-        request.log.error(error, 'Error checking user role');
-        return reply.status(500).send({
-            error: 'Internal Server Error',
-            message: 'Error verifying user permissions'
-        });
-    }
 }

@@ -1,20 +1,20 @@
 # Multi-stage build for Fastify TypeScript service
-# Stage 1: Dependencies
+# Stage 1: Dependencies (production only)
 FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install --only=production
+RUN npm install --omit=dev
 
-# Stage 2: Builder
+# Stage 2: Builder (all dependencies including dev)
 FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY package*.json tsconfig.json ./
-COPY src ./src
-
 RUN npm install
+
+COPY src ./src
 RUN npm run build
 
 # Stage 3: Runner
