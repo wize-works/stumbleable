@@ -82,6 +82,12 @@ jobs:
                   cache-to: type=registry,ref=${{ env.ACR_NAME }}.azurecr.io/stumbleable-${{ matrix.service.name }}:buildcache,mode=max
                   build-args: |
                       NODE_ENV=production
+                      NEXT_PUBLIC_DISCOVERY_API_URL=https://api.stumbleable.com/discovery
+                      NEXT_PUBLIC_INTERACTION_API_URL=https://api.stumbleable.com/interaction
+                      NEXT_PUBLIC_USER_API_URL=https://api.stumbleable.com/user
+                      NEXT_PUBLIC_CRAWLER_API_URL=https://api.stumbleable.com/crawler
+                      NEXT_PUBLIC_MODERATION_API_URL=https://api.stumbleable.com/moderation
+                      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
 
     # Deploy to AKS
     deploy:

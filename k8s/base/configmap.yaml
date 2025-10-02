@@ -17,11 +17,11 @@ data:
   MODERATION_PORT: "7005"
   
   # Internal service URLs (for server-side calls)
-  DISCOVERY_API_URL: "http://discovery-service:7001"
-  INTERACTION_API_URL: "http://interaction-service:7002"
-  USER_API_URL: "http://user-service:7003"
-  CRAWLER_API_URL: "http://crawler-service:7004"
-  MODERATION_API_URL: "http://moderation-service:7005"
+  DISCOVERY_API_URL: "http://discovery-service:8080"
+  INTERACTION_API_URL: "http://interaction-service:8080"
+  USER_API_URL: "http://user-service:8080"
+  CRAWLER_API_URL: "http://crawler-service:8080"
+  MODERATION_API_URL: "http://moderation-service:8080"
   
   # Public API URLs (for client-side calls - will be overridden with actual domain)
   NEXT_PUBLIC_DISCOVERY_API_URL: "https://api.stumbleable.com/discovery"
