@@ -56,6 +56,16 @@ spec:
             configMapKeyRef:
               name: stumbleable-config
               key: NEXT_PUBLIC_USER_API_URL
+        - name: NEXT_PUBLIC_CRAWLER_API_URL
+          valueFrom:
+            configMapKeyRef:
+              name: stumbleable-config
+              key: NEXT_PUBLIC_CRAWLER_API_URL
+        - name: NEXT_PUBLIC_MODERATION_API_URL
+          valueFrom:
+            configMapKeyRef:
+              name: stumbleable-config
+              key: NEXT_PUBLIC_MODERATION_API_URL
         - name: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
           valueFrom:
             secretKeyRef:

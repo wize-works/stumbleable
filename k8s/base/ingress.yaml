@@ -115,3 +115,12 @@ spec:
             name: crawler-service
             port:
               number: 8080
+      
+      # Moderation Service (admin/moderator only)
+      - path: /moderation
+        pathType: Prefix
+        backend:
+          service:
+            name: moderation-service
+            port:
+              number: 8080

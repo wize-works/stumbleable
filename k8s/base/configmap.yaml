@@ -14,17 +14,21 @@ data:
   INTERACTION_PORT: "7002"
   USER_PORT: "7003"
   CRAWLER_PORT: "7004"
+  MODERATION_PORT: "7005"
   
   # Internal service URLs (for server-side calls)
   DISCOVERY_API_URL: "http://discovery-service:7001"
   INTERACTION_API_URL: "http://interaction-service:7002"
   USER_API_URL: "http://user-service:7003"
   CRAWLER_API_URL: "http://crawler-service:7004"
+  MODERATION_API_URL: "http://moderation-service:7005"
   
   # Public API URLs (for client-side calls - will be overridden with actual domain)
   NEXT_PUBLIC_DISCOVERY_API_URL: "https://api.stumbleable.com/discovery"
   NEXT_PUBLIC_INTERACTION_API_URL: "https://api.stumbleable.com/interaction"
   NEXT_PUBLIC_USER_API_URL: "https://api.stumbleable.com/user"
+  NEXT_PUBLIC_CRAWLER_API_URL: "https://api.stumbleable.com/crawler"
+  NEXT_PUBLIC_MODERATION_API_URL: "https://api.stumbleable.com/moderation"
   
   # Feature flags
   NEXT_TELEMETRY_DISABLED: "1"

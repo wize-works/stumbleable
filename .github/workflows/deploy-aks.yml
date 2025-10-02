@@ -39,6 +39,9 @@ jobs:
                     - name: crawler
                       context: ./apis/crawler-service
                       dockerfile: ./apis/crawler-service/Dockerfile
+                    - name: moderation
+                      context: ./apis/moderation-service
+                      dockerfile: ./apis/moderation-service/Dockerfile
 
         steps:
             - name: Checkout code
@@ -165,6 +168,7 @@ jobs:
                   kubectl rollout status deployment/interaction-service -n ${{ env.NAMESPACE }} --timeout=5m
                   kubectl rollout status deployment/user-service -n ${{ env.NAMESPACE }} --timeout=5m
                   kubectl rollout status deployment/crawler-service -n ${{ env.NAMESPACE }} --timeout=5m
+                  kubectl rollout status deployment/moderation-service -n ${{ env.NAMESPACE }} --timeout=5m
 
             - name: Verify deployments
               run: |
@@ -191,8 +195,11 @@ jobs:
                   kubectl run curl-test-user --image=curlimages/curl:latest --restart=Never -n ${{ env.NAMESPACE }} -- \
                     curl -f http://user-service:7003/health || true
 
+                  kubectl run curl-test-moderation --image=curlimages/curl:latest --restart=Never -n ${{ env.NAMESPACE }} -- \
+                    curl -f http://moderation-service:7005/health || true
+
                   # Cleanup test pods
-                  kubectl delete pod curl-test curl-test-discovery curl-test-interaction curl-test-user -n ${{ env.NAMESPACE }} --ignore-not-found=true
+                  kubectl delete pod curl-test curl-test-discovery curl-test-interaction curl-test-user curl-test-moderation -n ${{ env.NAMESPACE }} --ignore-not-found=true
 
     # Notify on completion
     notify:
