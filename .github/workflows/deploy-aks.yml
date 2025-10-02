@@ -119,20 +119,12 @@ jobs:
               run: |
                   kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
 
-            - name: Attach ACR to AKS (if not already attached)
-              run: |
-                  az aks update \
-                    --resource-group ${{ env.AKS_RESOURCE_GROUP }} \
-                    --name ${{ env.AKS_CLUSTER_NAME }} \
-                    --attach-acr ${{ env.ACR_NAME }}
-              continue-on-error: true
-
             - name: Create secrets from GitHub Secrets
               run: |
                   kubectl create secret generic stumbleable-secrets \
                     --namespace=${{ env.NAMESPACE }} \
                     --from-literal=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
-                    --from-literal=SUPABASE_SERVICE_ROLE_KEY="${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+                    --from-literal=SUPABASE_SERVICE_KEY="${{ secrets.SUPABASE_SERVICE_KEY }}" \
                     --from-literal=NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}" \
                     --from-literal=CLERK_SECRET_KEY="${{ secrets.CLERK_SECRET_KEY }}" \
                     --from-literal=CLERK_WEBHOOK_SECRET="${{ secrets.CLERK_WEBHOOK_SECRET }}" \

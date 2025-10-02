@@ -113,7 +113,7 @@ This will:
 | `AKS_RESOURCE_GROUP` | Resource group | Azure Portal (same RG for AKS/ACR) |
 | `SUPABASE_URL` | https://xxx.supabase.co | Supabase project settings |
 | `SUPABASE_ANON_KEY` | eyJhbGc... | Supabase project API settings |
-| `SUPABASE_SERVICE_ROLE_KEY` | eyJhbGc... | Supabase project API settings |
+| `SUPABASE_SERVICE_KEY` | eyJhbGc... | Supabase project API settings |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | pk_live_... | Clerk dashboard |
 | `CLERK_SECRET_KEY` | sk_live_... | Clerk dashboard |
 | `CLERK_WEBHOOK_SECRET` | whsec_... | Clerk dashboard → Webhooks |
