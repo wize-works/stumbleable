@@ -20,7 +20,7 @@ const envSchema = {
     properties: {
         NODE_ENV: { type: 'string', default: 'development' },
         PORT: { type: 'string', default: '7002' },
-        HOST: { type: 'string', default: '127.0.0.1' },
+        HOST: { type: 'string', default: '0.0.0.0' },
         ALLOWED_ORIGINS: { type: 'string', default: 'http://localhost:3000' },
         SUPABASE_URL: { type: 'string' },
         SUPABASE_SERVICE_KEY: { type: 'string' },
