@@ -156,6 +156,42 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
         }
     });
 
+    // Accept community guidelines
+    fastify.put<{ Params: { userId: string } }>('/users/:userId/accept-guidelines', async (request: FastifyRequest<{ Params: { userId: string } }>, reply: FastifyReply) => {
+        try {
+            // Check authentication
+            const auth = getAuth(request as any);
+            if (!auth.isAuthenticated) {
+                return reply.status(401).send({
+                    error: 'User not authenticated'
+                });
+            }
+
+            const { userId } = request.params;
+
+            if (!userId) {
+                return reply.status(400).send({
+                    error: 'User ID is required'
+                });
+            }
+
+            // Update guidelines acceptance timestamp
+            const updatedUser = await repository.acceptGuidelines(userId);
+            if (!updatedUser) {
+                return reply.status(404).send({
+                    error: 'User not found'
+                });
+            }
+
+            return reply.send({ user: updatedUser });
+        } catch (error) {
+            fastify.log.error(error, 'Error in PUT /users/:userId/accept-guidelines');
+            return reply.status(500).send({
+                error: 'Internal server error'
+            });
+        }
+    });
+
     // Delete user
     fastify.delete<{ Params: { userId: string } }>('/users/:userId', async (request: FastifyRequest<{ Params: { userId: string } }>, reply: FastifyReply) => {
         try {

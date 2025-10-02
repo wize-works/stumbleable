@@ -154,17 +154,17 @@ export default function FAQPage() {
 
                             <div className="space-y-4">
                                 {section.questions.map((faq, index) => (
-                                    <div key={index} className="collapse collapse-plus bg-base-200 hover:bg-base-300 transition-colors">
-                                        <input type="radio" name={`faq-${section.category}`} />
-                                        <div className="collapse-title text-xl font-medium text-base-content">
-                                            {faq.q}
-                                        </div>
-                                        <div className="collapse-content">
+                                    <details key={index} className="group bg-base-200 hover:bg-base-300 transition-colors rounded-lg">
+                                        <summary className="flex items-center justify-between cursor-pointer p-4 text-xl font-medium text-base-content list-none">
+                                            <span>{faq.q}</span>
+                                            <i className="fa-solid fa-duotone fa-chevron-down text-primary transition-transform duration-300 group-open:rotate-180"></i>
+                                        </summary>
+                                        <div className="px-4 pb-4">
                                             <p className="text-base-content/70 leading-relaxed">
                                                 {faq.a}
                                             </p>
                                         </div>
-                                    </div>
+                                    </details>
                                 ))}
                             </div>
                         </div>
@@ -183,11 +183,11 @@ export default function FAQPage() {
                     </p>
                     <div className="flex gap-4 justify-center flex-wrap">
                         <a href="/contact" className="btn btn-primary btn-lg">
-                            <i className="fa-solid fa-envelope mr-2"></i>
+                            <i className="fa-solid fa-duotone fa-envelope mr-2"></i>
                             Contact Support
                         </a>
                         <a href="/how-it-works" className="btn btn-outline btn-lg">
-                            <i className="fa-solid fa-book mr-2"></i>
+                            <i className="fa-solid fa-duotone fa-book mr-2"></i>
                             How It Works
                         </a>
                     </div>
@@ -203,7 +203,7 @@ export default function FAQPage() {
                     <div className="grid md:grid-cols-3 gap-6">
                         <a href="/features" className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
                             <div className="card-body items-center text-center">
-                                <i className="fa-solid fa-list-check text-4xl text-primary mb-3"></i>
+                                <i className="fa-solid fa-duotone fa-list-check text-4xl text-primary mb-3"></i>
                                 <h4 className="card-title text-base">Features</h4>
                                 <p className="text-sm text-base-content/60">
                                     Explore all capabilities
@@ -213,7 +213,7 @@ export default function FAQPage() {
 
                         <a href="/guidelines" className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
                             <div className="card-body items-center text-center">
-                                <i className="fa-solid fa-shield-halved text-4xl text-secondary mb-3"></i>
+                                <i className="fa-solid fa-duotone fa-shield-halved text-4xl text-secondary mb-3"></i>
                                 <h4 className="card-title text-base">Guidelines</h4>
                                 <p className="text-sm text-base-content/60">
                                     Community standards
@@ -223,7 +223,7 @@ export default function FAQPage() {
 
                         <a href="/privacy" className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
                             <div className="card-body items-center text-center">
-                                <i className="fa-solid fa-lock text-4xl text-accent mb-3"></i>
+                                <i className="fa-solid fa-duotone fa-lock text-4xl text-accent mb-3"></i>
                                 <h4 className="card-title text-base">Privacy</h4>
                                 <p className="text-sm text-base-content/60">
                                     Your data protection

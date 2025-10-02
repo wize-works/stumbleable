@@ -27,9 +27,12 @@ export function useOnboardingCheck() {
                 // Try to get the user profile
                 const userProfile = await UserAPI.getUser(user.id, token);
 
-                // Check if user has meaningful preferences set
+                // Check if user has meaningful preferences set AND has accepted guidelines
                 const hasPreferences = userProfile.preferredTopics.length > 0;
-                setNeedsOnboarding(!hasPreferences);
+                const hasAcceptedGuidelines = !!userProfile.guidelinesAcceptedAt;
+
+                // User needs onboarding if they don't have preferences OR haven't accepted guidelines
+                setNeedsOnboarding(!hasPreferences || !hasAcceptedGuidelines);
             } catch (error) {
                 // If user doesn't exist (404), they need onboarding
                 if (error instanceof Error && error.message.includes('404')) {

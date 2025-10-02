@@ -45,7 +45,7 @@ export default function PressPage() {
                     <div className="card bg-base-200 shadow-lg">
                         <div className="card-body">
                             <h3 className="card-title">
-                                <i className="fa-solid fa-image text-primary"></i>
+                                <i className="fa-solid fa-duotone fa-image text-primary"></i>
                                 Brand Assets
                             </h3>
                             <p className="text-sm text-base-content/70 mb-4">
@@ -53,7 +53,7 @@ export default function PressPage() {
                             </p>
                             <div className="card-actions">
                                 <button className="btn btn-primary btn-sm">
-                                    <i className="fa-solid fa-download mr-2"></i>
+                                    <i className="fa-solid fa-duotone fa-download mr-2"></i>
                                     Download ZIP
                                 </button>
                             </div>
@@ -63,7 +63,7 @@ export default function PressPage() {
                     <div className="card bg-base-200 shadow-lg">
                         <div className="card-body">
                             <h3 className="card-title">
-                                <i className="fa-solid fa-file-pdf text-secondary"></i>
+                                <i className="fa-solid fa-duotone fa-file-pdf text-secondary"></i>
                                 Media Kit
                             </h3>
                             <p className="text-sm text-base-content/70 mb-4">
@@ -71,7 +71,7 @@ export default function PressPage() {
                             </p>
                             <div className="card-actions">
                                 <button className="btn btn-secondary btn-sm">
-                                    <i className="fa-solid fa-download mr-2"></i>
+                                    <i className="fa-solid fa-duotone fa-download mr-2"></i>
                                     Download PDF
                                 </button>
                             </div>
@@ -90,7 +90,7 @@ export default function PressPage() {
                             { title: 'Algorithm-Free', desc: 'Pure serendipity, no manipulation' },
                         ].map((feature, i) => (
                             <div key={i} className="flex items-start gap-3 p-4 bg-base-200 rounded-lg">
-                                <i className="fa-solid fa-check-circle text-success text-xl mt-1"></i>
+                                <i className="fa-solid fa-duotone fa-check-circle text-success text-xl mt-1"></i>
                                 <div>
                                     <h4 className="font-semibold text-base-content">{feature.title}</h4>
                                     <p className="text-sm text-base-content/70">{feature.desc}</p>
@@ -109,11 +109,11 @@ export default function PressPage() {
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4">
                             <a href="mailto:press@stumbleable.com" className="btn btn-primary">
-                                <i className="fa-solid fa-envelope mr-2"></i>
+                                <i className="fa-solid fa-duotone fa-envelope mr-2"></i>
                                 press@stumbleable.com
                             </a>
                             <Link href="/contact" className="btn btn-outline">
-                                <i className="fa-solid fa-message mr-2"></i>
+                                <i className="fa-solid fa-duotone fa-message mr-2"></i>
                                 Contact Form
                             </Link>
                         </div>

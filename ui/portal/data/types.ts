@@ -34,6 +34,7 @@ export type User = {
     id: string;
     preferredTopics: string[];  // topic ids with weights
     wildness: number;          // 0-100 default
+    guidelinesAcceptedAt?: string;  // ISO timestamp when user accepted guidelines
 };
 
 export type FeedbackStats = {

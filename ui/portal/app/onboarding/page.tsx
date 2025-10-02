@@ -22,6 +22,7 @@ export default function OnboardingPage() {
     const [step, setStep] = useState(1);
     const [topics, setTopics] = useState<Topic[]>([]);
     const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+    const [guidelinesAccepted, setGuidelinesAccepted] = useState(false);
     const [wildness, setWildness] = useState(35);
     const [loading, setLoading] = useState(false);
     const [topicsLoading, setTopicsLoading] = useState(true);
@@ -71,6 +72,11 @@ export default function OnboardingPage() {
         try {
             const token = await getToken();
             if (!token) return;
+
+            // Accept guidelines first
+            if (guidelinesAccepted) {
+                await UserAPI.acceptGuidelines(user.id, token);
+            }
 
             // Update user preferences (user already exists from sign-up or first visit)
             await UserAPI.updatePreferences(user.id, {
@@ -132,10 +138,10 @@ export default function OnboardingPage() {
                 {/* Progress Bar */}
                 <div className="w-full max-w-2xl mx-auto mb-8">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-base-content/60">Step {step} of 2</span>
-                        <span className="text-sm text-base-content/60">{Math.round((step / 2) * 100)}% complete</span>
+                        <span className="text-sm text-base-content/60">Step {step} of 3</span>
+                        <span className="text-sm text-base-content/60">{Math.round((step / 3) * 100)}% complete</span>
                     </div>
-                    <progress className="progress progress-primary w-full" value={step} max="2"></progress>
+                    <progress className="progress progress-primary w-full" value={step} max="3"></progress>
                 </div>
 
                 <div className="max-w-4xl mx-auto">
@@ -189,6 +195,93 @@ export default function OnboardingPage() {
 
                     {step === 2 && (
                         <div className="text-center">
+                            <h2 className="text-2xl font-semibold mb-4">Community Guidelines</h2>
+                            <p className="text-base-content/70 mb-8">
+                                To keep Stumbleable welcoming and safe, we ask all members to follow our community guidelines.
+                            </p>
+
+                            <div className="max-w-2xl mx-auto mb-8">
+                                {/* Condensed Guidelines */}
+                                <div className="bg-base-200 rounded-lg p-6 text-left space-y-4">
+                                    <div>
+                                        <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                                            <i className="fa-solid fa-duotone fa-check-circle text-success"></i>
+                                            What We Encourage
+                                        </h3>
+                                        <ul className="list-disc list-inside space-y-1 text-sm text-base-content/80">
+                                            <li>Quality, interesting content</li>
+                                            <li>Thoughtful curation and lists</li>
+                                            <li>Respectful interactions</li>
+                                            <li>Diverse perspectives</li>
+                                        </ul>
+                                    </div>
+
+                                    <div>
+                                        <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                                            <i className="fa-solid fa-duotone fa-ban text-error"></i>
+                                            What We Don't Allow
+                                        </h3>
+                                        <ul className="list-disc list-inside space-y-1 text-sm text-base-content/80">
+                                            <li>Hate speech or harassment</li>
+                                            <li>Violence or harmful content</li>
+                                            <li>Spam or manipulation</li>
+                                            <li>Illegal content</li>
+                                            <li>Adult or explicit content</li>
+                                            <li>Deliberate misinformation</li>
+                                        </ul>
+                                    </div>
+
+                                    <div className="pt-4 border-t border-base-300">
+                                        <a
+                                            href="/guidelines"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="link link-primary text-sm flex items-center gap-2 justify-center"
+                                        >
+                                            <i className="fa-solid fa-duotone fa-arrow-up-right-from-square"></i>
+                                            Read Full Community Guidelines
+                                        </a>
+                                    </div>
+                                </div>
+
+                                {/* Acceptance Checkbox */}
+                                <div className="mt-6">
+                                    <label className="flex items-start gap-3 cursor-pointer p-4 bg-base-100 rounded-lg border-2 border-base-300 hover:border-primary transition-colors">
+                                        <input
+                                            type="checkbox"
+                                            checked={guidelinesAccepted}
+                                            onChange={(e) => setGuidelinesAccepted(e.target.checked)}
+                                            className="checkbox checkbox-primary mt-1"
+                                        />
+                                        <span className="text-left">
+                                            I have read and agree to follow the Stumbleable Community Guidelines.
+                                            I understand that violations may result in content removal or account suspension.
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-between items-center">
+                                <button
+                                    onClick={() => setStep(1)}
+                                    className="btn btn-ghost"
+                                >
+                                    Back
+                                </button>
+
+                                <button
+                                    onClick={() => setStep(3)}
+                                    disabled={!guidelinesAccepted}
+                                    className="btn btn-primary"
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {step === 3 && (
+                        <div className="text-center">
                             <h2 className="text-2xl font-semibold mb-4">Set Your Exploration Level</h2>
                             <p className="text-base-content/70 mb-8">
                                 How adventurous do you want your discoveries to be?
@@ -227,7 +320,7 @@ export default function OnboardingPage() {
 
                             <div className="flex justify-between items-center">
                                 <button
-                                    onClick={() => setStep(1)}
+                                    onClick={() => setStep(2)}
                                     className="btn btn-ghost"
                                 >
                                     Back

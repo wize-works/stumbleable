@@ -77,7 +77,7 @@ export default function CookiesPage() {
                                 <li>Review and delete individual cookies</li>
                             </ul>
                             <div className="alert alert-info">
-                                <i className="fa-solid fa-info-circle"></i>
+                                <i className="fa-solid fa-duotone fa-info-circle"></i>
                                 <span>
                                     Note: Blocking essential cookies may affect the functionality of Stumbleable.
                                 </span>

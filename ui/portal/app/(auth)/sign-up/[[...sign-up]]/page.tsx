@@ -33,26 +33,26 @@ export default function SignUpPage() {
                                     <div className="grid grid-cols-2 gap-4">
                                         <Clerk.Field name="firstName" className="fieldset">
                                             <Clerk.Label>First Name</Clerk.Label>
-                                            <Clerk.Input type="text" className="input w-full" placeholder="Hattori" />
+                                            <Clerk.Input type="text" className="input w-full" placeholder="Marco" />
                                             <Clerk.FieldError />
                                         </Clerk.Field>
 
                                         <Clerk.Field name="lastName" className="fieldset">
                                             <Clerk.Label>Last Name</Clerk.Label>
-                                            <Clerk.Input type="text" className="input w-full" placeholder="Hanzō" />
+                                            <Clerk.Input type="text" className="input w-full" placeholder="Polo" />
                                             <Clerk.FieldError />
                                         </Clerk.Field>
                                     </div>
 
                                     <Clerk.Field name="emailAddress" className="fieldset">
                                         <Clerk.Label>What is your email?</Clerk.Label>
-                                        <Clerk.Input type="email" className="input w-full" placeholder="you@helpninja.ai" />
+                                        <Clerk.Input type="email" className="input w-full" placeholder="explorer@discovery.com" />
                                         <Clerk.FieldError />
                                     </Clerk.Field>
 
                                     <Clerk.Field name="password" className="fieldset">
                                         <Clerk.Label>What do you want your password to be?</Clerk.Label>
-                                        <Clerk.Input type="password" className="input w-full" placeholder="••••••••" />
+                                        <Clerk.Input type="password" className="input w-full" placeholder="StumbleAround123!" />
                                         <Clerk.FieldError />
                                     </Clerk.Field>
 

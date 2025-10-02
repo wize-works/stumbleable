@@ -119,7 +119,7 @@ export default function DMCAPage() {
                         <section>
                             <h2 className="text-2xl font-bold text-base-content mb-4">False Claims</h2>
                             <div className="alert alert-warning">
-                                <i className="fa-solid fa-exclamation-triangle"></i>
+                                <i className="fa-solid fa-duotone fa-exclamation-triangle"></i>
                                 <div>
                                     <h4 className="font-bold">Important Notice</h4>
                                     <p className="text-sm">

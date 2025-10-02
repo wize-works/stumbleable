@@ -30,13 +30,13 @@ export default function SignInPage() {
                                 <Clerk.GlobalError />
                                 <Clerk.Field name="identifier" className="fieldset">
                                     <Clerk.Label>What is your email?</Clerk.Label>
-                                    <Clerk.Input className="input w-full" placeholder="you@helpninja.ai" />
+                                    <Clerk.Input className="input w-full" placeholder="explorer@discovery.com" />
                                     <Clerk.FieldError />
                                 </Clerk.Field>
 
                                 <Clerk.Field name="password" className="fieldset">
                                     <Clerk.Label>What is your password?</Clerk.Label>
-                                    <Clerk.Input className="input w-full" placeholder="Ninja Password!" />
+                                    <Clerk.Input className="input w-full" placeholder="Your secret password" />
                                     <Clerk.FieldError />
                                 </Clerk.Field>
                                 <SignIn.Action submit className="btn btn-primary w-full rounded-xl">Login</SignIn.Action>
@@ -59,7 +59,7 @@ export default function SignInPage() {
                                 <Clerk.GlobalError />
                                 <Clerk.Field name="emailAddress" className="fieldset">
                                     <Clerk.Label>Enter your email to reset password</Clerk.Label>
-                                    <Clerk.Input className="input w-full" placeholder="hanzo@helpninja.ai" />
+                                    <Clerk.Input className="input w-full" placeholder="explorer@discovery.com" />
                                     <Clerk.FieldError />
                                 </Clerk.Field>
                                 <SignIn.SupportedStrategy name="reset_password_email_code">

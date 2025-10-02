@@ -33,6 +33,7 @@ export class UserRepository {
             preferredTopics: preferences?.preferred_topics || ['technology', 'culture', 'science'],
             wildness: preferences?.wildness || 50,
             role: user.role || 'user',
+            guidelinesAcceptedAt: user.guidelines_accepted_at,
             createdAt: user.created_at,
             updatedAt: user.updated_at,
         };
@@ -107,6 +108,36 @@ export class UserRepository {
 
         if (updateError) {
             throw new Error(`Failed to update preferences: ${updateError.message}`);
+        }
+
+        // Return updated user
+        return await this.getUserById(clerkUserId);
+    }
+
+    /**
+     * Accept community guidelines (sets timestamp)
+     */
+    async acceptGuidelines(clerkUserId: string): Promise<User | null> {
+        // First get the user
+        const { data: user, error: userError } = await supabase
+            .from('users')
+            .select('id')
+            .eq('clerk_user_id', clerkUserId)
+            .single();
+
+        if (userError || !user) return null;
+
+        // Update guidelines acceptance timestamp
+        const { error: updateError } = await supabase
+            .from('users')
+            .update({
+                guidelines_accepted_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', user.id);
+
+        if (updateError) {
+            throw new Error(`Failed to accept guidelines: ${updateError.message}`);
         }
 
         // Return updated user

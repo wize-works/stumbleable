@@ -9,6 +9,7 @@ export interface User {
     preferredTopics: string[];
     wildness: number; // 0-100 exploration level
     role: UserRole; // User's role for RBAC
+    guidelinesAcceptedAt?: string; // When user accepted community guidelines
     createdAt?: string;
     updatedAt?: string;
 }

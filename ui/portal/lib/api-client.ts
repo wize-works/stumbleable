@@ -296,8 +296,8 @@ export class UserAPI {
     /**
      * Create user after Clerk authentication (called once after signup)
      */
-    static async createUser(userId: string, token: string, preferences?: { preferredTopics?: string[]; wildness?: number }): Promise<{ id: string; preferredTopics: string[]; wildness: number }> {
-        const response = await apiRequest<{ user: { id: string; preferredTopics: string[]; wildness: number } }>(
+    static async createUser(userId: string, token: string, preferences?: { preferredTopics?: string[]; wildness?: number }): Promise<{ id: string; preferredTopics: string[]; wildness: number; guidelinesAcceptedAt?: string }> {
+        const response = await apiRequest<{ user: { id: string; preferredTopics: string[]; wildness: number; guidelinesAcceptedAt?: string } }>(
             `${USER_API}/users`,
             {
                 method: 'POST',
@@ -311,8 +311,8 @@ export class UserAPI {
     /**
      * Get existing user profile (does not create if missing)
      */
-    static async getUser(userId: string, token: string): Promise<{ id: string; preferredTopics: string[]; wildness: number }> {
-        const response = await apiRequest<{ user: { id: string; preferredTopics: string[]; wildness: number } }>(
+    static async getUser(userId: string, token: string): Promise<{ id: string; preferredTopics: string[]; wildness: number; guidelinesAcceptedAt?: string }> {
+        const response = await apiRequest<{ user: { id: string; preferredTopics: string[]; wildness: number; guidelinesAcceptedAt?: string } }>(
             `${USER_API}/users/${userId}`,
             {},
             token
@@ -323,7 +323,7 @@ export class UserAPI {
     /**
      * Initialize user with default preferences (called during first visit)
      */
-    static async initializeUser(userId: string, token: string): Promise<{ id: string; preferredTopics: string[]; wildness: number }> {
+    static async initializeUser(userId: string, token: string): Promise<{ id: string; preferredTopics: string[]; wildness: number; guidelinesAcceptedAt?: string }> {
         try {
             // First try to get existing user
             return await this.getUser(userId, token);
@@ -346,12 +346,26 @@ export class UserAPI {
         userId: string,
         updates: { preferredTopics?: string[]; wildness?: number },
         token: string
-    ): Promise<{ id: string; preferredTopics: string[]; wildness: number }> {
-        const response = await apiRequest<{ user: { id: string; preferredTopics: string[]; wildness: number } }>(
+    ): Promise<{ id: string; preferredTopics: string[]; wildness: number; guidelinesAcceptedAt?: string }> {
+        const response = await apiRequest<{ user: { id: string; preferredTopics: string[]; wildness: number; guidelinesAcceptedAt?: string } }>(
             `${USER_API}/users/${userId}/preferences`,
             {
                 method: 'PUT',
                 body: JSON.stringify(updates),
+            },
+            token
+        );
+        return response.user;
+    }
+
+    /**
+     * Accept community guidelines
+     */
+    static async acceptGuidelines(userId: string, token: string): Promise<{ id: string; guidelinesAcceptedAt: string }> {
+        const response = await apiRequest<{ user: { id: string; guidelinesAcceptedAt: string } }>(
+            `${USER_API}/users/${userId}/accept-guidelines`,
+            {
+                method: 'PUT',
             },
             token
         );

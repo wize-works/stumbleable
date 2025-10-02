@@ -10,7 +10,7 @@ export default function GuidelinesPage() {
                 </p>
 
                 <div className="alert alert-info mb-8">
-                    <i className="fa-solid fa-heart text-2xl"></i>
+                    <i className="fa-solid fa-duotone fa-heart text-2xl"></i>
                     <div>
                         <h3 className="font-bold">Our Mission</h3>
                         <div className="text-sm">
@@ -28,7 +28,7 @@ export default function GuidelinesPage() {
                                 <div className="card bg-base-200">
                                     <div className="card-body">
                                         <h3 className="card-title text-lg">
-                                            <i className="fa-solid fa-users text-primary"></i>
+                                            <i className="fa-solid fa-duotone fa-users text-primary"></i>
                                             Respect
                                         </h3>
                                         <p className="text-sm">Treat everyone with kindness and dignity</p>
@@ -37,7 +37,7 @@ export default function GuidelinesPage() {
                                 <div className="card bg-base-200">
                                     <div className="card-body">
                                         <h3 className="card-title text-lg">
-                                            <i className="fa-solid fa-sparkles text-secondary"></i>
+                                            <i className="fa-solid fa-duotone fa-sparkles text-secondary"></i>
                                             Curiosity
                                         </h3>
                                         <p className="text-sm">Embrace diverse perspectives and ideas</p>
@@ -46,7 +46,7 @@ export default function GuidelinesPage() {
                                 <div className="card bg-base-200">
                                     <div className="card-body">
                                         <h3 className="card-title text-lg">
-                                            <i className="fa-solid fa-shield-check text-accent"></i>
+                                            <i className="fa-solid fa-duotone fa-shield-check text-accent"></i>
                                             Authenticity
                                         </h3>
                                         <p className="text-sm">Share genuine, quality content</p>
@@ -55,7 +55,7 @@ export default function GuidelinesPage() {
                                 <div className="card bg-base-200">
                                     <div className="card-body">
                                         <h3 className="card-title text-lg">
-                                            <i className="fa-solid fa-hands-helping text-success"></i>
+                                            <i className="fa-solid fa-duotone fa-hands-helping text-success"></i>
                                             Collaboration
                                         </h3>
                                         <p className="text-sm">Build and share together</p>
@@ -68,25 +68,25 @@ export default function GuidelinesPage() {
                             <h2 className="text-2xl font-bold text-base-content mb-4">What We Encourage</h2>
                             <ul className="space-y-3">
                                 <li className="flex items-start gap-3">
-                                    <i className="fa-solid fa-check-circle text-success text-xl mt-1"></i>
+                                    <i className="fa-solid fa-duotone fa-check-circle text-success text-xl mt-1"></i>
                                     <div>
                                         <strong>Quality Content:</strong> Share interesting, informative, and engaging discoveries
                                     </div>
                                 </li>
                                 <li className="flex items-start gap-3">
-                                    <i className="fa-solid fa-check-circle text-success text-xl mt-1"></i>
+                                    <i className="fa-solid fa-duotone fa-check-circle text-success text-xl mt-1"></i>
                                     <div>
                                         <strong>Thoughtful Curation:</strong> Create lists that tell a story or explore a theme
                                     </div>
                                 </li>
                                 <li className="flex items-start gap-3">
-                                    <i className="fa-solid fa-check-circle text-success text-xl mt-1"></i>
+                                    <i className="fa-solid fa-duotone fa-check-circle text-success text-xl mt-1"></i>
                                     <div>
                                         <strong>Constructive Feedback:</strong> Help improve the community through reporting and suggestions
                                     </div>
                                 </li>
                                 <li className="flex items-start gap-3">
-                                    <i className="fa-solid fa-check-circle text-success text-xl mt-1"></i>
+                                    <i className="fa-solid fa-duotone fa-check-circle text-success text-xl mt-1"></i>
                                     <div>
                                         <strong>Diverse Perspectives:</strong> Share content from various sources and viewpoints
                                     </div>
@@ -98,7 +98,7 @@ export default function GuidelinesPage() {
                             <h2 className="text-2xl font-bold text-base-content mb-4">What We Don't Allow</h2>
                             <div className="space-y-4">
                                 <div className="alert alert-error">
-                                    <i className="fa-solid fa-ban"></i>
+                                    <i className="fa-solid fa-duotone fa-ban"></i>
                                     <div>
                                         <h4 className="font-bold">Hate Speech & Harassment</h4>
                                         <p className="text-sm">Content that attacks or demeans individuals or groups based on identity</p>
@@ -106,7 +106,7 @@ export default function GuidelinesPage() {
                                 </div>
 
                                 <div className="alert alert-error">
-                                    <i className="fa-solid fa-ban"></i>
+                                    <i className="fa-solid fa-duotone fa-ban"></i>
                                     <div>
                                         <h4 className="font-bold">Violence & Harmful Content</h4>
                                         <p className="text-sm">Content promoting violence, self-harm, or dangerous activities</p>
@@ -114,7 +114,7 @@ export default function GuidelinesPage() {
                                 </div>
 
                                 <div className="alert alert-error">
-                                    <i className="fa-solid fa-ban"></i>
+                                    <i className="fa-solid fa-duotone fa-ban"></i>
                                     <div>
                                         <h4 className="font-bold">Spam & Manipulation</h4>
                                         <p className="text-sm">Artificially inflating engagement, repetitive content, or misleading links</p>
@@ -122,7 +122,7 @@ export default function GuidelinesPage() {
                                 </div>
 
                                 <div className="alert alert-error">
-                                    <i className="fa-solid fa-ban"></i>
+                                    <i className="fa-solid fa-duotone fa-ban"></i>
                                     <div>
                                         <h4 className="font-bold">Illegal Content</h4>
                                         <p className="text-sm">Content that violates laws or promotes illegal activities</p>
@@ -130,7 +130,7 @@ export default function GuidelinesPage() {
                                 </div>
 
                                 <div className="alert alert-error">
-                                    <i className="fa-solid fa-ban"></i>
+                                    <i className="fa-solid fa-duotone fa-ban"></i>
                                     <div>
                                         <h4 className="font-bold">Adult Content</h4>
                                         <p className="text-sm">Sexually explicit material or content not suitable for all ages</p>
@@ -138,7 +138,7 @@ export default function GuidelinesPage() {
                                 </div>
 
                                 <div className="alert alert-error">
-                                    <i className="fa-solid fa-ban"></i>
+                                    <i className="fa-solid fa-duotone fa-ban"></i>
                                     <div>
                                         <h4 className="font-bold">Misinformation</h4>
                                         <p className="text-sm">Deliberately false or misleading information, especially on health or safety topics</p>

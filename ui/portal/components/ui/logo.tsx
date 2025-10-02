@@ -93,7 +93,7 @@ export default function Logo({
 
             {/* Text */}
             {displayText && (
-                <span className={`font-bold ${textSizeClass} text-primary`}>
+                <span className={`font-bold ${textSizeClass} text-primary pb-2`}>
                     {displayText}
                 </span>
             )}
