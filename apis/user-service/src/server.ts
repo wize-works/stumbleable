@@ -177,7 +177,7 @@ async function start() {
     try {
         const app = await buildApp();
         const port = parseInt(process.env.PORT || '7003', 10);
-        const host = process.env.HOST || '127.0.0.1';
+        const host = process.env.HOST || '0.0.0.0';
 
         await app.listen({ port, host });
 
