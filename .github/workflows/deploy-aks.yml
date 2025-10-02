@@ -126,6 +126,7 @@ jobs:
                     --from-literal=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
                     --from-literal=SUPABASE_SERVICE_KEY="${{ secrets.SUPABASE_SERVICE_KEY }}" \
                     --from-literal=NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}" \
+                    --from-literal=CLERK_PUBLISHABLE_KEY="${{ secrets.CLERK_PUBLISHABLE_KEY }}" \
                     --from-literal=CLERK_SECRET_KEY="${{ secrets.CLERK_SECRET_KEY }}" \
                     --from-literal=CLERK_WEBHOOK_SECRET="${{ secrets.CLERK_WEBHOOK_SECRET }}" \
                     --dry-run=client -o yaml | kubectl apply -f -
