@@ -27,9 +27,10 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 .pnpm-store/
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
+# Lock files are now COMMITTED for reproducible builds
+# package-lock.json - KEEP THIS
+# yarn.lock - KEEP THIS  
+# pnpm-lock.yaml - KEEP THIS
 
 # ==============================================================================
 # Next.js (UI Portal)

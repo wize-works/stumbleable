@@ -5,7 +5,7 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm install --only=production
 
 # Stage 2: Builder
 FROM node:20-alpine AS builder
@@ -14,7 +14,7 @@ WORKDIR /app
 COPY package*.json tsconfig.json ./
 COPY src ./src
 
-RUN npm ci
+RUN npm install
 RUN npm run build
 
 # Stage 3: Runner
