@@ -75,7 +75,7 @@ export default function AboutPage() {
                         <div className="card bg-primary/10 border border-primary/20 p-6 mt-8">
                             <p className="text-center text-base-content/80 mb-4">
                                 <strong>Currently in beta:</strong> All discoveries are powered by
-                                curated mock data. Real web crawling and dynamic content coming soon.
+                                curated data. Real web crawling and dynamic content coming soon.
                             </p>
                             <div className="text-center">
                                 <a

@@ -7,10 +7,10 @@
 
     /* Brand palette — glowing against dark */
     --color-primary:  #FF4D6D; /* Punchy Pink-Red */
-    --color-primary-content: #0B0D10;
+    --color-primary-content: #FFFFFF;
 
     --color-secondary:  #00E6B3; /* Vibrant Aqua Mint */
-    --color-secondary-content: #0B0D10;
+    --color-secondary-content: #FFFFFF;
 
     --color-accent:  #FFD600; /* Electric Yellow */
     --color-accent-content: #0B0D10;

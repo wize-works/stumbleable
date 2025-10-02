@@ -67,7 +67,7 @@ ui/portal/                  # Next.js frontend
     api-client.ts           # HTTP client for API calls
     utils.ts
 # this should no longer be needed, we should call APIs instead
-  data/                     # Types and temporary mock data during development
+  data/                     # Types 
     types.ts
 
 apis/                       # Independent, scalable backend services
@@ -128,13 +128,6 @@ export type Interaction = {
   at: number;            // Date.now()
 };
 ```
-
-## Mock data - this should no longer be the practice, we should call APIs instead
-- `data/topics.ts`: export ~30 topics across arts, crafts, design, science, code, indie web, photography, music, philosophy, games, DIY, nature, history, etc.
-- `data/sources.ts`: export **40–60 `Discovery` objects** with diverse topics, realistic titles, and `image` placeholders like `https://picsum.photos/seed/<id>/1200/630`. Mix creation dates within the last 365 days and vary `quality`.
-- `data/users.ts`: export a single `currentUser` with preferred topics (weights) and a `wildness` default (0–100).
-- `data/interactions.ts`: export an in-memory array and helpers: `logInteraction(i:Interaction)`, `getInteractions()`.
-
 ## API Architecture
 
 ### Discovery Service APIs
@@ -180,7 +173,7 @@ export type Interaction = {
   - Use `KeyboardShortcuts` component to attach listeners and show a help tooltip.
 # this should no longer be the practice, we should call APIs instead
   - Toasts for actions (e.g. “Saved!”).
-- **Saved (`/saved`)**: read from `mockService.getSaved()`; render a simple list of saved `DiscoveryCard`s.
+- **Saved (`/saved`)**: loaded from api; render a simple list of saved `DiscoveryCard`s.
 # this should no longer be the practice, we should call APIs instead
 - **Lists (`/lists`)**: stub placeholder explaining “Collaborative trails coming later.”
 - **About (`/about`)**: short blurb.

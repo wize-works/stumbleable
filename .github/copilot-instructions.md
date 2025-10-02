@@ -352,7 +352,7 @@ export const supabase = createClient(supabaseUrl, supabaseKey);
 - Grid/list of saved discoveries from database; empty state if none.
 
 **4) Lists `/lists`**
-- Placeholder for community lists/trails; show static mock cards.
+- Placeholder for community lists/trails;
 
 **5) About `/about`**
 - Brief manifesto about serendipity and how it works.

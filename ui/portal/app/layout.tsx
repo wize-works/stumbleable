@@ -1,6 +1,7 @@
 import { ClerkProvider } from '@clerk/nextjs';
 import Script from 'next/script';
 import { ReactNode } from 'react';
+import { Footer } from '../components/footer';
 import { Header } from '../components/header';
 import { ToasterProvider } from '../components/toaster';
 import './globals.css';
@@ -25,7 +26,20 @@ const fontAwesomeKitUrl = process.env.NEXT_PUBLIC_FONTAWESOME_KIT_URL || "https:
 export default function RootLayout({ children }: { children: ReactNode }) {
     return (
         <ClerkProvider>
-            <html lang="en" data-theme="light">
+            <html lang="en" suppressHydrationWarning>
+                <head>
+                    <script
+                        dangerouslySetInnerHTML={{
+                            __html: `
+                                try {
+                                    const theme = localStorage.getItem('theme') || 
+                                        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                                    document.documentElement.setAttribute('data-theme', theme);
+                                } catch (e) {}
+                            `,
+                        }}
+                    />
+                </head>
                 <body className="min-h-screen bg-base-100">
 
                     <ToasterProvider>
@@ -33,6 +47,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                         <main className="flex-1">
                             {children}
                         </main>
+                        <Footer />
                     </ToasterProvider>
                     <Script src={fontAwesomeKitUrl} crossOrigin="anonymous" strategy="afterInteractive" />
                 </body>

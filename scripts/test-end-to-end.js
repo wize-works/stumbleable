@@ -12,9 +12,6 @@ const DISCOVERY_API = 'http://localhost:7001/api';
 const INTERACTION_API = 'http://localhost:7002/api';
 const USER_API = 'http://localhost:7003/api';
 
-// Mock Clerk JWT token for testing (replace with real token in production)
-const TEST_TOKEN = 'test-token-for-local-development';
-
 async function testEndToEndDataFlow() {
     console.log('🧪 Starting End-to-End Data Flow Test...\n');
 

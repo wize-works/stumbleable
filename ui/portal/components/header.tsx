@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '../lib/utils';
 import { SignInButton } from './sign-in-button';
+import { ThemeToggle } from './theme-toggle';
 import Logo from './ui/logo';
 import { UserMenu } from './user-menu';
 
@@ -32,7 +33,7 @@ function AuthSection() {
                 <>
                     <Link
                         href="/sign-up"
-                        className="btn btn-ghost btn-sm sm:btn-md px-3 sm:px-4 text-xs sm:text-sm"
+                        className="btn btn-ghost sm:btn-md px-3 sm:px-4 text-xs sm:text-sm"
                     >
                         <span>Sign Up</span>
                     </Link>
@@ -73,7 +74,7 @@ export function Header() {
                                         key={item.name}
                                         href={item.href}
                                         className={cn(
-                                            'btn btn-sm sm:btn-md transition-colors min-h-[2.5rem] sm:min-h-[3rem]',
+                                            'btn transition-colors',
                                             'px-2 sm:px-4 text-xs sm:text-sm',
                                             'touch-manipulation', // Better touch handling
                                             isActive
@@ -89,6 +90,9 @@ export function Header() {
                                 );
                             })}
                         </nav>
+
+                        {/* Theme Toggle */}
+                        <ThemeToggle />
 
                         {/* User Authentication */}
                         <AuthSection />

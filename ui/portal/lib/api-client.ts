@@ -131,9 +131,9 @@ export class DiscoveryAPI {
     }
 
     /**
-     * Get trending discoveries
+     * Get trending discoveries (public endpoint, no auth required)
      */
-    static async getTrending(token: string): Promise<Discovery[]> {
+    static async getTrending(token?: string): Promise<Discovery[]> {
         const response = await apiRequest<TrendingResponse>(`${DISCOVERY_API}/trending`, {}, token);
         return response.discoveries;
     }
