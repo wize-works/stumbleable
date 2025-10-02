@@ -12,9 +12,9 @@ The Stumbleable UI uses a multi-stage Docker build process optimized for Next.js
 
 ### Stage 2: Builder (`builder`)
 - Copies dependencies from Stage 1
-- Accepts build arguments for configuration
+- Accepts optional build arguments for API URLs
 - Compiles the Next.js application
-- Uses placeholder values for Clerk keys to allow static page generation
+- Uses dynamic rendering (no static page generation)
 
 ### Stage 3: Production Dependencies (`prod-deps`)
 - Installs only production dependencies
@@ -27,25 +27,26 @@ The Stumbleable UI uses a multi-stage Docker build process optimized for Next.js
 
 ## Build Arguments
 
-The following build arguments are accepted (with default placeholders):
+The following build arguments are accepted (all optional):
 
 ```bash
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_placeholder_for_build
-CLERK_SECRET_KEY=sk_test_placeholder_for_build
-NEXT_PUBLIC_DISCOVERY_API_URL=http://localhost:7001
-NEXT_PUBLIC_INTERACTION_API_URL=http://localhost:7002
-NEXT_PUBLIC_USER_API_URL=http://localhost:7003
-NEXT_PUBLIC_CRAWLER_API_URL=http://localhost:7004
-NEXT_PUBLIC_FONTAWESOME_KIT_URL=https://kit.fontawesome.com/fab812572f.js
+NEXT_PUBLIC_DISCOVERY_API_URL
+NEXT_PUBLIC_INTERACTION_API_URL
+NEXT_PUBLIC_USER_API_URL
+NEXT_PUBLIC_CRAWLER_API_URL
+NEXT_PUBLIC_FONTAWESOME_KIT_URL
 ```
 
-### Why Placeholder Values?
+### Why No Clerk Keys During Build?
 
-During the Docker build, Next.js attempts to statically generate pages. Since ClerkProvider wraps the entire application, it needs API keys during build time. We provide placeholder values that:
+The application uses **dynamic rendering** (`export const dynamic = 'force-dynamic'` in `app/layout.tsx`), which means:
 
-1. **Allow the build to complete** without errors
-2. **Are overridden at runtime** by actual environment variables
-3. **Don't pose security risks** (placeholders are never used in production)
+1. **No static page generation** - Pages are rendered at request time, not build time
+2. **No Clerk validation during build** - Authentication happens at runtime
+3. **Cleaner builds** - No need for placeholder or dummy API keys
+4. **Runtime flexibility** - All environment variables are provided when the container starts
+
+This approach is more secure and flexible than embedding credentials in the build.
 
 ## Building the Image
 
@@ -54,12 +55,11 @@ During the Docker build, Next.js attempts to statically generate pages. Since Cl
 docker build -t stumbleable-ui:latest ./ui/portal
 ```
 
-### Build with Custom Values
+### Build with Custom API URLs (Optional)
 ```bash
 docker build \
-  --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_your_key \
-  --build-arg CLERK_SECRET_KEY=sk_live_your_secret \
   --build-arg NEXT_PUBLIC_DISCOVERY_API_URL=https://api.stumbleable.com/discovery \
+  --build-arg NEXT_PUBLIC_INTERACTION_API_URL=https://api.stumbleable.com/interaction \
   -t stumbleable-ui:latest \
   ./ui/portal
 ```
@@ -69,14 +69,12 @@ docker build \
 az acr build \
   --registry your-registry \
   --image stumbleable-ui:latest \
-  --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$CLERK_PK \
-  --build-arg CLERK_SECRET_KEY=$CLERK_SK \
   ./ui/portal
 ```
 
 ## Runtime Environment Variables
 
-**IMPORTANT**: The placeholder values used during build MUST be overridden at runtime with actual values.
+**IMPORTANT**: All authentication and API configuration is provided at runtime, not during the build.
 
 ### Docker Run
 ```bash
@@ -101,9 +99,9 @@ Environment variables are configured in the Azure Portal or via Azure CLI during
 **Symptom**: `Cannot find module 'typescript'`
 **Solution**: Ensure Stage 1 uses `npm ci` (not `npm ci --only=production`)
 
-### Issue: Clerk Missing Publishable Key
-**Symptom**: `@clerk/clerk-react: Missing publishableKey`
-**Solution**: Build arguments now include placeholder values by default
+### Issue: Clerk Invalid Publishable Key During Build
+**Symptom**: `@clerk/clerk-react: The publishableKey passed to Clerk is invalid`
+**Solution**: Application uses dynamic rendering (`force-dynamic`) to skip static generation. No Clerk keys are needed during build.
 
 ### Issue: Build Cache Not Found
 **Symptom**: `failed to configure registry cache importer`

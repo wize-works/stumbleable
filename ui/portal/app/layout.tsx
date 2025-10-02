@@ -5,6 +5,10 @@ import { Header } from '../components/header';
 import { ToasterProvider } from '../components/toaster';
 import './globals.css';
 
+// Force dynamic rendering to prevent static generation during Docker builds
+// This is necessary because ClerkProvider validates API keys during static generation
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
     title: 'Stumbleable',
     description: 'One button. Curated randomness. Human taste + AI vibes.',
