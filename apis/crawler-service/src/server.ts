@@ -39,6 +39,17 @@ async function buildApp() {
         credentials: true
     });
 
+    // Allow empty JSON bodies (for PUT/DELETE without body)
+    fastify.addContentTypeParser('application/json', { parseAs: 'string' }, (req, body, done) => {
+        try {
+            const json = body === '' ? {} : JSON.parse(body as string);
+            done(null, json);
+        } catch (err: any) {
+            err.statusCode = 400;
+            done(err, undefined);
+        }
+    });
+
     // Health check endpoint (MUST be registered BEFORE Clerk plugin to avoid authentication)
     fastify.get('/health', async () => {
         return {

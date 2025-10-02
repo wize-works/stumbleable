@@ -47,6 +47,17 @@ async function buildApp() {
         dotenv: true
     });
 
+    // Allow empty JSON bodies (for PUT/DELETE without body)
+    fastify.addContentTypeParser('application/json', { parseAs: 'string' }, (req, body, done) => {
+        try {
+            const json = body === '' ? {} : JSON.parse(body as string);
+            done(null, json);
+        } catch (err: any) {
+            err.statusCode = 400;
+            done(err, undefined);
+        }
+    });
+
     // Rate limiting - MUST be registered before routes
     await fastify.register(fastifyRateLimit, {
         max: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
