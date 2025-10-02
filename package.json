@@ -1,0 +1,57 @@
+{
+    "name": "stumbleable",
+    "version": "1.0.0",
+    "description": "StumbleUpon-style serendipity engine - Monorepo",
+    "private": true,
+    "workspaces": [
+        "ui/portal",
+        "apis/discovery-service",
+        "apis/interaction-service",
+        "apis/user-service",
+        "apis/crawler-service"
+    ],
+    "scripts": {
+        "setup": "node scripts/setup.js",
+        "dev": "concurrently --kill-others-on-fail --prefix-colors \"blue,green,yellow,magenta,cyan\" --prefix \"{name}\" \"npm:dev:*\"",
+        "dev:ui": "powershell -Command \"cd ui/portal; npm run dev\"",
+        "dev:discovery": "powershell -Command \"cd apis/discovery-service; npm run dev\"",
+        "dev:interaction": "powershell -Command \"cd apis/interaction-service; npm run dev\"",
+        "dev:user": "powershell -Command \"cd apis/user-service; npm run dev\"",
+        "dev:crawler": "powershell -Command \"cd apis/crawler-service; npm run dev\"",
+        "install:all": "node scripts/install-all.js",
+        "install:ui": "powershell -Command \"cd ui/portal; npm install\"",
+        "install:discovery": "powershell -Command \"cd apis/discovery-service; npm install\"",
+        "install:interaction": "powershell -Command \"cd apis/interaction-service; npm install\"",
+        "install:user": "powershell -Command \"cd apis/user-service; npm install\"",
+        "install:crawler": "powershell -Command \"cd apis/crawler-service; npm install\"",
+        "build": "npm run build:ui",
+        "build:ui": "powershell -Command \"cd ui/portal; npm run build\"",
+        "build:discovery": "powershell -Command \"cd apis/discovery-service; npm run build\"",
+        "build:interaction": "powershell -Command \"cd apis/interaction-service; npm run build\"",
+        "build:user": "powershell -Command \"cd apis/user-service; npm run build\"",
+        "build:crawler": "powershell -Command \"cd apis/crawler-service; npm run build\"",
+        "start": "concurrently --kill-others-on-fail --prefix-colors \"blue,green,yellow,magenta,cyan\" --prefix \"{name}\" \"npm:start:*\"",
+        "start:ui": "powershell -Command \"cd ui/portal; npm start\"",
+        "start:discovery": "powershell -Command \"cd apis/discovery-service; npm start\"",
+        "start:interaction": "powershell -Command \"cd apis/interaction-service; npm start\"",
+        "start:user": "powershell -Command \"cd apis/user-service; npm start\"",
+        "start:crawler": "powershell -Command \"cd apis/crawler-service; npm start\"",
+        "test": "npm run test:ui",
+        "test:ui": "powershell -Command \"cd ui/portal; npm test\"",
+        "lint": "npm run lint:ui",
+        "lint:ui": "powershell -Command \"cd ui/portal; npm run lint\"",
+        "health": "node scripts/health-check.js",
+        "test:e2e": "node scripts/test-end-to-end.js"
+    },
+    "devDependencies": {
+        "concurrently": "^8.2.2"
+    },
+    "engines": {
+        "node": ">=18.0.0",
+        "npm": ">=8.0.0"
+    },
+    "dependencies": {
+        "@clerk/clerk-sdk-node": "^4.13.23",
+        "@clerk/fastify": "^2.4.34"
+    }
+}

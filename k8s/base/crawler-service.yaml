@@ -1,0 +1,100 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crawler-service
+  namespace: stumbleable
+  labels:
+    app: crawler-service
+    component: api
+spec:
+  replicas: 1  # Crawler only needs one replica
+  selector:
+    matchLabels:
+      app: crawler-service
+  template:
+    metadata:
+      labels:
+        app: crawler-service
+        component: api
+    spec:
+      containers:
+      - name: crawler-service
+        image: ${ACR_NAME}.azurecr.io/stumbleable-crawler:${IMAGE_TAG}
+        ports:
+        - containerPort: 7004
+          name: http
+          protocol: TCP
+        env:
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: stumbleable-config
+              key: CRAWLER_PORT
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: stumbleable-config
+              key: NODE_ENV
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: stumbleable-config
+              key: LOG_LEVEL
+        - name: SUPABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: stumbleable-secrets
+              key: SUPABASE_URL
+        - name: SUPABASE_SERVICE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: stumbleable-secrets
+              key: SUPABASE_SERVICE_KEY
+        - name: CLERK_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: stumbleable-secrets
+              key: CLERK_SECRET_KEY
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 7004
+          initialDelaySeconds: 20
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 7004
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+      imagePullSecrets:
+      - name: acr-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: crawler-service
+  namespace: stumbleable
+  labels:
+    app: crawler-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 7004
+    targetPort: 7004
+    protocol: TCP
+    name: http
+  selector:
+    app: crawler-service

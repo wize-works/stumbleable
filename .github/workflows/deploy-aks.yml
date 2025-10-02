@@ -1,0 +1,210 @@
+name: Build and Deploy to AKS
+
+on:
+    push:
+        branches:
+            - main
+            - develop
+    pull_request:
+        branches:
+            - main
+    workflow_dispatch:
+
+env:
+    ACR_NAME: ${{ secrets.ACR_NAME }}
+    AKS_CLUSTER_NAME: ${{ secrets.AKS_CLUSTER_NAME }}
+    AKS_RESOURCE_GROUP: ${{ secrets.AKS_RESOURCE_GROUP }}
+    NAMESPACE: stumbleable
+
+jobs:
+    # Build and push Docker images
+    build-and-push:
+        name: Build and Push Images
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                service:
+                    - name: ui
+                      context: ./ui/portal
+                      dockerfile: ./ui/portal/Dockerfile
+                    - name: discovery
+                      context: ./apis/discovery-service
+                      dockerfile: ./apis/discovery-service/Dockerfile
+                    - name: interaction
+                      context: ./apis/interaction-service
+                      dockerfile: ./apis/interaction-service/Dockerfile
+                    - name: user
+                      context: ./apis/user-service
+                      dockerfile: ./apis/user-service/Dockerfile
+                    - name: crawler
+                      context: ./apis/crawler-service
+                      dockerfile: ./apis/crawler-service/Dockerfile
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Azure Login
+              uses: azure/login@v1
+              with:
+                  creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+            - name: Log in to Azure Container Registry
+              run: |
+                  az acr login --name ${{ env.ACR_NAME }}
+
+            - name: Extract metadata (tags, labels)
+              id: meta
+              uses: docker/metadata-action@v5
+              with:
+                  images: ${{ env.ACR_NAME }}.azurecr.io/stumbleable-${{ matrix.service.name }}
+                  tags: |
+                      type=ref,event=branch
+                      type=ref,event=pr
+                      type=sha,prefix={{branch}}-
+                      type=raw,value=latest,enable={{is_default_branch}}
+
+            - name: Build and push Docker image
+              uses: docker/build-push-action@v5
+              with:
+                  context: ${{ matrix.service.context }}
+                  file: ${{ matrix.service.dockerfile }}
+                  push: true
+                  tags: ${{ steps.meta.outputs.tags }}
+                  labels: ${{ steps.meta.outputs.labels }}
+                  cache-from: type=registry,ref=${{ env.ACR_NAME }}.azurecr.io/stumbleable-${{ matrix.service.name }}:buildcache
+                  cache-to: type=registry,ref=${{ env.ACR_NAME }}.azurecr.io/stumbleable-${{ matrix.service.name }}:buildcache,mode=max
+                  build-args: |
+                      NODE_ENV=production
+
+    # Deploy to AKS
+    deploy:
+        name: Deploy to AKS
+        runs-on: ubuntu-latest
+        needs: build-and-push
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Azure Login
+              uses: azure/login@v1
+              with:
+                  creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+            - name: Set AKS context
+              uses: azure/aks-set-context@v3
+              with:
+                  resource-group: ${{ env.AKS_RESOURCE_GROUP }}
+                  cluster-name: ${{ env.AKS_CLUSTER_NAME }}
+
+            - name: Create namespace if not exists
+              run: |
+                  kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
+
+            - name: Attach ACR to AKS (if not already attached)
+              run: |
+                  az aks update \
+                    --resource-group ${{ env.AKS_RESOURCE_GROUP }} \
+                    --name ${{ env.AKS_CLUSTER_NAME }} \
+                    --attach-acr ${{ env.ACR_NAME }}
+              continue-on-error: true
+
+            - name: Create secrets from GitHub Secrets
+              run: |
+                  kubectl create secret generic stumbleable-secrets \
+                    --namespace=${{ env.NAMESPACE }} \
+                    --from-literal=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
+                    --from-literal=SUPABASE_SERVICE_ROLE_KEY="${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+                    --from-literal=NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}" \
+                    --from-literal=CLERK_SECRET_KEY="${{ secrets.CLERK_SECRET_KEY }}" \
+                    --from-literal=CLERK_WEBHOOK_SECRET="${{ secrets.CLERK_WEBHOOK_SECRET }}" \
+                    --dry-run=client -o yaml | kubectl apply -f -
+
+            - name: Set image tag
+              id: image-tag
+              run: |
+                  if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+                    echo "IMAGE_TAG=latest" >> $GITHUB_OUTPUT
+                  else
+                    echo "IMAGE_TAG=${{ github.ref_name }}-${{ github.sha }}" >> $GITHUB_OUTPUT
+                  fi
+
+            - name: Deploy ConfigMap
+              run: |
+                  envsubst < k8s/base/configmap.yaml | kubectl apply -f -
+              env:
+                  ACR_NAME: ${{ env.ACR_NAME }}
+                  IMAGE_TAG: ${{ steps.image-tag.outputs.IMAGE_TAG }}
+
+            - name: Deploy services
+              run: |
+                  for file in k8s/base/*.yaml; do
+                    if [[ "$file" != *"secrets.yaml.template"* ]]; then
+                      envsubst < "$file" | kubectl apply -f -
+                    fi
+                  done
+              env:
+                  ACR_NAME: ${{ env.ACR_NAME }}
+                  IMAGE_TAG: ${{ steps.image-tag.outputs.IMAGE_TAG }}
+
+            - name: Wait for deployments
+              run: |
+                  kubectl rollout status deployment/ui-portal -n ${{ env.NAMESPACE }} --timeout=5m
+                  kubectl rollout status deployment/discovery-service -n ${{ env.NAMESPACE }} --timeout=5m
+                  kubectl rollout status deployment/interaction-service -n ${{ env.NAMESPACE }} --timeout=5m
+                  kubectl rollout status deployment/user-service -n ${{ env.NAMESPACE }} --timeout=5m
+                  kubectl rollout status deployment/crawler-service -n ${{ env.NAMESPACE }} --timeout=5m
+
+            - name: Verify deployments
+              run: |
+                  kubectl get pods -n ${{ env.NAMESPACE }}
+                  kubectl get services -n ${{ env.NAMESPACE }}
+                  kubectl get ingress -n ${{ env.NAMESPACE }}
+
+            - name: Run smoke tests
+              run: |
+                  # Wait for services to be ready
+                  sleep 30
+
+                  # Test UI health
+                  kubectl run curl-test --image=curlimages/curl:latest --restart=Never -n ${{ env.NAMESPACE }} -- \
+                    curl -f http://ui-portal:3000/api/health || true
+
+                  # Test API health endpoints
+                  kubectl run curl-test-discovery --image=curlimages/curl:latest --restart=Never -n ${{ env.NAMESPACE }} -- \
+                    curl -f http://discovery-service:7001/health || true
+
+                  kubectl run curl-test-interaction --image=curlimages/curl:latest --restart=Never -n ${{ env.NAMESPACE }} -- \
+                    curl -f http://interaction-service:7002/health || true
+
+                  kubectl run curl-test-user --image=curlimages/curl:latest --restart=Never -n ${{ env.NAMESPACE }} -- \
+                    curl -f http://user-service:7003/health || true
+
+                  # Cleanup test pods
+                  kubectl delete pod curl-test curl-test-discovery curl-test-interaction curl-test-user -n ${{ env.NAMESPACE }} --ignore-not-found=true
+
+    # Notify on completion
+    notify:
+        name: Notify Deployment Status
+        runs-on: ubuntu-latest
+        needs: [build-and-push, deploy]
+        if: always()
+
+        steps:
+            - name: Deployment Success
+              if: ${{ needs.deploy.result == 'success' }}
+              run: |
+                  echo "✅ Deployment to AKS successful!"
+                  echo "Environment: ${{ github.ref_name }}"
+                  echo "Commit: ${{ github.sha }}"
+
+            - name: Deployment Failed
+              if: ${{ needs.deploy.result == 'failure' }}
+              run: |
+                  echo "❌ Deployment to AKS failed!"
+                  exit 1

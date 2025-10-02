@@ -1,0 +1,179 @@
+import { getAuth } from '@clerk/fastify';
+import { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify';
+import { z } from 'zod';
+import { UserRepository } from '../lib/repository';
+import { CreateUserRequest, UpdatePreferencesRequest } from '../types';
+
+const repository = new UserRepository();
+
+// Validation schemas
+const createUserSchema = z.object({
+    userId: z.string().min(1),
+    preferences: z.object({
+        preferredTopics: z.array(z.string()).min(1).max(20).optional(),
+        wildness: z.number().min(0).max(100).optional()
+    }).optional()
+});
+
+const updatePreferencesSchema = z.object({
+    preferredTopics: z.array(z.string()).min(1).max(20).optional(),
+    wildness: z.number().min(0).max(100).optional()
+}).refine((data) => data.preferredTopics || data.wildness !== undefined, {
+    message: "At least one field (preferredTopics or wildness) must be provided"
+});
+
+/**
+ * User management routes
+ */
+export const userRoutes: FastifyPluginAsync = async (fastify) => {
+
+    // Get user profile (does NOT auto-create - user must exist)
+    fastify.get<{ Params: { userId: string } }>('/users/:userId', async (request: FastifyRequest<{ Params: { userId: string } }>, reply: FastifyReply) => {
+        try {
+            // Check authentication
+            const auth = getAuth(request as any);
+            if (!auth.isAuthenticated) {
+                return reply.status(401).send({
+                    error: 'User not authenticated'
+                });
+            }
+
+            const { userId } = request.params;
+
+            if (!userId) {
+                return reply.status(400).send({
+                    error: 'User ID is required'
+                });
+            }
+
+            // Only get existing user - do not auto-create
+            const user = await repository.getUserById(userId);
+            if (!user) {
+                return reply.status(404).send({
+                    error: 'User not found. Please complete signup first.'
+                });
+            }
+
+            return reply.send({ user });
+        } catch (error) {
+            fastify.log.error(error, 'Error in GET /users/:userId');
+            return reply.status(500).send({
+                error: 'Internal server error'
+            });
+        }
+    });
+
+
+
+    // Create user after Clerk authentication (called by frontend after successful Clerk signup)
+    fastify.post<{ Body: CreateUserRequest }>('/users', async (request: FastifyRequest<{ Body: CreateUserRequest }>, reply: FastifyReply) => {
+        try {
+            const validationResult = createUserSchema.safeParse(request.body);
+            if (!validationResult.success) {
+                return reply.status(400).send({
+                    error: 'Invalid request body',
+                    details: validationResult.error.errors
+                });
+            }
+
+            const { userId, preferences } = validationResult.data;
+
+            // Check if user already exists
+            const existingUser = await repository.getUserById(userId);
+            if (existingUser) {
+                return reply.status(409).send({
+                    error: 'User already exists',
+                    user: existingUser
+                });
+            }
+
+            // Validate topics if provided
+            if (preferences?.preferredTopics) {
+                const validation = await repository.validateTopics(preferences.preferredTopics);
+                if (validation.invalid.length > 0) {
+                    return reply.status(400).send({
+                        error: 'Invalid topic IDs',
+                        invalidTopics: validation.invalid
+                    });
+                }
+            }
+
+            const user = await repository.createUser(userId, preferences);
+            return reply.status(201).send({ user });
+        } catch (error) {
+            fastify.log.error(error, 'Error in POST /users');
+            return reply.status(500).send({
+                error: 'Internal server error'
+            });
+        }
+    });
+
+    // Update user preferences
+    fastify.put<{
+        Params: { userId: string },
+        Body: UpdatePreferencesRequest
+    }>('/users/:userId/preferences', async (request: FastifyRequest<{
+        Params: { userId: string },
+        Body: UpdatePreferencesRequest
+    }>, reply: FastifyReply) => {
+        try {
+            const { userId } = request.params;
+
+            const validationResult = updatePreferencesSchema.safeParse(request.body);
+            if (!validationResult.success) {
+                return reply.status(400).send({
+                    error: 'Invalid request body',
+                    details: validationResult.error.errors
+                });
+            }
+
+            const updates = validationResult.data;
+
+            // Validate topics if provided
+            if (updates.preferredTopics) {
+                const validation = await repository.validateTopics(updates.preferredTopics);
+                if (validation.invalid.length > 0) {
+                    return reply.status(400).send({
+                        error: 'Invalid topic IDs',
+                        invalidTopics: validation.invalid
+                    });
+                }
+            }
+
+            const updatedUser = await repository.updateUserPreferences(userId, updates);
+            if (!updatedUser) {
+                return reply.status(404).send({
+                    error: 'User not found'
+                });
+            }
+
+            return reply.send({ user: updatedUser });
+        } catch (error) {
+            fastify.log.error(error, 'Error in PUT /users/:userId/preferences');
+            return reply.status(500).send({
+                error: 'Internal server error'
+            });
+        }
+    });
+
+    // Delete user
+    fastify.delete<{ Params: { userId: string } }>('/users/:userId', async (request: FastifyRequest<{ Params: { userId: string } }>, reply: FastifyReply) => {
+        try {
+            const { userId } = request.params;
+
+            const deleted = await repository.deleteUser(userId);
+            if (!deleted) {
+                return reply.status(404).send({
+                    error: 'User not found'
+                });
+            }
+
+            return reply.status(204).send();
+        } catch (error) {
+            fastify.log.error(error, 'Error in DELETE /users/:userId');
+            return reply.status(500).send({
+                error: 'Internal server error'
+            });
+        }
+    });
+};

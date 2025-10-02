@@ -1,0 +1,100 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: discovery-service
+  namespace: stumbleable
+  labels:
+    app: discovery-service
+    component: api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: discovery-service
+  template:
+    metadata:
+      labels:
+        app: discovery-service
+        component: api
+    spec:
+      containers:
+      - name: discovery-service
+        image: ${ACR_NAME}.azurecr.io/stumbleable-discovery:${IMAGE_TAG}
+        ports:
+        - containerPort: 7001
+          name: http
+          protocol: TCP
+        env:
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: stumbleable-config
+              key: DISCOVERY_PORT
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: stumbleable-config
+              key: NODE_ENV
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: stumbleable-config
+              key: LOG_LEVEL
+        - name: SUPABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: stumbleable-secrets
+              key: SUPABASE_URL
+        - name: SUPABASE_SERVICE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: stumbleable-secrets
+              key: SUPABASE_SERVICE_KEY
+        - name: CLERK_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: stumbleable-secrets
+              key: CLERK_SECRET_KEY
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "250m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 7001
+          initialDelaySeconds: 20
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 7001
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+      imagePullSecrets:
+      - name: acr-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: discovery-service
+  namespace: stumbleable
+  labels:
+    app: discovery-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 7001
+    targetPort: 7001
+    protocol: TCP
+    name: http
+  selector:
+    app: discovery-service

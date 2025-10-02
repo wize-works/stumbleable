@@ -1,0 +1,286 @@
+# Stumbleable - Comprehensive .gitignore
+# Generated: October 1, 2025
+
+# ==============================================================================
+# Environment Variables & Secrets
+# ==============================================================================
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+.env*.local
+
+# Backup of corrupted files
+*.backup
+
+# Azure credentials (should only be in GitHub Secrets)
+azure-credentials.json
+service-principal.json
+
+# ==============================================================================
+# Dependencies & Package Managers
+# ==============================================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ==============================================================================
+# Next.js (UI Portal)
+# ==============================================================================
+.next/
+out/
+.vercel
+.turbo
+
+# Next.js build info
+.next/cache
+.next/server
+.next/static
+
+# Next.js standalone build
+.next/standalone/
+
+# ==============================================================================
+# TypeScript & Build Outputs
+# ==============================================================================
+dist/
+build/
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# ==============================================================================
+# Testing
+# ==============================================================================
+coverage/
+.nyc_output/
+*.lcov
+*.log
+
+# Jest
+jest-results.json
+__snapshots__/
+
+# ==============================================================================
+# IDEs & Editors
+# ==============================================================================
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# VS Code - Workspace specific
+.history/
+*.swp
+*.swo
+*~
+
+# JetBrains IDEs (WebStorm, IntelliJ, etc.)
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+
+# ==============================================================================
+# Operating Systems
+# ==============================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ==============================================================================
+# Logs
+# ==============================================================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
+
+# Runtime logs
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# ==============================================================================
+# Temporary Files
+# ==============================================================================
+tmp/
+temp/
+*.tmp
+*.temp
+.cache/
+
+# ==============================================================================
+# Docker & Kubernetes
+# ==============================================================================
+# Don't ignore Dockerfiles or K8s manifests, but ignore generated files
+*.dockerignore.backup
+
+# Kubernetes secrets (actual values)
+k8s/base/secrets.yaml
+k8s/production/secrets.yaml
+k8s/staging/secrets.yaml
+k8s/development/secrets.yaml
+
+# Keep the template
+!k8s/base/secrets.yaml.template
+
+# ==============================================================================
+# Database
+# ==============================================================================
+# Local database files
+*.sqlite
+*.sqlite3
+*.db
+
+# Database dumps
+*.sql
+*.dump
+
+# Supabase local
+.supabase/
+supabase/.branches/
+supabase/.temp/
+
+# ==============================================================================
+# Monitoring & Analytics
+# ==============================================================================
+# Sentry
+.sentryclirc
+
+# ==============================================================================
+# CI/CD & Deployment
+# ==============================================================================
+# GitHub Actions local testing
+.github/workflows/*.local.yml
+
+# Terraform (if added later)
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Pulumi (if added later)
+.pulumi/
+Pulumi.*.yaml
+
+# ==============================================================================
+# Documentation
+# ==============================================================================
+# Generated docs
+docs/.vitepress/cache
+docs/.vitepress/dist
+
+# Compiled API docs
+api-docs/
+
+# ==============================================================================
+# Miscellaneous
+# ==============================================================================
+# Lock files for services
+*.lock
+
+# Error screenshots
+screenshots/
+error-*.png
+
+# Local configuration overrides
+*.local.json
+local-config.json
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Archive files
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# ==============================================================================
+# Project Specific
+# ==============================================================================
+# Test data
+test-data/
+fixtures/
+*.fixture.json
+
+# Scripts output
+scripts/output/
+scripts/logs/
+
+# Crawler data
+crawler-data/
+crawled-content/
+
+# User uploads (if testing locally)
+uploads/
+user-uploads/
+
+# ==============================================================================
+# Keep These Files
+# ==============================================================================
+# Ensure these important files are NOT ignored
+!.env.example
+!.env.template
+!.gitignore
+!.gitkeep
+!.dockerignore
+!Dockerfile
+!docker-compose.yml
+!*.md
+!LICENSE

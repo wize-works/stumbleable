@@ -1,0 +1,301 @@
+import { useAuth, useUser } from '@clerk/nextjs';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { UserAPI } from './api-client';
+
+interface SessionData {
+    sessionId: string;
+    startTime: string;
+    discoveryCount: number;
+    interactionCount: number;
+    isActive: boolean;
+}
+
+interface UseSessionTrackingReturn {
+    session: SessionData | null;
+    isLoading: boolean;
+    error: string | null;
+    trackDiscovery: () => Promise<void>;
+    trackInteraction: () => Promise<void>;
+    endSession: () => Promise<void>;
+}
+
+/**
+ * Custom hook for real-time session analytics tracking
+ * Automatically starts a session when user is authenticated and tracks activity
+ */
+export function useSessionTracking(): UseSessionTrackingReturn {
+    const { user, isLoaded, isSignedIn } = useUser();
+    const { getToken } = useAuth();
+    const [session, setSession] = useState<SessionData | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    // Refs to prevent stale closures in effect cleanup
+    const sessionIdRef = useRef<string | null>(null);
+    const userIdRef = useRef<string | null>(null);
+
+    /**
+     * Start a new session for the authenticated user
+     */
+    const startSession = useCallback(async (userId: string) => {
+        try {
+            setIsLoading(true);
+            setError(null);
+
+            console.log('Starting session for Clerk user:', userId);
+            const token = await getToken();
+            if (!token) {
+                throw new Error('Authentication token not available');
+            }
+
+            // Get user profile to get internal user ID
+            const userProfile = await UserAPI.getUser(userId, token);
+            userIdRef.current = userProfile.id;
+
+            console.log('Got user profile:', userProfile.id, 'for session start');
+
+            // Start session tracking
+            const response = await fetch('http://localhost:7002/api/sessions/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userId: userProfile.id
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to start session');
+            }
+
+            const data = await response.json();
+
+            const newSession: SessionData = {
+                sessionId: data.sessionId,
+                startTime: data.startTime,
+                discoveryCount: 0,
+                interactionCount: 0,
+                isActive: true,
+            };
+
+            setSession(newSession);
+            sessionIdRef.current = data.sessionId;
+
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'Failed to start session';
+            setError(errorMessage);
+            console.error('Session tracking error:', err);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    /**
+     * Update session with discovery activity
+     */
+    const trackDiscovery = useCallback(async () => {
+        if (!session?.sessionId || !session.isActive) return;
+
+        try {
+            const response = await fetch('http://localhost:7002/api/sessions/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    sessionId: session.sessionId,
+                    action: 'discovery'
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to track discovery');
+            }
+
+            const data = await response.json();
+
+            setSession(prev => prev ? {
+                ...prev,
+                discoveryCount: data.discoveryCount,
+                interactionCount: data.interactionCount,
+            } : null);
+
+        } catch (err) {
+            console.error('Failed to track discovery:', err);
+        }
+    }, [session?.sessionId, session?.isActive]);
+
+    /**
+     * Update session with interaction activity
+     */
+    const trackInteraction = useCallback(async () => {
+        if (!session?.sessionId || !session.isActive) return;
+
+        try {
+            const response = await fetch('http://localhost:7002/api/sessions/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    sessionId: session.sessionId,
+                    action: 'interaction'
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to track interaction');
+            }
+
+            const data = await response.json();
+
+            setSession(prev => prev ? {
+                ...prev,
+                discoveryCount: data.discoveryCount,
+                interactionCount: data.interactionCount,
+            } : null);
+
+        } catch (err) {
+            console.error('Failed to track interaction:', err);
+        }
+    }, [session?.sessionId, session?.isActive]);
+
+    /**
+     * End the current session
+     */
+    const endSession = useCallback(async () => {
+        if (!session?.sessionId || !session.isActive) return;
+
+        try {
+            const response = await fetch('http://localhost:7002/api/sessions/end', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    sessionId: session.sessionId
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to end session');
+            }
+
+            const data = await response.json();
+
+            setSession(prev => prev ? {
+                ...prev,
+                isActive: false,
+            } : null);
+
+            console.log('Session ended:', {
+                duration: data.sessionDuration,
+                discoveries: data.totalDiscoveries,
+                interactions: data.totalInteractions,
+            });
+
+        } catch (err) {
+            console.error('Failed to end session:', err);
+        }
+    }, [session?.sessionId, session?.isActive]);
+
+    /**
+     * Initialize session when user is authenticated
+     */
+    useEffect(() => {
+        if (isLoaded && isSignedIn && user?.id && !session && !isLoading) {
+            startSession(user.id);
+        }
+    }, [isLoaded, isSignedIn, user?.id, session, isLoading, startSession]);
+
+    /**
+     * End session on component unmount or user sign out
+     */
+    useEffect(() => {
+        return () => {
+            if (sessionIdRef.current) {
+                // End session on cleanup
+                fetch('http://localhost:7002/api/sessions/end', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        sessionId: sessionIdRef.current
+                    }),
+                    keepalive: true, // Ensure request completes even if page is closing
+                }).catch(err => {
+                    console.error('Failed to end session on cleanup:', err);
+                });
+            }
+        };
+    }, []);
+
+    /**
+     * Handle page visibility changes (tab switching, minimizing)
+     */
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.hidden && session?.isActive) {
+                // User switched away from tab - could pause tracking or note inactivity
+                console.log('User switched away from tab');
+            } else if (!document.hidden && session?.isActive) {
+                // User returned to tab
+                console.log('User returned to tab');
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, [session?.isActive]);
+
+    /**
+     * Handle page unload (refresh, close, navigate away)
+     */
+    useEffect(() => {
+        const handleBeforeUnload = () => {
+            if (sessionIdRef.current) {
+                // Use beacon API for reliable session ending on page unload
+                if (navigator.sendBeacon) {
+                    const data = JSON.stringify({
+                        sessionId: sessionIdRef.current
+                    });
+                    navigator.sendBeacon('http://localhost:7002/api/sessions/end', data);
+                } else {
+                    // Fallback for browsers without beacon support
+                    fetch('http://localhost:7002/api/sessions/end', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            sessionId: sessionIdRef.current
+                        }),
+                        keepalive: true,
+                    }).catch(() => {
+                        // Ignore errors on page unload
+                    });
+                }
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+    }, []);
+
+    return {
+        session,
+        isLoading,
+        error,
+        trackDiscovery,
+        trackInteraction,
+        endSession,
+    };
+}

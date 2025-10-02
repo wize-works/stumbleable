@@ -1,0 +1,40 @@
+{
+    "name": "@stumbleable/crawler-service",
+    "version": "1.0.0",
+    "description": "Content crawler service for Stumbleable - RSS, sitemap, and web crawling",
+    "main": "dist/server.js",
+    "scripts": {
+        "dev": "tsx watch src/server.ts",
+        "build": "tsc",
+        "start": "node dist/server.js"
+    },
+    "keywords": [
+        "crawler",
+        "rss",
+        "sitemap",
+        "web-scraping"
+    ],
+    "author": "Stumbleable Team",
+    "license": "MIT",
+    "dependencies": {
+        "fastify": "^5.6.1",
+        "@fastify/cors": "^10.1.0",
+        "@clerk/fastify": "^2.4.34",
+        "@supabase/supabase-js": "^2.45.4",
+        "dotenv": "^16.4.5",
+        "zod": "^3.23.8",
+        "fastify-plugin": "^5.1.0",
+        "pino": "^9.4.0",
+        "pino-pretty": "^11.2.2",
+        "robots-parser": "^3.0.1",
+        "rss-parser": "^3.13.0",
+        "sitemapper": "^3.2.9",
+        "node-cron": "^3.0.3"
+    },
+    "devDependencies": {
+        "tsx": "^4.19.1",
+        "typescript": "^5.6.2",
+        "@types/node": "^20.16.10",
+        "@types/node-cron": "^3.0.11"
+    }
+}

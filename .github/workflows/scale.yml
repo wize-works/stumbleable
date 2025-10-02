@@ -1,0 +1,62 @@
+name: Scale Deployment
+
+on:
+    workflow_dispatch:
+        inputs:
+            service:
+                description: "Service to scale"
+                required: true
+                type: choice
+                options:
+                    - ui-portal
+                    - discovery-service
+                    - interaction-service
+                    - user-service
+                    - crawler-service
+            replicas:
+                description: "Number of replicas"
+                required: true
+                type: number
+                default: 2
+
+env:
+    AKS_CLUSTER_NAME: ${{ secrets.AKS_CLUSTER_NAME }}
+    AKS_RESOURCE_GROUP: ${{ secrets.AKS_RESOURCE_GROUP }}
+    NAMESPACE: stumbleable
+
+jobs:
+    scale:
+        name: Scale Deployment
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Azure Login
+              uses: azure/login@v1
+              with:
+                  creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+            - name: Set AKS context
+              uses: azure/aks-set-context@v3
+              with:
+                  resource-group: ${{ env.AKS_RESOURCE_GROUP }}
+                  cluster-name: ${{ env.AKS_CLUSTER_NAME }}
+
+            - name: Scale deployment
+              run: |
+                  echo "Scaling ${{ inputs.service }} to ${{ inputs.replicas }} replicas..."
+                  kubectl scale deployment/${{ inputs.service }} --replicas=${{ inputs.replicas }} -n ${{ env.NAMESPACE }}
+
+            - name: Wait for scaling
+              run: |
+                  kubectl rollout status deployment/${{ inputs.service }} -n ${{ env.NAMESPACE }} --timeout=5m
+
+            - name: Verify scaling
+              run: |
+                  kubectl get deployment/${{ inputs.service }} -n ${{ env.NAMESPACE }}
+                  kubectl get pods -n ${{ env.NAMESPACE }} -l app=${{ inputs.service }}
+
+            - name: Scaling complete
+              run: |
+                  echo "✅ Scaling completed successfully!"
+                  echo "Service: ${{ inputs.service }}"
+                  echo "Replicas: ${{ inputs.replicas }}"

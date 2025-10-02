@@ -1,0 +1,48 @@
+/* Stumbleable — Light Theme (Radical) */
+@plugin "daisyui/theme" {
+    name: "light";
+    default: true;
+    color-scheme: light;
+    prefersdark: false;
+
+    /* Brand palette — vibrant & uncommon */
+    --color-primary:  #FF4D6D; /* Punchy Pink-Red */
+    --color-primary-content: #FFFFFF;
+
+    --color-secondary:  #00C49A; /* Neon Mint */
+    --color-secondary-content: #0B0D10;
+
+    --color-accent:  #FFD600; /* Electric Yellow */
+    --color-accent-content: #0B0D10;
+
+    --color-neutral:  #1F262E; /* Graphite Anchor */
+    --color-neutral-content: #F7F5F2;
+
+    /* Base surfaces — warmer canvas than pure white */
+    --color-base-100: #FFFDF7; /* Cream White */
+    --color-base-200: #F6F0E9; 
+    --color-base-300: #EDE3D9; 
+    --color-base-content: #1C1A1A;
+
+    /* Status — keep clarity, but tuned for harmony */
+    --color-info:  #0091FF; 
+    --color-info-content: #FFFFFF;
+    --color-success:  #17E68F; 
+    --color-success-content: #0B0D10;
+    --color-warning:  #FF8C42; 
+    --color-warning-content: #0B0D10;
+    --color-error:  #FF3355; 
+    --color-error-content: #FFFFFF;
+
+    /* Shape + motion */
+    --rounded-box: 1.25rem;
+    --rounded-btn: 1rem;
+    --rounded-badge: 0.75rem;
+    --btn-text-case: none;
+    --tab-radius: 0.85rem;
+    --animation-btn: 0.18s;
+
+    /* Custom shadows */
+    --shadow-card: 0 6px 20px rgba(255, 77, 109, 0.1);
+    --shadow-float: 0 12px 28px rgba(255, 214, 0, 0.15);
+}

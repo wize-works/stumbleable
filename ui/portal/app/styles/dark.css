@@ -1,0 +1,48 @@
+/* Stumbleable — Dark Theme (Radical) */
+@plugin "daisyui/theme" {
+    name: "dark";
+    default: false;
+    color-scheme: dark;
+    prefersdark: false;
+
+    /* Brand palette — glowing against dark */
+    --color-primary:  #FF4D6D; /* Punchy Pink-Red */
+    --color-primary-content: #0B0D10;
+
+    --color-secondary:  #00E6B3; /* Vibrant Aqua Mint */
+    --color-secondary-content: #0B0D10;
+
+    --color-accent:  #FFD600; /* Electric Yellow */
+    --color-accent-content: #0B0D10;
+
+    --color-neutral:  #0A0F14; /* Deep Ink */
+    --color-neutral-content: #EDEAE6;
+
+    /* Base surfaces — layered dark with subtle warmth */
+    --color-base-100: #0B0D10; /* Near Black */
+    --color-base-200: #131820; 
+    --color-base-300: #1A222C; 
+    --color-base-content: #F8F7F4; /* High readability */
+
+    /* Status — glowing & consistent */
+    --color-info:  #2E9BFF; 
+    --color-info-content: #0B0D10;
+    --color-success:  #22F09E; 
+    --color-success-content: #0B0D10;
+    --color-warning:  #FF914D; 
+    --color-warning-content: #0B0D10;
+    --color-error:  #FF3355; 
+    --color-error-content: #FFFFFF;
+
+    /* Shape + motion */
+    --rounded-box: 1.25rem;
+    --rounded-btn: 1rem;
+    --rounded-badge: 0.75rem;
+    --btn-text-case: none;
+    --tab-radius: 0.85rem;
+    --animation-btn: 0.18s;
+
+    /* Custom shadows — luminous feel */
+    --shadow-card: 0 6px 20px rgba(0, 255, 170, 0.15);
+    --shadow-float: 0 12px 28px rgba(255, 77, 109, 0.25);
+}

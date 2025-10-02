@@ -1,0 +1,33 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stumbleable-config
+  namespace: stumbleable
+data:
+  # Node environment
+  NODE_ENV: "production"
+  
+  # Service ports
+  UI_PORT: "3000"
+  DISCOVERY_PORT: "7001"
+  INTERACTION_PORT: "7002"
+  USER_PORT: "7003"
+  CRAWLER_PORT: "7004"
+  
+  # Internal service URLs (for server-side calls)
+  DISCOVERY_API_URL: "http://discovery-service:7001"
+  INTERACTION_API_URL: "http://interaction-service:7002"
+  USER_API_URL: "http://user-service:7003"
+  CRAWLER_API_URL: "http://crawler-service:7004"
+  
+  # Public API URLs (for client-side calls - will be overridden with actual domain)
+  NEXT_PUBLIC_DISCOVERY_API_URL: "https://api.stumbleable.com/discovery"
+  NEXT_PUBLIC_INTERACTION_API_URL: "https://api.stumbleable.com/interaction"
+  NEXT_PUBLIC_USER_API_URL: "https://api.stumbleable.com/user"
+  
+  # Feature flags
+  NEXT_TELEMETRY_DISABLED: "1"
+  
+  # Logging
+  LOG_LEVEL: "info"

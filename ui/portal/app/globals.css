@@ -1,0 +1,90 @@
+@layer base;
+
+@import "tailwindcss";
+@plugin "daisyui";
+
+/* Import theme files */
+@import "./styles/light.css";
+@import "./styles/dark.css";
+
+/* Apply theme based on system preference */
+@media (prefers-color-scheme: dark) {
+  html {
+    --color-scheme: dark;
+  }
+}
+
+
+.btn {
+    @apply rounded-full;
+}
+
+
+.logo-shadow {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+/* Hide global SVG definitions */
+.svg-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 640px) {
+  /* Better touch targets */
+  .btn {
+    min-height: 2.5rem;
+    min-width: 2.5rem;
+  }
+  
+  /* Prevent iOS zoom on form inputs */
+  input, select, textarea {
+    font-size: 16px;
+  }
+  
+  /* Better range slider touch targets */
+  input[type="range"] {
+    height: 24px;
+  }
+}
+
+/* Additional responsive breakpoint for extra small screens */
+@media (min-width: 475px) {
+  .xs\:inline {
+    display: inline;
+  }
+  
+  .xs\:hidden {
+    display: none;
+  }
+}
+
+/* Touch improvements */
+.touch-manipulation {
+  touch-action: manipulation;
+}
+
+/* Prevent text selection on interactive elements */
+.btn, button, [role="button"] {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+/* Smooth scrolling for better mobile experience */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Better focus indicators for accessibility */
+.btn:focus-visible,
+button:focus-visible,
+input:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
