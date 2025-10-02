@@ -308,7 +308,7 @@ export default function AdminDeletionRequestsPage() {
                                                             className="btn btn-ghost btn-xs"
                                                             title="View Details"
                                                         >
-                                                            <i className="fa-solid fa-eye"></i>
+                                                            <i className="fa-solid fa-duotone  fa-eye"></i>
                                                         </button>
                                                         {request.status === 'pending' && (
                                                             <button
@@ -316,7 +316,7 @@ export default function AdminDeletionRequestsPage() {
                                                                 className="btn btn-error btn-xs"
                                                                 title="Cancel Deletion"
                                                             >
-                                                                <i className="fa-solid fa-ban"></i>
+                                                                <i className="fa-solid fa-duotone  fa-ban"></i>
                                                             </button>
                                                         )}
                                                     </div>

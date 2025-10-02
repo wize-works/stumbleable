@@ -286,4 +286,20 @@ export const adminRoutes: FastifyPluginAsync = async (fastify) => {
             });
         }
     });
+
+    // Get user analytics
+    fastify.get('/admin/users/analytics', {
+        preHandler: requireAdminRole
+    }, async (request: FastifyRequest, reply: FastifyReply) => {
+        try {
+            const analytics = await repository.getUserAnalytics();
+
+            return reply.send({ analytics });
+        } catch (error) {
+            fastify.log.error(error, 'Error in GET /admin/users/analytics');
+            return reply.status(500).send({
+                error: 'Internal server error'
+            });
+        }
+    });
 };

@@ -440,6 +440,46 @@ export class UserAPI {
     }
 
     /**
+     * Get user analytics (admin only)
+     */
+    static async getUserAnalytics(token: string): Promise<{
+        analytics: {
+            totalUsers: number;
+            activeUsers7Days: number;
+            activeUsers30Days: number;
+            newUsersToday: number;
+            newUsers7Days: number;
+            newUsers30Days: number;
+            usersByRole: {
+                user: number;
+                moderator: number;
+                admin: number;
+            };
+        };
+    }> {
+        const response = await apiRequest<{
+            analytics: {
+                totalUsers: number;
+                activeUsers7Days: number;
+                activeUsers30Days: number;
+                newUsersToday: number;
+                newUsers7Days: number;
+                newUsers30Days: number;
+                usersByRole: {
+                    user: number;
+                    moderator: number;
+                    admin: number;
+                };
+            };
+        }>(
+            `${USER_API}/admin/users/analytics`,
+            {},
+            token
+        );
+        return response;
+    }
+
+    /**
      * Request account deletion (starts 30-day grace period)
      */
     static async requestDeletion(userId: string, token: string): Promise<{

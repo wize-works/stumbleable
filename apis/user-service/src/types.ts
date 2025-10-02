@@ -54,3 +54,17 @@ export interface RoleCheckResponse {
 export interface UpdateRoleRequest {
     role: UserRole;
 }
+
+export interface UserAnalytics {
+    totalUsers: number;
+    activeUsers7Days: number;
+    activeUsers30Days: number;
+    newUsersToday: number;
+    newUsers7Days: number;
+    newUsers30Days: number;
+    usersByRole: {
+        user: number;
+        moderator: number;
+        admin: number;
+    };
+}

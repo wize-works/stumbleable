@@ -15,6 +15,14 @@ interface AdminStats {
     totalReports: number;
     activeUsers7Days: number;
     activeUsers30Days: number;
+    newUsersToday?: number;
+    newUsers7Days?: number;
+    newUsers30Days?: number;
+    usersByRole?: {
+        user: number;
+        moderator: number;
+        admin: number;
+    };
 }
 
 interface RecentActivity {
@@ -85,22 +93,28 @@ export default function AdminDashboard() {
             }
 
             // Fetch admin statistics from various services
-            const [deletionRequestsData, moderationAnalytics] = await Promise.all([
+            const [deletionRequestsData, moderationAnalytics, userAnalytics] = await Promise.all([
                 AdminAPI.listDeletionRequests({ status: 'pending', limit: 1 }, token),
                 ModerationAPI.getModerationAnalytics(token),
+                UserAPI.getUserAnalytics(token),
             ]);
 
             // Aggregate stats from the actual API response structure
             const modStats = moderationAnalytics.analytics;
+            const userStats = userAnalytics.analytics;
             const aggregatedStats: AdminStats = {
-                totalUsers: 0, // TODO: Add user stats endpoint
+                totalUsers: userStats.totalUsers,
                 totalDiscoveries: 0, // TODO: Add discovery stats endpoint
                 totalSubmissions: 0, // TODO: Add submission stats endpoint
                 pendingModeration: modStats.totalPending || 0,
                 pendingDeletionRequests: deletionRequestsData.total || 0,
                 totalReports: modStats.totalReports || 0,
-                activeUsers7Days: 0, // TODO: Add user activity endpoint
-                activeUsers30Days: 0, // TODO: Add user activity endpoint
+                activeUsers7Days: userStats.activeUsers7Days,
+                activeUsers30Days: userStats.activeUsers30Days,
+                newUsersToday: userStats.newUsersToday,
+                newUsers7Days: userStats.newUsers7Days,
+                newUsers30Days: userStats.newUsers30Days,
+                usersByRole: userStats.usersByRole,
             };
 
             setStats(aggregatedStats);
@@ -228,6 +242,74 @@ export default function AdminDashboard() {
                                 Platform registered users
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                {/* User Analytics Section */}
+                <div className="card bg-base-200 shadow-md mb-8">
+                    <div className="card-body">
+                        <h2 className="card-title text-xl mb-6">
+                            <i className="fa-solid fa-duotone fa-users text-primary"></i>
+                            User Analytics
+                        </h2>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            {/* New Users */}
+                            <div className="stat bg-base-100 rounded-lg p-4">
+                                <div className="stat-title text-sm">New Users</div>
+                                <div className="stat-value text-2xl text-primary">
+                                    {stats?.newUsers7Days ?? 0}
+                                </div>
+                                <div className="stat-desc text-xs mt-1">
+                                    Last 7 days ({stats?.newUsersToday ?? 0} today)
+                                </div>
+                            </div>
+
+                            {/* Active Users */}
+                            <div className="stat bg-base-100 rounded-lg p-4">
+                                <div className="stat-title text-sm">Active Users</div>
+                                <div className="stat-value text-2xl text-success">
+                                    {stats?.activeUsers7Days ?? '—'}
+                                </div>
+                                <div className="stat-desc text-xs mt-1">
+                                    Last 7 days ({stats?.activeUsers30Days ?? 0} in 30d)
+                                </div>
+                            </div>
+
+                            {/* Growth Rate */}
+                            <div className="stat bg-base-100 rounded-lg p-4">
+                                <div className="stat-title text-sm">30-Day Growth</div>
+                                <div className="stat-value text-2xl text-info">
+                                    {stats?.newUsers30Days ?? 0}
+                                </div>
+                                <div className="stat-desc text-xs mt-1">
+                                    New registrations
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Users by Role */}
+                        {stats?.usersByRole && (
+                            <div>
+                                <h3 className="text-sm font-semibold text-base-content/70 uppercase tracking-wide mb-3">
+                                    Users by Role
+                                </h3>
+                                <div className="grid grid-cols-3 gap-3">
+                                    <div className="bg-base-100 rounded-lg p-3 text-center">
+                                        <div className="text-xs text-base-content/60 mb-1">Users</div>
+                                        <div className="text-xl font-bold">{stats.usersByRole.user}</div>
+                                    </div>
+                                    <div className="bg-base-100 rounded-lg p-3 text-center">
+                                        <div className="text-xs text-base-content/60 mb-1">Moderators</div>
+                                        <div className="text-xl font-bold text-warning">{stats.usersByRole.moderator}</div>
+                                    </div>
+                                    <div className="bg-base-100 rounded-lg p-3 text-center">
+                                        <div className="text-xs text-base-content/60 mb-1">Admins</div>
+                                        <div className="text-xl font-bold text-error">{stats.usersByRole.admin}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 

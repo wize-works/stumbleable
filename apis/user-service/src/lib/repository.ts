@@ -755,6 +755,89 @@ export class UserRepository {
         };
     }
 
+    /**
+     * Get user analytics for admin dashboard
+     */
+    async getUserAnalytics(): Promise<{
+        totalUsers: number;
+        activeUsers7Days: number;
+        activeUsers30Days: number;
+        newUsersToday: number;
+        newUsers7Days: number;
+        newUsers30Days: number;
+        usersByRole: {
+            user: number;
+            moderator: number;
+            admin: number;
+        };
+    }> {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const sevenDaysAgo = new Date(now);
+        sevenDaysAgo.setDate(now.getDate() - 7);
+        const thirtyDaysAgo = new Date(now);
+        thirtyDaysAgo.setDate(now.getDate() - 30);
+
+        // Get total user count
+        const { count: totalUsers, error: totalError } = await supabase
+            .from('users')
+            .select('*', { count: 'exact', head: true });
+
+        if (totalError) {
+            throw new Error(`Failed to get total users: ${totalError.message}`);
+        }
+
+        // Get new users by time period
+        const { data: newUsersData, error: newUsersError } = await supabase
+            .from('users')
+            .select('created_at')
+            .gte('created_at', thirtyDaysAgo.toISOString());
+
+        if (newUsersError) {
+            throw new Error(`Failed to get new users: ${newUsersError.message}`);
+        }
+
+        const newUsersToday = newUsersData?.filter(u =>
+            new Date(u.created_at) >= today
+        ).length || 0;
+
+        const newUsers7Days = newUsersData?.filter(u =>
+            new Date(u.created_at) >= sevenDaysAgo
+        ).length || 0;
+
+        const newUsers30Days = newUsersData?.length || 0;
+
+        // Get users by role
+        const { data: roleData, error: roleError } = await supabase
+            .from('users')
+            .select('role');
+
+        if (roleError) {
+            throw new Error(`Failed to get users by role: ${roleError.message}`);
+        }
+
+        const usersByRole = {
+            user: roleData?.filter(u => u.role === 'user').length || 0,
+            moderator: roleData?.filter(u => u.role === 'moderator').length || 0,
+            admin: roleData?.filter(u => u.role === 'admin').length || 0,
+        };
+
+        // TODO: Add actual user activity tracking
+        // For now, return placeholder values
+        const activeUsers7Days = 0;
+        const activeUsers30Days = 0;
+
+        return {
+            totalUsers: totalUsers || 0,
+            activeUsers7Days,
+            activeUsers30Days,
+            newUsersToday,
+            newUsers7Days,
+            newUsers30Days,
+            usersByRole,
+        };
+    }
+
     // ========================================================================
     // Note: Moderation methods moved to dedicated moderation-service (port 7005)
     // This service now only handles user profiles, preferences, and role management
