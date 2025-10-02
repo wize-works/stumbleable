@@ -7,7 +7,14 @@ import { requireAdmin } from '../middleware/auth';
 const CreateSourceSchema = z.object({
     name: z.string().min(1).max(255),
     type: z.enum(['rss', 'sitemap', 'web']),
-    url: z.string().url(),
+    url: z.string().url().refine((url) => {
+        try {
+            const urlObj = new URL(url);
+            return urlObj.protocol === 'https:';
+        } catch {
+            return false;
+        }
+    }, { message: 'Only HTTPS URLs are allowed for security' }),
     crawl_frequency_hours: z.number().min(1).max(168).default(24),
     topics: z.array(z.string()).optional(),
     enabled: z.boolean().default(true)
@@ -15,7 +22,14 @@ const CreateSourceSchema = z.object({
 
 const UpdateSourceSchema = z.object({
     name: z.string().min(1).max(255).optional(),
-    url: z.string().url().optional(),
+    url: z.string().url().refine((url) => {
+        try {
+            const urlObj = new URL(url);
+            return urlObj.protocol === 'https:';
+        } catch {
+            return false;
+        }
+    }, { message: 'Only HTTPS URLs are allowed for security' }).optional(),
     crawl_frequency_hours: z.number().min(1).max(168).optional(),
     topics: z.array(z.string()).optional(),
     enabled: z.boolean().optional()

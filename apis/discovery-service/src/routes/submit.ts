@@ -21,9 +21,9 @@ function sanitizeUrl(url: string): string {
     try {
         const urlObj = new URL(url);
 
-        // Only allow http and https protocols
-        if (!['http:', 'https:'].includes(urlObj.protocol)) {
-            throw new Error('Only HTTP and HTTPS URLs are allowed');
+        // Only allow HTTPS protocol for security
+        if (urlObj.protocol !== 'https:') {
+            throw new Error('Only HTTPS URLs are allowed. Please use a secure connection.');
         }
 
         // Remove tracking parameters

@@ -111,7 +111,7 @@ spec:
   tls:
   - hosts:
     - api.stumbleable.com
-    secretName: stumbleable-tls
+    secretName: stumbleable-api-tls
   rules:
   # API Gateway
   - host: api.stumbleable.com

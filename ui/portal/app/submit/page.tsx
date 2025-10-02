@@ -159,8 +159,9 @@ export default function SubmitPage() {
 
     const isValidUrl = (url: string) => {
         try {
-            new URL(url);
-            return true;
+            const urlObj = new URL(url);
+            // Only accept HTTPS URLs
+            return urlObj.protocol === 'https:';
         } catch {
             return false;
         }
@@ -293,7 +294,11 @@ export default function SubmitPage() {
                             />
                             {url && !isValidUrl(url) && (
                                 <label className="label">
-                                    <span className="label-text-alt text-error">Please enter a valid URL</span>
+                                    <span className="label-text-alt text-error">
+                                        {url.startsWith('http://')
+                                            ? 'Please use HTTPS instead of HTTP for security'
+                                            : 'Please enter a valid HTTPS URL (must start with https://)'}
+                                    </span>
                                 </label>
                             )}
                         </div>
@@ -461,8 +466,8 @@ export default function SubmitPage() {
                                                         type="button"
                                                         onClick={() => setTopicsPage(i)}
                                                         className={`w-2 h-2 rounded-full transition-all ${i === topicsPage
-                                                                ? 'bg-primary w-6'
-                                                                : 'bg-base-300 hover:bg-base-400'
+                                                            ? 'bg-primary w-6'
+                                                            : 'bg-base-300 hover:bg-base-400'
                                                             }`}
                                                         aria-label={`Go to page ${i + 1}`}
                                                     />
@@ -517,7 +522,7 @@ export default function SubmitPage() {
                     <div className="mt-8 p-4 bg-base-200 rounded-lg">
                         <h3 className="font-semibold mb-2">📋 Submission Guidelines</h3>
                         <ul className="text-sm space-y-1 text-base-content/70">
-                            <li>• Only HTTP and HTTPS URLs are accepted</li>
+                            <li>• Only <strong>HTTPS</strong> URLs are accepted for security (no HTTP)</li>
                             <li>• We'll automatically extract metadata if you don't provide it</li>
                             <li>• Duplicate URLs will be rejected</li>
                             <li>• Content will be reviewed and classified automatically</li>
