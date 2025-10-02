@@ -9,9 +9,11 @@ import { Discovery, Interaction } from '@/data/types';
 const DISCOVERY_API_URL = process.env.NEXT_PUBLIC_DISCOVERY_API_URL || 'http://localhost:7001';
 const INTERACTION_API_URL = process.env.NEXT_PUBLIC_INTERACTION_API_URL || 'http://localhost:7002';
 const USER_API_URL = process.env.NEXT_PUBLIC_USER_API_URL || 'http://localhost:7003';
+const MODERATION_API_URL = process.env.NEXT_PUBLIC_MODERATION_API_URL || 'http://localhost:7005';
 const DISCOVERY_API = `${DISCOVERY_API_URL}/api`;
 const INTERACTION_API = `${INTERACTION_API_URL}/api`; // Direct access to service endpoints
 const USER_API = `${USER_API_URL}/api`;
+const MODERATION_API = `${MODERATION_API_URL}/api`;
 
 // Custom error class for API errors
 export class ApiError extends Error {
@@ -923,28 +925,402 @@ export class ListsAPI {
 }
 
 /**
+ * Moderation API Types
+ */
+export interface ModerationQueueItem {
+    id: string;
+    discovery_id: string;
+    url: string;
+    title: string;
+    description?: string;
+    domain: string;
+    issues?: string[];
+    confidence_score?: number;
+    status: 'pending' | 'approved' | 'rejected' | 'reviewing';
+    submitted_by: string;
+    submitted_by_user?: {
+        id: string;
+        email: string;
+        full_name?: string;
+    };
+    reviewed_by?: string;
+    reviewed_by_user?: {
+        id: string;
+        email: string;
+        full_name?: string;
+    };
+    moderator_notes?: string;
+    created_at: string;
+    reviewed_at?: string;
+}
+
+export interface ContentReport {
+    id: string;
+    discovery_id: string;
+    reported_by: string;
+    reported_by_user?: {
+        id: string;
+        email: string;
+        full_name?: string;
+    };
+    reason: 'spam' | 'inappropriate' | 'broken-link' | 'misleading' | 'copyright' | 'other';
+    description?: string;
+    status: 'pending' | 'resolved' | 'dismissed';
+    resolved_by?: string;
+    resolved_by_user?: {
+        id: string;
+        email: string;
+        full_name?: string;
+    };
+    moderator_notes?: string;
+    created_at: string;
+    resolved_at?: string;
+    content?: {
+        id: string;
+        url: string;
+        title: string;
+        domain: string;
+    };
+}
+
+export interface DomainReputation {
+    domain: string;
+    reputation_score: number;
+    total_submissions: number;
+    approved_count: number;
+    rejected_count: number;
+    flagged_count: number;
+    moderator_notes?: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface ModerationAnalytics {
+    totalPending: number;
+    totalReviewed: number;
+    totalApproved: number;
+    totalRejected: number;
+    avgReviewTime: number | null;
+    totalReports: number;
+    resolvedReports: number;
+    pendingReports: number;
+}
+
+/**
+ * Moderation API - Content moderation, reports, and domain management
+ */
+export class ModerationAPI {
+    /**
+     * List moderation queue items
+     */
+    static async listModerationQueue(
+        filters: {
+            status?: 'pending' | 'approved' | 'rejected' | 'reviewing' | 'all';
+            search?: string;
+            limit?: number;
+            offset?: number;
+        },
+        token: string
+    ): Promise<{
+        items: ModerationQueueItem[];
+        total: number;
+        limit: number;
+        offset: number;
+    }> {
+        const params = new URLSearchParams();
+        if (filters.status) params.append('status', filters.status);
+        if (filters.search) params.append('search', filters.search);
+        if (filters.limit) params.append('limit', filters.limit.toString());
+        if (filters.offset) params.append('offset', filters.offset.toString());
+
+        return apiRequest<{
+            items: ModerationQueueItem[];
+            total: number;
+            limit: number;
+            offset: number;
+        }>(
+            `${MODERATION_API}/moderation/queue?${params.toString()}`,
+            { method: 'GET' },
+            token
+        );
+    }
+
+    /**
+     * Get specific moderation queue item
+     */
+    static async getModerationQueueItem(
+        queueId: string,
+        token: string
+    ): Promise<{ item: ModerationQueueItem }> {
+        return apiRequest<{ item: ModerationQueueItem }>(
+            `${MODERATION_API}/moderation/queue/${queueId}`,
+            { method: 'GET' },
+            token
+        );
+    }
+
+    /**
+     * Review content (approve or reject)
+     */
+    static async reviewContent(
+        queueId: string,
+        status: 'approved' | 'rejected',
+        moderatorNotes: string | undefined,
+        token: string
+    ): Promise<{ success: boolean; item: ModerationQueueItem }> {
+        return apiRequest<{ success: boolean; item: ModerationQueueItem }>(
+            `${MODERATION_API}/moderation/queue/${queueId}/review`,
+            {
+                method: 'POST',
+                body: JSON.stringify({ status, moderatorNotes }),
+            },
+            token
+        );
+    }
+
+    /**
+     * Bulk approve content
+     */
+    static async bulkApprove(
+        queueIds: string[],
+        moderatorNotes: string | undefined,
+        token: string
+    ): Promise<{ success: boolean; approved: number; failed: number }> {
+        return apiRequest<{
+            success: boolean;
+            approved: number;
+            failed: number;
+        }>(
+            `${MODERATION_API}/moderation/queue/bulk-approve`,
+            {
+                method: 'POST',
+                body: JSON.stringify({ queueIds, moderatorNotes }),
+            },
+            token
+        );
+    }
+
+    /**
+     * Bulk reject content
+     */
+    static async bulkReject(
+        queueIds: string[],
+        moderatorNotes: string | undefined,
+        token: string
+    ): Promise<{ success: boolean; rejected: number; failed: number }> {
+        return apiRequest<{
+            success: boolean;
+            rejected: number;
+            failed: number;
+        }>(
+            `${MODERATION_API}/moderation/queue/bulk-reject`,
+            {
+                method: 'POST',
+                body: JSON.stringify({ queueIds, moderatorNotes }),
+            },
+            token
+        );
+    }
+
+    /**
+     * Get moderation analytics
+     */
+    static async getModerationAnalytics(
+        token: string
+    ): Promise<{ analytics: ModerationAnalytics }> {
+        return apiRequest<{ analytics: ModerationAnalytics }>(
+            `${MODERATION_API}/moderation/analytics`,
+            { method: 'GET' },
+            token
+        );
+    }
+
+    /**
+     * List content reports
+     */
+    static async listContentReports(
+        filters: {
+            status?: 'pending' | 'resolved' | 'dismissed' | 'all';
+            discoveryId?: string;
+            limit?: number;
+            offset?: number;
+        },
+        token: string
+    ): Promise<{
+        reports: ContentReport[];
+        total: number;
+        limit: number;
+        offset: number;
+    }> {
+        const params = new URLSearchParams();
+        if (filters.status) params.append('status', filters.status);
+        if (filters.discoveryId) params.append('discoveryId', filters.discoveryId);
+        if (filters.limit) params.append('limit', filters.limit.toString());
+        if (filters.offset) params.append('offset', filters.offset.toString());
+
+        return apiRequest<{
+            reports: ContentReport[];
+            total: number;
+            limit: number;
+            offset: number;
+        }>(
+            `${MODERATION_API}/moderation/reports?${params.toString()}`,
+            { method: 'GET' },
+            token
+        );
+    }
+
+    /**
+     * Get specific content report
+     */
+    static async getContentReport(
+        reportId: string,
+        token: string
+    ): Promise<{ report: ContentReport }> {
+        return apiRequest<{ report: ContentReport }>(
+            `${MODERATION_API}/moderation/reports/${reportId}`,
+            { method: 'GET' },
+            token
+        );
+    }
+
+    /**
+     * Resolve content report
+     */
+    static async resolveReport(
+        reportId: string,
+        status: 'resolved' | 'dismissed',
+        notes: string | undefined,
+        token: string
+    ): Promise<{ success: boolean; report: ContentReport }> {
+        return apiRequest<{ success: boolean; report: ContentReport }>(
+            `${MODERATION_API}/moderation/reports/${reportId}/resolve`,
+            {
+                method: 'POST',
+                body: JSON.stringify({ status, notes }),
+            },
+            token
+        );
+    }
+
+    /**
+     * Report content (user-facing)
+     */
+    static async reportContent(
+        contentId: string,
+        reason: 'spam' | 'inappropriate' | 'broken' | 'offensive' | 'copyright' | 'other',
+        description: string | undefined,
+        token: string,
+        contentType: 'discovery' | 'submission' = 'discovery'
+    ): Promise<{ success: boolean; report: ContentReport }> {
+        return apiRequest<{ success: boolean; report: ContentReport }>(
+            `${MODERATION_API}/moderation/report`,
+            {
+                method: 'POST',
+                body: JSON.stringify({ contentId, contentType, reason, description }),
+            },
+            token
+        );
+    }
+
+    /**
+     * List domain reputations
+     */
+    static async listDomainReputations(
+        filters: {
+            search?: string;
+            minScore?: number;
+            maxScore?: number;
+            limit?: number;
+            offset?: number;
+        },
+        token: string
+    ): Promise<{
+        domains: DomainReputation[];
+        total: number;
+        limit: number;
+        offset: number;
+    }> {
+        const params = new URLSearchParams();
+        if (filters.search) params.append('search', filters.search);
+        if (filters.minScore !== undefined) params.append('minScore', filters.minScore.toString());
+        if (filters.maxScore !== undefined) params.append('maxScore', filters.maxScore.toString());
+        if (filters.limit) params.append('limit', filters.limit.toString());
+        if (filters.offset) params.append('offset', filters.offset.toString());
+
+        return apiRequest<{
+            domains: DomainReputation[];
+            total: number;
+            limit: number;
+            offset: number;
+        }>(
+            `${MODERATION_API}/moderation/domains?${params.toString()}`,
+            { method: 'GET' },
+            token
+        );
+    }
+
+    /**
+     * Get specific domain reputation
+     */
+    static async getDomainReputation(
+        domain: string,
+        token: string
+    ): Promise<{ reputation: DomainReputation }> {
+        return apiRequest<{ reputation: DomainReputation }>(
+            `${MODERATION_API}/moderation/domains/${encodeURIComponent(domain)}`,
+            { method: 'GET' },
+            token
+        );
+    }
+
+    /**
+     * Update domain reputation
+     */
+    static async updateDomainReputation(
+        domain: string,
+        score: number,
+        notes: string | undefined,
+        token: string
+    ): Promise<{ success: boolean; reputation: DomainReputation }> {
+        return apiRequest<{ success: boolean; reputation: DomainReputation }>(
+            `${MODERATION_API}/moderation/domains/${encodeURIComponent(domain)}`,
+            {
+                method: 'PATCH',
+                body: JSON.stringify({ score, notes }),
+            },
+            token
+        );
+    }
+}
+
+/**
  * Health check for API services
  */
 export async function checkServiceHealth(): Promise<{
     discovery: boolean;
     interaction: boolean;
     user: boolean;
+    moderation: boolean;
 }> {
     try {
         const discoveryHealthy = await fetch(`${DISCOVERY_API_URL}/health`).then(() => true).catch(() => false);
         const interactionHealthy = await fetch(`${INTERACTION_API_URL}/health`).then(() => true).catch(() => false);
         const userHealthy = await fetch(`${USER_API_URL}/health`).then(() => true).catch(() => false);
+        const moderationHealthy = await fetch(`${MODERATION_API_URL}/health`).then(() => true).catch(() => false);
 
         return {
             discovery: discoveryHealthy,
             interaction: interactionHealthy,
             user: userHealthy,
+            moderation: moderationHealthy,
         };
     } catch {
         return {
             discovery: false,
             interaction: false,
             user: false,
+            moderation: false,
         };
     }
 }

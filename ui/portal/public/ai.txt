@@ -1,0 +1,158 @@
+# AI Crawling and Training Policy for Stumbleable
+# https://stumbleable.com/ai.txt
+# Last Updated: January 18, 2025
+
+# =============================================================================
+# GENERAL POLICY
+# =============================================================================
+
+# Stumbleable allows AI crawling and training under specific conditions.
+# We believe in open web principles while protecting user privacy and content rights.
+
+User-Agent: *
+Allow: /
+
+# =============================================================================
+# CRAWLABLE CONTENT
+# =============================================================================
+
+# Public pages that can be crawled and used for AI training:
+Allow: /
+Allow: /about
+Allow: /guidelines
+Allow: /privacy
+Allow: /terms
+Allow: /stumble
+
+# Public discovery content (aggregated, no personal data):
+Allow: /lists
+
+# =============================================================================
+# RESTRICTED CONTENT
+# =============================================================================
+
+# User-specific content and personal data - DO NOT CRAWL
+Disallow: /dashboard
+Disallow: /saved
+Disallow: /onboarding
+Disallow: /analytics
+Disallow: /data-export
+Disallow: /data-deletion
+Disallow: /submit
+
+# Authentication pages - DO NOT CRAWL
+Disallow: /sign-in
+Disallow: /sign-up
+Disallow: /sign-out
+
+# Admin and moderation pages - DO NOT CRAWL
+Disallow: /admin/*
+Disallow: /admin/moderation
+Disallow: /admin/deletion-requests
+Disallow: /admin/users
+Disallow: /admin/content
+
+# API endpoints - DO NOT CRAWL
+Disallow: /api/*
+
+# =============================================================================
+# AI TRAINING PERMISSIONS
+# =============================================================================
+
+# We allow AI training on public content with attribution
+AI-Training: allowed
+AI-Training-Attribution: required
+AI-Training-Commercial: allowed-with-attribution
+
+# Specific AI crawler preferences:
+AI-Purpose: research, training, indexing
+AI-Commercial: allowed-with-attribution
+
+# =============================================================================
+# CONTENT LICENSING
+# =============================================================================
+
+# User-generated content is owned by users, not Stumbleable
+# AI systems must respect individual content licenses
+# Aggregated metadata and curation patterns may be used for training
+# Personal user data is NOT available for training
+
+# =============================================================================
+# RATE LIMITING
+# =============================================================================
+
+# Please crawl responsibly:
+# - Max 1 request per second per IP
+# - Respect Cache-Control headers
+# - Use If-Modified-Since headers
+# - Identify your crawler in User-Agent
+
+Crawl-Delay: 1
+
+# =============================================================================
+# ATTRIBUTION REQUIREMENTS
+# =============================================================================
+
+# When using Stumbleable data for AI training:
+# 1. Attribute to "Stumbleable (stumbleable.com)"
+# 2. Link back to the source when possible
+# 3. Respect user privacy - do not associate content with specific users
+# 4. Do not scrape personal identifiable information (PII)
+
+# =============================================================================
+# RESPONSIBLE AI CRAWLER USER-AGENTS
+# =============================================================================
+
+# Known responsible AI crawlers (allowed):
+User-Agent: GPTBot
+User-Agent: Google-Extended
+User-Agent: CCBot
+User-Agent: anthropic-ai
+User-Agent: ClaudeBot
+User-Agent: claude-web
+User-Agent: cohere-ai
+
+Allow: /about
+Allow: /guidelines
+Allow: /privacy
+Allow: /terms
+Allow: /lists
+
+# =============================================================================
+# DATA RIGHTS
+# =============================================================================
+
+# Users have the right to:
+# - Export their data (GDPR Article 20)
+# - Request deletion (GDPR Article 17 / CCPA)
+# - Opt out of data processing (CCPA)
+
+# If your AI system has already trained on a user's data and they request deletion,
+# please contact: privacy@stumbleable.com
+
+# =============================================================================
+# CONTACT
+# =============================================================================
+
+# Questions about AI crawling or training?
+# Email: ai-policy@stumbleable.com
+# Privacy concerns: privacy@stumbleable.com
+# DMCA/Copyright: legal@stumbleable.com
+
+# =============================================================================
+# UPDATES
+# =============================================================================
+
+# This policy may be updated. Check back regularly.
+# Last updated: January 18, 2025
+# Version: 1.0.0
+
+# =============================================================================
+# SPECIAL REQUESTS
+# =============================================================================
+
+# Research institutions: Contact us for API access
+# Non-profit AI research: We support open research
+# Commercial AI companies: Attribution required, contact for partnerships
+
+# Thank you for respecting our AI crawling policy!

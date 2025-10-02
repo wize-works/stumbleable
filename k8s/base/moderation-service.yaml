@@ -1,0 +1,100 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: moderation-service
+  namespace: stumbleable
+  labels:
+    app: moderation-service
+    component: api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: moderation-service
+  template:
+    metadata:
+      labels:
+        app: moderation-service
+        component: api
+    spec:
+      containers:
+      - name: moderation-service
+        image: ${ACR_NAME}.azurecr.io/stumbleable-moderation:${IMAGE_TAG}
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: stumbleable-config
+              key: NODE_ENV
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: stumbleable-config
+              key: LOG_LEVEL
+        - name: SUPABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: stumbleable-secrets
+              key: SUPABASE_URL
+        - name: SUPABASE_SERVICE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: stumbleable-secrets
+              key: SUPABASE_SERVICE_KEY
+        - name: CLERK_PUBLISHABLE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: stumbleable-secrets
+              key: CLERK_PUBLISHABLE_KEY
+        - name: CLERK_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: stumbleable-secrets
+              key: CLERK_SECRET_KEY
+        - name: USER_SERVICE_URL
+          value: "http://user-service:7003"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "250m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 20
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: moderation-service
+  namespace: stumbleable
+  labels:
+    app: moderation-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 7005
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: moderation-service

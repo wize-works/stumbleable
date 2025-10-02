@@ -1,5 +1,6 @@
 import { useToaster } from '@/components/toaster';
-import { useUser } from '@clerk/nextjs';
+import { ModerationAPI } from '@/lib/api-client';
+import { useAuth, useUser } from '@clerk/nextjs';
 import React, { useState } from 'react';
 
 interface ReportContentButtonProps {
@@ -9,6 +10,7 @@ interface ReportContentButtonProps {
 
 export default function ReportContentButton({ discoveryId, className = '' }: ReportContentButtonProps) {
     const { user } = useUser();
+    const { getToken } = useAuth();
     const { showToast } = useToaster();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedReason, setSelectedReason] = useState<string>('');
@@ -33,23 +35,19 @@ export default function ReportContentButton({ discoveryId, className = '' }: Rep
         setIsSubmitting(true);
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_DISCOVERY_API_URL}/api/reports`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    discoveryId,
-                    reason: selectedReason,
-                    description: description.trim() || undefined,
-                    userId: user.id
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to submit report');
+            // Get Clerk JWT token
+            const token = await getToken();
+            if (!token) {
+                throw new Error('Authentication required');
             }
+
+            // Use ModerationAPI to report content
+            await ModerationAPI.reportContent(
+                discoveryId,
+                selectedReason as 'spam' | 'inappropriate' | 'broken' | 'offensive' | 'copyright' | 'other',
+                description.trim() || undefined,
+                token
+            );
 
             setIsReported(true);
             setIsModalOpen(false);

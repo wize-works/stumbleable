@@ -3,7 +3,7 @@
 import { useToaster } from '@/components/toaster';
 import { AdminAPI } from '@/lib/api-client';
 import { useAuth, useUser } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 interface DeletionRequestDetail {
@@ -25,7 +25,9 @@ interface DeletionRequestDetail {
     };
 }
 
-export default function DeletionRequestDetailPage({ params }: { params: { requestId: string } }) {
+export default function DeletionRequestDetailPage() {
+    const params = useParams();
+    const requestId = params?.requestId as string;
     const { user, isLoaded } = useUser();
     const { getToken } = useAuth();
     const router = useRouter();
@@ -40,10 +42,10 @@ export default function DeletionRequestDetailPage({ params }: { params: { reques
     const [note, setNote] = useState('');
 
     useEffect(() => {
-        if (isLoaded && user) {
+        if (isLoaded && user && requestId) {
             loadRequest();
         }
-    }, [isLoaded, user, params.requestId]);
+    }, [isLoaded, user, requestId]);
 
     const loadRequest = async () => {
         setIsLoading(true);
@@ -54,7 +56,7 @@ export default function DeletionRequestDetailPage({ params }: { params: { reques
                 return;
             }
 
-            const data = await AdminAPI.getDeletionRequest(params.requestId, token);
+            const data = await AdminAPI.getDeletionRequest(requestId, token);
             setRequest(data.request);
         } catch (error: any) {
             console.error('Error loading request:', error);
@@ -78,7 +80,7 @@ export default function DeletionRequestDetailPage({ params }: { params: { reques
             const token = await getToken();
             if (!token) return;
 
-            await AdminAPI.cancelDeletionRequest(params.requestId, reason, token);
+            await AdminAPI.cancelDeletionRequest(requestId, reason, token);
             showToast('Deletion request cancelled successfully', 'success');
             loadRequest();
         } catch (error) {
@@ -97,7 +99,7 @@ export default function DeletionRequestDetailPage({ params }: { params: { reques
             const token = await getToken();
             if (!token) return;
 
-            await AdminAPI.extendGracePeriod(params.requestId, additionalDays, extensionReason, token);
+            await AdminAPI.extendGracePeriod(requestId, additionalDays, extensionReason, token);
             showToast(`Grace period extended by ${additionalDays} days`, 'success');
             setShowExtendModal(false);
             setExtensionReason('');
@@ -119,7 +121,7 @@ export default function DeletionRequestDetailPage({ params }: { params: { reques
             const token = await getToken();
             if (!token) return;
 
-            await AdminAPI.addNote(params.requestId, note, token);
+            await AdminAPI.addNote(requestId, note, token);
             showToast('Note added successfully', 'success');
             setShowNoteModal(false);
             setNote('');

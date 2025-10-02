@@ -76,8 +76,8 @@ Send email notifications throughout the account deletion lifecycle to keep users
 - CTA: "Go to Dashboard" button
 
 **Technical Stack:**
-- Email Service: Resend, SendGrid, or AWS SES
-- Template Engine: React Email or MJML
+- Email Service: Resend
+- Template Engine: React Email or MJML or custom
 - Queue: Redis or database-backed queue for reliability
 
 **Requirements:**
@@ -411,7 +411,7 @@ Allow users to schedule automatic data exports on a recurring basis (weekly, mon
 | Background Deletion Job | High | Not Started | Medium | Unassigned |
 | Email Notifications | High | Not Started | Medium | Unassigned |
 | End-to-End Testing | High | Not Started | Large | Unassigned |
-| Admin Dashboard | Medium | Not Started | Medium | Unassigned |
+| Admin Dashboard | Medium | ✅ COMPLETE | Medium | GitHub Copilot |
 | Self-Service Cancel | Medium | Not Started | Small | Unassigned |
 | Export Scheduling | Medium | Not Started | Medium | Unassigned |
 
@@ -440,8 +440,9 @@ Allow users to schedule automatic data exports on a recurring basis (weekly, mon
 
 ## 📝 Notes
 
-### Recently Completed (October 2, 2025):
-✅ Enhanced Dashboard with Data & Privacy section  
+### Recently Completed:
+✅ **Admin Dashboard** (January 18, 2025) - Complete oversight tools for deletion requests  
+✅ Enhanced Dashboard with Data & Privacy section (October 2, 2025)  
 ✅ Data Export System (JSON/CSV download)  
 ✅ Account Deletion System (backend API + frontend)  
 ✅ Enhanced Privacy Policy with comprehensive rights  

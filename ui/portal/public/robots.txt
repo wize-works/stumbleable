@@ -1,0 +1,147 @@
+# Robots.txt for Stumbleable
+# https://stumbleable.com/robots.txt
+# Last Updated: January 18, 2025
+
+# =============================================================================
+# DEFAULT RULES FOR ALL BOTS
+# =============================================================================
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /saved
+Disallow: /onboarding
+Disallow: /analytics
+Disallow: /data-export
+Disallow: /data-deletion
+Disallow: /submit
+Disallow: /sign-in
+Disallow: /sign-up
+
+# Crawl delay (1 second between requests)
+Crawl-delay: 1
+
+# =============================================================================
+# SITEMAPS
+# =============================================================================
+
+Sitemap: https://stumbleable.com/sitemap.xml
+
+# =============================================================================
+# AI CRAWLING POLICY
+# =============================================================================
+
+# For detailed AI crawling and training policies, see:
+# https://stumbleable.com/ai.txt
+
+# =============================================================================
+# RESPONSIBLE AI CRAWLERS
+# =============================================================================
+
+# OpenAI GPTBot
+User-agent: GPTBot
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /saved
+Disallow: /submit
+Crawl-delay: 1
+
+# Google Extended (Bard, Gemini)
+User-agent: Google-Extended
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /saved
+Disallow: /submit
+Crawl-delay: 1
+
+# Common Crawl
+User-agent: CCBot
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /saved
+Disallow: /submit
+Crawl-delay: 1
+
+# Anthropic Claude
+User-agent: anthropic-ai
+User-agent: ClaudeBot
+User-agent: claude-web
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /saved
+Disallow: /submit
+Crawl-delay: 1
+
+# Cohere
+User-agent: cohere-ai
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /saved
+Disallow: /submit
+Crawl-delay: 1
+
+# =============================================================================
+# SEARCH ENGINE CRAWLERS
+# =============================================================================
+
+# Googlebot (standard web search)
+User-agent: Googlebot
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /saved
+Disallow: /submit
+
+# Bingbot
+User-agent: Bingbot
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /saved
+Disallow: /submit
+
+# =============================================================================
+# AGGRESSIVE/PROBLEMATIC CRAWLERS
+# =============================================================================
+
+# Block aggressive crawlers and scrapers
+User-agent: AhrefsBot
+User-agent: SemrushBot
+User-agent: MJ12bot
+User-agent: DotBot
+User-agent: BLEXBot
+User-agent: DataForSeoBot
+Disallow: /
+
+# =============================================================================
+# ARCHIVE BOTS
+# =============================================================================
+
+# Internet Archive (allowed for historical preservation)
+User-agent: ia_archiver
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /saved
+
+# =============================================================================
+# CONTACT
+# =============================================================================
+
+# Questions about crawling? Contact: webmaster@stumbleable.com
+# Report crawler issues: support@stumbleable.com

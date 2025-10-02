@@ -141,7 +141,7 @@ export function UserMenu() {
                                 <div className="border-t border-base-300 my-1"></div>
 
                                 <Link
-                                    href="/admin/deletion-requests"
+                                    href="/admin"
                                     className="flex items-center px-4 py-2 text-sm text-warning hover:bg-base-200 transition-colors"
                                     onClick={() => setIsOpen(false)}
                                 >

@@ -754,4 +754,10 @@ export class UserRepository {
             avgDaysToCancellation: avgTimeToCancellation
         };
     }
+
+    // ========================================================================
+    // Note: Moderation methods moved to dedicated moderation-service (port 7005)
+    // This service now only handles user profiles, preferences, and role management
+    // ========================================================================
 }
+
