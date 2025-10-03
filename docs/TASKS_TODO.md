@@ -119,7 +119,12 @@
 ---
 
 ## 🎯 **HIGH PRIORITY** (v1 - Full Release)
-
+- [ ] **U1. Retrieve User Profile Data**
+  - [ ] U1.1: Fetch user profile data from Clerk store in database
+  - [ ] U1.2: Display user profile info in UI from database
+  - [ ] U1.3: Allow users to update profile info
+  - [ ] U1.4: Sync profile updates with Clerk
+  - [ ] U1.5: Add profile picture upload functionality
 ### **Email Features**
 - [ ] **H1. Email Notifications**
   - [ ] H1.1: Build email service integration (e.g., Resend)

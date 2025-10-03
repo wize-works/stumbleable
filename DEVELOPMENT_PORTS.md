@@ -11,6 +11,8 @@ This document outlines the port assignments for local development of the Stumble
 | Interaction Service | 7002 | http://localhost:7002 | User interaction tracking API |
 | User Service | 7003 | http://localhost:7003 | User profiles & preferences API |
 | Crawler Service | 7004 | http://localhost:7004 | Automated content crawler API |
+| Moderation Service | 7005 | http://localhost:7005 | Content moderation & reporting API |
+| Email Service | 7006 | http://localhost:7006 | Email notifications & communications API |
 
 ## Starting Services
 
@@ -58,12 +60,28 @@ npm run dev
 # Runs on http://localhost:7004
 ```
 
+#### Moderation Service
+```bash
+cd apis/moderation-service
+npm run dev
+# Runs on http://localhost:7005
+```
+
+#### Email Service
+```bash
+cd apis/email-service
+npm run dev
+# Runs on http://localhost:7006
+```
+
 ## Health Checks
 
 - Discovery Service: http://localhost:7001/health
 - Interaction Service: http://localhost:7002/health
 - User Service: http://localhost:7003/health
 - Crawler Service: http://localhost:7004/health
+- Moderation Service: http://localhost:7005/health
+- Email Service: http://localhost:7006/health
 
 Run `npm run health` from root to check all services at once.
 
@@ -115,3 +133,19 @@ cp .env.example .env
 - `GET /api/jobs` - List recent crawler jobs
 - `POST /api/crawl/:sourceId` - Trigger manual crawl for a source
 - `GET /api/stats` - Get aggregated crawler statistics
+
+### Moderation Service (Port 7005)
+- `GET /api/moderation/queue` - Get moderation queue
+- `POST /api/moderation/:id/approve` - Approve content
+- `POST /api/moderation/:id/reject` - Reject content
+- `GET /api/moderation/stats` - Get moderation statistics
+- `POST /api/reports` - Create content report
+- `GET /api/reports` - List content reports
+- `POST /api/reports/:id/resolve` - Resolve report
+
+### Email Service (Port 7006)
+- `POST /api/send` - Queue an email to be sent
+- `GET /api/preferences/:userId` - Get user's email preferences
+- `PUT /api/preferences/:userId` - Update email preferences
+- `POST /api/scheduled/trigger` - Trigger scheduled email job
+- `GET /api/scheduled/status` - Get scheduler status

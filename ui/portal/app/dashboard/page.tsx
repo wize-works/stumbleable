@@ -84,7 +84,27 @@ export default async function Dashboard() {
                             <p className="text-base-content/70 mb-4">
                                 Manage your personal data and privacy settings. You have full control over your information.
                             </p>
-                            <div className="grid md:grid-cols-3 gap-4">
+                            <div className="grid md:grid-cols-4 gap-4">
+                                <a href="/email/preferences" className="card bg-base-100 hover:bg-base-300 transition-colors">
+                                    <div className="card-body">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <div className="w-12 h-12 rounded-full bg-warning/20 flex items-center justify-center">
+                                                <i className="fa-solid fa-duotone fa-envelope text-warning text-xl"></i>
+                                            </div>
+                                            <h3 className="card-title text-lg">Email Settings</h3>
+                                        </div>
+                                        <p className="text-sm text-base-content/70">
+                                            Manage your email notification preferences and subscriptions
+                                        </p>
+                                        <div className="card-actions mt-4">
+                                            <span className="text-sm text-primary font-semibold flex items-center gap-1">
+                                                Manage Emails
+                                                <i className="fa-solid fa-duotone fa-arrow-right"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </a>
+
                                 <a href="/data-export" className="card bg-base-100 hover:bg-base-300 transition-colors">
                                     <div className="card-body">
                                         <div className="flex items-center gap-3 mb-2">

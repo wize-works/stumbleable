@@ -1,0 +1,39 @@
+{
+    "name": "email-service",
+    "version": "1.0.0",
+    "description": "Stumbleable Email Service - Handles all email notifications and communications",
+    "main": "dist/server.js",
+    "type": "module",
+    "scripts": {
+        "dev": "tsx watch src/server.ts",
+        "build": "tsc",
+        "start": "node dist/server.js",
+        "email:dev": "email dev --dir src/templates"
+    },
+    "keywords": [
+        "email",
+        "notifications",
+        "resend",
+        "react-email"
+    ],
+    "author": "Stumbleable Team",
+    "license": "MIT",
+    "dependencies": {
+        "fastify": "^4.28.1",
+        "@fastify/cors": "^9.0.1",
+        "resend": "^3.5.0",
+        "@react-email/components": "^0.0.25",
+        "@react-email/render": "^1.0.1",
+        "react": "^18.3.1",
+        "@supabase/supabase-js": "^2.45.4",
+        "dotenv": "^16.4.5",
+        "zod": "^3.23.8"
+    },
+    "devDependencies": {
+        "tsx": "^4.19.1",
+        "typescript": "^5.6.2",
+        "@types/node": "^20.16.10",
+        "@types/react": "^18.3.5",
+        "react-email": "^2.1.6"
+    }
+}

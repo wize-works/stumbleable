@@ -146,7 +146,8 @@ export function classifyContent(url: string, title?: string, description?: strin
     // Enhanced keyword-based classification with new playful topics
     const topicKeywords: Record<string, string[]> = {
         // Core anchors
-        'technology': ['tech', 'software', 'ai', 'computer', 'programming', 'code', 'digital', 'app', 'startup'],
+        'technology': ['tech', 'software', 'computer', 'programming', 'code', 'digital', 'app', 'startup'],
+        'ai': ['ai', 'artificial intelligence', 'machine learning', 'ml', 'neural network', 'deep learning', 'gpt', 'llm', 'chatbot', 'transformer'],
         'science': ['science', 'research', 'study', 'discovery', 'lab', 'experiment', 'nature'],
         'business': ['business', 'finance', 'market', 'economy', 'company', 'entrepreneur', 'investment'],
         'culture': ['art', 'film', 'culture', 'creative', 'fashion', 'entertainment'],

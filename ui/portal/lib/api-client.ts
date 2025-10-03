@@ -10,10 +10,12 @@ const DISCOVERY_API_URL = process.env.NEXT_PUBLIC_DISCOVERY_API_URL || 'http://l
 const INTERACTION_API_URL = process.env.NEXT_PUBLIC_INTERACTION_API_URL || 'http://localhost:7002';
 const USER_API_URL = process.env.NEXT_PUBLIC_USER_API_URL || 'http://localhost:7003';
 const MODERATION_API_URL = process.env.NEXT_PUBLIC_MODERATION_API_URL || 'http://localhost:7005';
+const EMAIL_API_URL = process.env.NEXT_PUBLIC_EMAIL_API_URL || 'http://localhost:7006';
 const DISCOVERY_API = `${DISCOVERY_API_URL}/api`;
 const INTERACTION_API = `${INTERACTION_API_URL}/api`; // Direct access to service endpoints
 const USER_API = `${USER_API_URL}/api`;
 const MODERATION_API = `${MODERATION_API_URL}/api`;
+const EMAIL_API = `${EMAIL_API_URL}/api`;
 
 // Custom error class for API errors
 export class ApiError extends Error {
@@ -1339,6 +1341,87 @@ export class ModerationAPI {
 }
 
 /**
+ * Email Service API Types
+ */
+export interface EmailPreferences {
+    user_id: string;
+    welcome_email: boolean;
+    weekly_trending: boolean;
+    weekly_new: boolean;
+    saved_digest: boolean;
+    submission_updates: boolean;
+    re_engagement: boolean;
+    account_notifications: boolean;
+    unsubscribed_all: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * Email Service API - Manage email preferences and notifications
+ */
+export class EmailAPI {
+    /**
+     * Get user's email preferences
+     */
+    static async getPreferences(userId: string, token: string): Promise<EmailPreferences> {
+        const response = await apiRequest<{ preferences: EmailPreferences }>(
+            `${EMAIL_API}/preferences/${userId}`,
+            {},
+            token
+        );
+        return response.preferences;
+    }
+
+    /**
+     * Update user's email preferences
+     */
+    static async updatePreferences(
+        userId: string,
+        preferences: Partial<Omit<EmailPreferences, 'user_id' | 'created_at' | 'updated_at'>>,
+        token: string
+    ): Promise<EmailPreferences> {
+        const response = await apiRequest<{ preferences: EmailPreferences }>(
+            `${EMAIL_API}/preferences/${userId}`,
+            {
+                method: 'PUT',
+                body: JSON.stringify(preferences),
+            },
+            token
+        );
+        return response.preferences;
+    }
+
+    /**
+     * Unsubscribe from all emails (one-click unsubscribe)
+     */
+    static async unsubscribeAll(userId: string, token?: string): Promise<{ success: boolean; message: string }> {
+        const response = await apiRequest<{ success: boolean; message: string }>(
+            `${EMAIL_API}/preferences/${userId}/unsubscribe`,
+            {
+                method: 'POST',
+            },
+            token
+        );
+        return response;
+    }
+
+    /**
+     * Resubscribe to emails
+     */
+    static async resubscribe(userId: string, token: string): Promise<{ success: boolean; message: string }> {
+        const response = await apiRequest<{ success: boolean; message: string }>(
+            `${EMAIL_API}/preferences/${userId}/resubscribe`,
+            {
+                method: 'POST',
+            },
+            token
+        );
+        return response;
+    }
+}
+
+/**
  * Health check for API services
  */
 export async function checkServiceHealth(): Promise<{
@@ -1346,18 +1429,21 @@ export async function checkServiceHealth(): Promise<{
     interaction: boolean;
     user: boolean;
     moderation: boolean;
+    email: boolean;
 }> {
     try {
         const discoveryHealthy = await fetch(`${DISCOVERY_API_URL}/health`).then(() => true).catch(() => false);
         const interactionHealthy = await fetch(`${INTERACTION_API_URL}/health`).then(() => true).catch(() => false);
         const userHealthy = await fetch(`${USER_API_URL}/health`).then(() => true).catch(() => false);
         const moderationHealthy = await fetch(`${MODERATION_API_URL}/health`).then(() => true).catch(() => false);
+        const emailHealthy = await fetch(`${EMAIL_API_URL}/health`).then(() => true).catch(() => false);
 
         return {
             discovery: discoveryHealthy,
             interaction: interactionHealthy,
             user: userHealthy,
             moderation: moderationHealthy,
+            email: emailHealthy,
         };
     } catch {
         return {
@@ -1365,6 +1451,7 @@ export async function checkServiceHealth(): Promise<{
             interaction: false,
             user: false,
             moderation: false,
+            email: false,
         };
     }
 }
