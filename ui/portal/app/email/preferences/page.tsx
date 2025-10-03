@@ -243,7 +243,7 @@ export default function EmailPreferencesPage() {
                 {/* Unsubscribed Banner */}
                 {preferences.unsubscribed_all && (
                     <div className="alert alert-warning mb-6">
-                        <i className="fa-solid fa-exclamation-triangle" />
+                        <i className="fa-solid fa-duotone fa-exclamation-triangle" />
                         <div>
                             <h3 className="font-bold">You're unsubscribed from all emails</h3>
                             <p className="text-sm">Re-enable emails below to start receiving notifications again.</p>
@@ -298,7 +298,7 @@ export default function EmailPreferencesPage() {
                             </>
                         ) : (
                             <>
-                                <i className="fa-solid fa-check" />
+                                <i className="fa-solid fa-duotone fa-check" />
                                 Save Preferences
                             </>
                         )}
@@ -310,7 +310,7 @@ export default function EmailPreferencesPage() {
                             disabled={saving}
                             className="btn btn-outline btn-error flex-1 sm:flex-none"
                         >
-                            <i className="fa-solid fa-ban" />
+                            <i className="fa-solid fa-duotone fa-ban" />
                             Unsubscribe from All
                         </button>
                     )}
@@ -319,7 +319,7 @@ export default function EmailPreferencesPage() {
                 {/* Help Text */}
                 <div className="mt-8 p-4 bg-base-200 rounded-lg">
                     <h3 className="font-semibold text-base-content mb-2 flex items-center gap-2">
-                        <i className="fa-solid fa-info-circle" />
+                        <i className="fa-solid fa-duotone fa-info-circle" />
                         About Email Preferences
                     </h3>
                     <ul className="text-sm text-base-content/60 space-y-1 list-disc list-inside">

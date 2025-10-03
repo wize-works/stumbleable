@@ -191,7 +191,7 @@ export default function DeletionRequestDetailPage() {
                 <div className="card bg-base-200 mb-6">
                     <div className="card-body">
                         <h2 className="card-title text-2xl mb-4">
-                            <i className="fa-solid fa-user text-primary"></i>
+                            <i className="fa-solid fa-duotone fa-user text-primary"></i>
                             User Information
                         </h2>
                         <div className="grid md:grid-cols-2 gap-4">
@@ -241,7 +241,7 @@ export default function DeletionRequestDetailPage() {
                 <div className="card bg-base-200 mb-6">
                     <div className="card-body">
                         <h2 className="card-title text-2xl mb-4">
-                            <i className="fa-solid fa-clock text-primary"></i>
+                            <i className="fa-solid fa-duotone fa-clock text-primary"></i>
                             Timeline
                         </h2>
                         <div className="grid md:grid-cols-2 gap-6">
@@ -300,7 +300,7 @@ export default function DeletionRequestDetailPage() {
                     <div className="card bg-base-200 mb-6">
                         <div className="card-body">
                             <h2 className="card-title text-2xl mb-4">
-                                <i className="fa-solid fa-note-sticky text-primary"></i>
+                                <i className="fa-solid fa-duotone fa-note-sticky text-primary"></i>
                                 Notes & History
                             </h2>
                             <div className="whitespace-pre-wrap text-base-content">
@@ -315,7 +315,7 @@ export default function DeletionRequestDetailPage() {
                     <div className="card bg-base-200">
                         <div className="card-body">
                             <h2 className="card-title text-2xl mb-4">
-                                <i className="fa-solid fa-wrench text-primary"></i>
+                                <i className="fa-solid fa-duotone fa-wrench text-primary"></i>
                                 Admin Actions
                             </h2>
                             <div className="flex flex-wrap gap-4">
@@ -323,21 +323,21 @@ export default function DeletionRequestDetailPage() {
                                     onClick={handleCancel}
                                     className="btn btn-error"
                                 >
-                                    <i className="fa-solid fa-ban"></i>
+                                    <i className="fa-solid fa-duotone fa-ban"></i>
                                     Cancel Deletion
                                 </button>
                                 <button
                                     onClick={() => setShowExtendModal(true)}
                                     className="btn btn-warning"
                                 >
-                                    <i className="fa-solid fa-hourglass-half"></i>
+                                    <i className="fa-solid fa-duotone fa-hourglass-half"></i>
                                     Extend Grace Period
                                 </button>
                                 <button
                                     onClick={() => setShowNoteModal(true)}
                                     className="btn btn-info"
                                 >
-                                    <i className="fa-solid fa-comment-plus"></i>
+                                    <i className="fa-solid fa-duotone fa-comment-plus"></i>
                                     Add Note
                                 </button>
                             </div>

@@ -55,9 +55,19 @@ export function UserMenu() {
         setIsOpen(false);
     }, [router]);
 
-    const handleSignOut = () => {
-        signOut(() => router.push('/'));
-        setIsOpen(false);
+    const handleSignOut = async () => {
+        try {
+            setIsOpen(false);
+            // Clerk's signOut handles all cleanup automatically:
+            // - Clears session cookie
+            // - Invalidates tokens
+            // - Clears Clerk state
+            await signOut({ redirectUrl: '/' });
+        } catch (error) {
+            console.error('Error signing out:', error);
+            // Still try to redirect even if sign out fails
+            router.push('/');
+        }
     };
 
     const userInitials = user?.firstName && user?.lastName

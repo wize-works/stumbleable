@@ -86,7 +86,7 @@ export default function PrivacyPage() {
                                         You can request to see what personal data we hold about you at any time.
                                     </p>
                                     <a href="/data-export" className="link link-primary font-semibold flex items-center gap-2">
-                                        <i className="fa-solid fa-download"></i>
+                                        <i className="fa-solid fa-duotone fa-download"></i>
                                         Export Your Data
                                         <i className="fa-solid fa-arrow-right text-sm"></i>
                                     </a>
@@ -102,9 +102,9 @@ export default function PrivacyPage() {
                                         This allows you to move your information to another service if you choose.
                                     </p>
                                     <a href="/data-export" className="link link-primary font-semibold flex items-center gap-2">
-                                        <i className="fa-solid fa-file-export"></i>
+                                        <i className="fa-solid fa-duotone fa-file-export"></i>
                                         Download Your Data
-                                        <i className="fa-solid fa-arrow-right text-sm"></i>
+                                        <i className="fa-solid fa-duotone fa-arrow-right text-sm"></i>
                                     </a>
                                 </div>
 
@@ -117,9 +117,9 @@ export default function PrivacyPage() {
                                         You can request correction of inaccurate or incomplete personal data.
                                     </p>
                                     <a href="/dashboard" className="link link-primary font-semibold flex items-center gap-2">
-                                        <i className="fa-solid fa-user-edit"></i>
+                                        <i className="fa-solid fa-duotone fa-user-edit"></i>
                                         Update Your Profile
-                                        <i className="fa-solid fa-arrow-right text-sm"></i>
+                                        <i className="fa-solid fa-duotone fa-arrow-right text-sm"></i>
                                     </a>
                                 </div>
 
@@ -140,9 +140,9 @@ export default function PrivacyPage() {
                                         </div>
                                     </div>
                                     <a href="/data-deletion" className="link link-error font-semibold flex items-center gap-2">
-                                        <i className="fa-solid fa-circle-exclamation"></i>
+                                        <i className="fa-solid fa-duotone fa-circle-exclamation"></i>
                                         Request Account Deletion
-                                        <i className="fa-solid fa-arrow-right text-sm"></i>
+                                        <i className="fa-solid fa-duotone fa-arrow-right text-sm"></i>
                                     </a>
                                 </div>
 

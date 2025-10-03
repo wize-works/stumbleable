@@ -26,7 +26,12 @@ const fontAwesomeKitUrl = process.env.NEXT_PUBLIC_FONTAWESOME_KIT_URL || "https:
 
 export default function RootLayout({ children }: { children: ReactNode }) {
     return (
-        <ClerkProvider>
+        <ClerkProvider
+            signInUrl="/sign-in"
+            signUpUrl="/sign-up"
+            signInFallbackRedirectUrl="/dashboard"
+            signUpFallbackRedirectUrl="/onboarding"
+        >
             <html lang="en" suppressHydrationWarning>
                 <head>
                     <meta name="helpninja-verification" content="e2f6f6f7-0bf6-453f-b630-472d371db6b6" />

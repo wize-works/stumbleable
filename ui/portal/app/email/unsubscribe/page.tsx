@@ -65,7 +65,7 @@ export default function UnsubscribePage() {
                     <div className="card bg-base-200">
                         <div className="card-body text-center">
                             <div className="w-16 h-16 rounded-full bg-success/20 flex items-center justify-center mx-auto mb-4">
-                                <i className="fa-solid fa-check text-success text-3xl" />
+                                <i className="fa-solid fa-duotone fa-check text-success text-3xl" />
                             </div>
                             <h1 className="card-title text-2xl justify-center mb-2">Successfully Unsubscribed</h1>
                             <p className="text-base-content/60 mb-6">
@@ -78,7 +78,7 @@ export default function UnsubscribePage() {
                                 {isLoaded && user ? (
                                     <>
                                         <Link href="/email/preferences" className="btn btn-primary btn-block">
-                                            <i className="fa-solid fa-sliders" />
+                                            <i className="fa-solid fa-duotone fa-sliders" />
                                             Manage Email Preferences
                                         </Link>
                                         <p className="text-sm text-base-content/60">
@@ -88,7 +88,7 @@ export default function UnsubscribePage() {
                                 ) : (
                                     <>
                                         <Link href="/sign-in" className="btn btn-primary btn-block">
-                                            <i className="fa-solid fa-right-to-bracket" />
+                                            <i className="fa-solid fa-duotone fa-right-to-bracket" />
                                             Sign In to Manage Preferences
                                         </Link>
                                         <p className="text-sm text-base-content/60">
@@ -98,7 +98,7 @@ export default function UnsubscribePage() {
                                 )}
 
                                 <Link href="/" className="btn btn-ghost btn-block">
-                                    <i className="fa-solid fa-house" />
+                                    <i className="fa-solid fa-duotone fa-house" />
                                     Return to Home
                                 </Link>
                             </div>
@@ -125,7 +125,7 @@ export default function UnsubscribePage() {
                     <div className="card bg-base-200">
                         <div className="card-body text-center">
                             <div className="w-16 h-16 rounded-full bg-warning/20 flex items-center justify-center mx-auto mb-4">
-                                <i className="fa-solid fa-info-circle text-warning text-3xl" />
+                                <i className="fa-solid fa-duotone fa-info-circle text-warning text-3xl" />
                             </div>
                             <h1 className="card-title text-2xl justify-center mb-2">Already Unsubscribed</h1>
                             <p className="text-base-content/60 mb-6">
@@ -135,18 +135,18 @@ export default function UnsubscribePage() {
                             <div className="space-y-3">
                                 {isLoaded && user ? (
                                     <Link href="/email/preferences" className="btn btn-primary btn-block">
-                                        <i className="fa-solid fa-sliders" />
+                                        <i className="fa-solid fa-duotone fa-sliders" />
                                         Manage Email Preferences
                                     </Link>
                                 ) : (
                                     <Link href="/sign-in" className="btn btn-primary btn-block">
-                                        <i className="fa-solid fa-right-to-bracket" />
+                                        <i className="fa-solid fa-duotone fa-right-to-bracket" />
                                         Sign In to Manage Preferences
                                     </Link>
                                 )}
 
                                 <Link href="/" className="btn btn-ghost btn-block">
-                                    <i className="fa-solid fa-house" />
+                                    <i className="fa-solid fa-duotone fa-house" />
                                     Return to Home
                                 </Link>
                             </div>
@@ -164,7 +164,7 @@ export default function UnsubscribePage() {
                 <div className="card bg-base-200">
                     <div className="card-body text-center">
                         <div className="w-16 h-16 rounded-full bg-error/20 flex items-center justify-center mx-auto mb-4">
-                            <i className="fa-solid fa-exclamation-circle text-error text-3xl" />
+                            <i className="fa-solid fa-duotone fa-exclamation-circle text-error text-3xl" />
                         </div>
                         <h1 className="card-title text-2xl justify-center mb-2">Unsubscribe Failed</h1>
                         <p className="text-base-content/60 mb-2">
@@ -178,19 +178,19 @@ export default function UnsubscribePage() {
 
                         <div className="space-y-3">
                             <button onClick={handleUnsubscribe} className="btn btn-primary btn-block">
-                                <i className="fa-solid fa-rotate-right" />
+                                <i className="fa-solid fa-duotone fa-rotate-right" />
                                 Try Again
                             </button>
 
                             {isLoaded && user && (
                                 <Link href="/email/preferences" className="btn btn-ghost btn-block">
-                                    <i className="fa-solid fa-sliders" />
+                                    <i className="fa-solid fa-duotone fa-sliders" />
                                     Go to Email Preferences
                                 </Link>
                             )}
 
                             <Link href="/contact" className="btn btn-ghost btn-block">
-                                <i className="fa-solid fa-envelope" />
+                                <i className="fa-solid fa-duotone fa-envelope" />
                                 Contact Support
                             </Link>
                         </div>

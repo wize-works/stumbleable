@@ -9,11 +9,19 @@ const isProtectedRoute = createRouteMatcher([
     '/submit(.*)'
 ]);
 
-export default clerkMiddleware(async (auth, req) => {
-    if (isProtectedRoute(req)) {
-        await auth.protect();
+export default clerkMiddleware(
+    async (auth, req) => {
+        // Only protect specific routes
+        if (isProtectedRoute(req)) {
+            await auth.protect();
+        }
+    },
+    {
+        // Use custom authentication pages instead of Clerk hosted pages
+        signInUrl: '/sign-in',
+        signUpUrl: '/sign-up',
     }
-});
+);
 
 
 export const config = {
