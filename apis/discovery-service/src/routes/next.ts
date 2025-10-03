@@ -62,28 +62,28 @@ export const nextDiscoveryRoute: FastifyPluginAsync = async (fastify) => {
 
             const { wildness, seenIds } = validationResult.data;
 
-            // Get user preferences and stats
-            let user = await repository.getUserById(userId);
-            if (!user) {
-                // Use default user preferences for new Clerk users
-                user = {
-                    id: userId,
-                    preferredTopics: ['technology', 'science'], // default starter topics
-                    wildness: 35 // moderate exploration for new users
-                };
-            }
+            // PERFORMANCE: Parallelize initial data fetching
+            const [user, candidates] = await Promise.all([
+                repository.getUserById(userId),
+                repository.getDiscoveriesExcluding(seenIds)
+            ]);
 
-            // Get candidate discoveries (excluding already seen and blocked domains)
-            let candidates = await repository.getDiscoveriesExcluding(seenIds);
+            // Use default user preferences for new Clerk users
+            const userPrefs = user || {
+                id: userId,
+                preferredTopics: ['technology', 'science'],
+                wildness: 35
+            };
 
             // Filter out blocked domains
-            if (user.blockedDomains && user.blockedDomains.length > 0) {
-                candidates = candidates.filter(discovery =>
-                    !user.blockedDomains!.includes(discovery.domain)
+            let filteredCandidates = candidates;
+            if (userPrefs.blockedDomains && userPrefs.blockedDomains.length > 0) {
+                filteredCandidates = candidates.filter(discovery =>
+                    !userPrefs.blockedDomains!.includes(discovery.domain)
                 );
             }
 
-            if (candidates.length === 0) {
+            if (filteredCandidates.length === 0) {
                 // If all discoveries have been seen, reset and pick from all
                 const allDiscoveries = await repository.getAllDiscoveries();
                 if (allDiscoveries.length === 0) {
@@ -102,24 +102,24 @@ export const nextDiscoveryRoute: FastifyPluginAsync = async (fastify) => {
                 });
             }
 
-            // Get global engagement statistics for relative scoring
-            const globalStats = await repository.getGlobalEngagementStats();
-
-            // Get user's interaction history for enhanced personalization (H2.3)
-            const interactionHistory = await repository.getUserInteractionHistory(user.id || userId, 100);
+            // PERFORMANCE: Parallelize stats and history fetching
+            const [globalStats, interactionHistory] = await Promise.all([
+                repository.getGlobalEngagementStats(),
+                repository.getUserInteractionHistory(userPrefs.id || userId, 100)
+            ]);
 
             // Create scoring context
             const now = new Date();
             const scoringContext: ScoringContext = {
-                userTopics: user.preferredTopics,
+                userTopics: userPrefs.preferredTopics,
                 wildness,
-                userEngagementHistory: user.engagementHistory,
+                userEngagementHistory: userPrefs.engagementHistory,
                 timeOfDay: now.getHours(),
                 dayOfWeek: now.getDay()
             };
 
             // Fetch domain reputations for all unique domains (H2.2 - batch optimization)
-            const uniqueDomains = [...new Set(candidates.map(c => c.domain))];
+            const uniqueDomains = [...new Set(filteredCandidates.map(c => c.domain))];
             const domainReputations: Record<string, number> = {};
 
             await Promise.all(
@@ -129,7 +129,7 @@ export const nextDiscoveryRoute: FastifyPluginAsync = async (fastify) => {
             );
 
             // Calculate scores for all candidates with enhanced features
-            const scoredCandidates: EnhancedScoredCandidate[] = candidates.map(discovery => {
+            const scoredCandidates: EnhancedScoredCandidate[] = filteredCandidates.map(discovery => {
                 const ageDays = getAgeDays(discovery.createdAt || new Date().toISOString());
 
                 // Core scoring components
@@ -142,7 +142,7 @@ export const nextDiscoveryRoute: FastifyPluginAsync = async (fastify) => {
 
                 // Enhanced similarity calculation with topic confidence
                 const similarityScore = calculateSimilarity(
-                    user!.preferredTopics,
+                    userPrefs.preferredTopics,
                     discovery.contentTopics || discovery.topics.map(t => ({ name: t, confidence: 0.5 }))
                 );
 
@@ -196,14 +196,11 @@ export const nextDiscoveryRoute: FastifyPluginAsync = async (fastify) => {
             // Sort by score (highest first)
             scoredCandidates.sort((a, b) => b.score - a.score);
 
-            // IMPROVED: Session-based randomization to prevent predictable ordering
-            // Create a session seed based on user + current hour to vary selection within sessions
-            const sessionSeed = (userId.charCodeAt(0) + new Date().getHours()) % 1000;
-
-            // Shuffle the scored candidates using the session seed for consistent variety
+            // RANDOMIZATION: Use Fisher-Yates shuffle for true randomness
+            // This ensures different results each time instead of being locked to an hourly seed
             const shuffledCandidates = [...scoredCandidates];
             for (let i = shuffledCandidates.length - 1; i > 0; i--) {
-                const j = Math.floor(((sessionSeed + i) * 9301 + 49297) % 233280) / 233280 * (i + 1);
+                const j = Math.floor(Math.random() * (i + 1));
                 [shuffledCandidates[i], shuffledCandidates[j]] = [shuffledCandidates[j], shuffledCandidates[i]];
             }
 
@@ -226,11 +223,16 @@ export const nextDiscoveryRoute: FastifyPluginAsync = async (fastify) => {
             const shouldInjectRandomContent = wildness > 30 && Math.random() < (wildness / 200); // Higher wildness = more random content
             if (shouldInjectRandomContent && shuffledCandidates.length > topCount) {
                 const randomContentPool = shuffledCandidates.slice(topCount);
-                const randomPick = randomContentPool[Math.floor(Math.random() * Math.min(10, randomContentPool.length))];
-                varietyCandidates.push(randomPick);
+                if (randomContentPool.length > 0) {
+                    const randomPick = randomContentPool[Math.floor(Math.random() * Math.min(10, randomContentPool.length))];
+                    if (randomPick) { // Safety check: ensure randomPick is not undefined
+                        varietyCandidates.push(randomPick);
+                    }
+                }
             }
 
-            const selectionPool = [...topScored, ...varietyCandidates];
+            // Filter out any null/undefined values before creating selection pool
+            const selectionPool = [...topScored, ...varietyCandidates].filter(c => c != null);
 
             let selectedCandidate: EnhancedScoredCandidate;
 
@@ -248,7 +250,12 @@ export const nextDiscoveryRoute: FastifyPluginAsync = async (fastify) => {
             } else if (Math.random() < totalRandomness && selectionPool.length > 1) {
                 // Weighted random selection with bias toward higher scores but more variety
                 const weights = selectionPool.map((c, i) => {
-                    const scoreWeight = Math.pow(c.score || 0.5, 0.5); // Reduce score dominance, handle undefined
+                    // Additional safety: validate candidate and score
+                    if (!c || typeof c.score !== 'number') {
+                        request.log.warn({ candidate: c }, 'Invalid candidate in selection pool');
+                        return 0.5; // Fallback weight for invalid candidates
+                    }
+                    const scoreWeight = Math.pow(c.score, 0.5); // Reduce score dominance
                     const varietyBonus = i >= topScored.length ? 1.5 : 1; // Boost variety candidates
                     return scoreWeight * varietyBonus;
                 });
@@ -294,14 +301,14 @@ export const nextDiscoveryRoute: FastifyPluginAsync = async (fastify) => {
             }            // Generate human-readable reason
             const reason = generateReason(
                 selectedCandidate.discovery,
-                user.preferredTopics,
+                userPrefs.preferredTopics,
                 selectedCandidate.score,
                 scoringContext
             );
 
             // Record discovery event for analytics
             // Use the database user ID if available, otherwise use Clerk ID
-            const userIdForEvent = user.id;
+            const userIdForEvent = userPrefs.id;
 
             await repository.recordDiscoveryEvent(
                 userIdForEvent,
@@ -325,7 +332,7 @@ export const nextDiscoveryRoute: FastifyPluginAsync = async (fastify) => {
             // Log debug info for development - now includes randomization details
             const selectedRank = shuffledCandidates.findIndex(c => c.discovery.id === selectedCandidate.discovery.id) + 1;
             fastify.log.info({
-                userId: user.id,
+                userId: userPrefs.id,
                 contentId: selectedCandidate.discovery.id,
                 title: selectedCandidate.discovery.title,
                 domain: selectedCandidate.discovery.domain,
@@ -334,11 +341,10 @@ export const nextDiscoveryRoute: FastifyPluginAsync = async (fastify) => {
                 debug: selectedCandidate.debug,
                 reason,
                 wildness,
-                candidateCount: candidates.length,
-                sessionSeed,
+                candidateCount: filteredCandidates.length,
                 randomnessApplied: totalRandomness,
                 selectionPoolSize: selectionPool.length
-            }, 'Discovery selected with randomization');
+            }, 'Discovery selected with true randomization');
 
             return reply.send(response);
 
