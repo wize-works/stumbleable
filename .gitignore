@@ -27,8 +27,9 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 .pnpm-store/
-# Lock files are now COMMITTED for reproducible builds
-# package-lock.json - KEEP THIS
+# Lock files are committed for backend services for reproducible builds
+# BUT ui/portal uses workspace deps and npm install, so no lockfile needed
+ui/portal/package-lock.json
 # yarn.lock - KEEP THIS  
 # pnpm-lock.yaml - KEEP THIS
 
