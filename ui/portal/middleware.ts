@@ -9,8 +9,18 @@ const isProtectedRoute = createRouteMatcher([
     '/submit(.*)'
 ]);
 
+// Sign-out page should be accessible regardless of auth state
+const isPublicRoute = createRouteMatcher([
+    '/sign-out'
+]);
+
 export default clerkMiddleware(
     async (auth, req) => {
+        // Allow public routes without authentication
+        if (isPublicRoute(req)) {
+            return;
+        }
+
         // Only protect specific routes
         if (isProtectedRoute(req)) {
             // Environment variables will handle the redirect URLs
@@ -18,8 +28,13 @@ export default clerkMiddleware(
         }
     },
     {
-        // Explicitly authorize main domain to prevent subdomain issues
-        authorizedParties: ['https://stumbleable.com', 'https://www.stumbleable.com'],
+        // Include both development and production domains
+        authorizedParties: [
+            'https://stumbleable.com',
+            'https://www.stumbleable.com',
+            'http://localhost:3000',  // Development
+            'http://127.0.0.1:3000'   // Alternative localhost
+        ],
     }
 );
 

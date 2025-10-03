@@ -27,7 +27,8 @@
         "react": "19.1.0",
         "@supabase/supabase-js": "^2.45.4",
         "dotenv": "^16.4.5",
-        "zod": "^3.23.8"
+        "zod": "^3.23.8",
+        "prettier": "^3.0.0"
     },
     "devDependencies": {
         "tsx": "^4.19.1",
