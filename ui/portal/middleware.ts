@@ -13,7 +13,11 @@ export default clerkMiddleware(
     async (auth, req) => {
         // Only protect specific routes
         if (isProtectedRoute(req)) {
-            await auth.protect();
+            // Use auth.protect() with explicit redirect configuration
+            await auth.protect({
+                unauthenticatedUrl: '/sign-in',
+                unauthorizedUrl: '/sign-in',
+            });
         }
     },
     {
