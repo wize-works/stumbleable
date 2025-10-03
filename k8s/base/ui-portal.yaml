@@ -76,6 +76,26 @@ spec:
             secretKeyRef:
               name: stumbleable-secrets
               key: CLERK_SECRET_KEY
+        - name: NEXT_PUBLIC_CLERK_SIGN_IN_URL
+          valueFrom:
+            configMapKeyRef:
+              name: stumbleable-config
+              key: NEXT_PUBLIC_CLERK_SIGN_IN_URL
+        - name: NEXT_PUBLIC_CLERK_SIGN_UP_URL
+          valueFrom:
+            configMapKeyRef:
+              name: stumbleable-config
+              key: NEXT_PUBLIC_CLERK_SIGN_UP_URL
+        - name: NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL
+          valueFrom:
+            configMapKeyRef:
+              name: stumbleable-config
+              key: NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL
+        - name: NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL
+          valueFrom:
+            configMapKeyRef:
+              name: stumbleable-config
+              key: NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL
         resources:
           requests:
             memory: "256Mi"

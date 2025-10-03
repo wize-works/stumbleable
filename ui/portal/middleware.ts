@@ -24,6 +24,8 @@ export default clerkMiddleware(
         // Use custom authentication pages instead of Clerk hosted pages
         signInUrl: '/sign-in',
         signUpUrl: '/sign-up',
+        // Explicitly authorize main domain to prevent subdomain issues
+        authorizedParties: ['https://stumbleable.com', 'https://www.stumbleable.com'],
     }
 );
 

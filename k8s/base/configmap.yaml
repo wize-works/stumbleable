@@ -40,5 +40,11 @@ data:
   # Feature flags
   NEXT_TELEMETRY_DISABLED: "1"
   
+  # Clerk custom authentication pages
+  NEXT_PUBLIC_CLERK_SIGN_IN_URL: "/sign-in"
+  NEXT_PUBLIC_CLERK_SIGN_UP_URL: "/sign-up"
+  NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL: "/dashboard"
+  NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL: "/onboarding"
+  
   # Logging
   LOG_LEVEL: "info"

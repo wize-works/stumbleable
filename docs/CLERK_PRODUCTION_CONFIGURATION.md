@@ -27,11 +27,36 @@ This happens because:
 
 ## ✅ The Solution
 
-### Step 0: Configure Custom Authentication Pages (REQUIRED)
+### Step 0: Configure Custom Authentication Pages (REQUIRED - CRITICAL!)
+
+**MOST IMPORTANT:** You must set environment variables to tell Clerk where your custom pages are!
 
 **CRITICAL:** You must tell Clerk to use your custom sign-in/sign-up pages instead of hosted pages.
 
-#### A. Update Your Code (Already Done ✅)
+#### A. Set Environment Variables (CRITICAL - DO THIS FIRST! ✅)
+
+According to [Clerk's official documentation](https://clerk.com/docs/nextjs/guides/development/custom-sign-in-or-up-page), you **MUST** set these environment variables:
+
+**For Kubernetes (in `k8s/base/configmap.yaml`):**
+```yaml
+# Clerk custom authentication pages
+NEXT_PUBLIC_CLERK_SIGN_IN_URL: "/sign-in"
+NEXT_PUBLIC_CLERK_SIGN_UP_URL: "/sign-up"
+NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL: "/dashboard"
+NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL: "/onboarding"
+```
+
+**For local development (in `.env.local`):**
+```env
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/dashboard
+NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/onboarding
+```
+
+**Without these environment variables, Clerk will default to using the Account Portal subdomain (`accounts.stumbleable.com`) for authentication!**
+
+#### B. Update Your Code (Already Done ✅)
 
 1. **Middleware configuration** (`middleware.ts`):
 ```typescript
