@@ -88,7 +88,7 @@ export default function PrivacyPage() {
                                     <a href="/data-export" className="link link-primary font-semibold flex items-center gap-2">
                                         <i className="fa-solid fa-duotone fa-download"></i>
                                         Export Your Data
-                                        <i className="fa-solid fa-arrow-right text-sm"></i>
+                                        <i className="fa-solid fa-duotone fa-arrow-right text-sm"></i>
                                     </a>
                                 </div>
 

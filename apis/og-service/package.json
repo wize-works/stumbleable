@@ -1,0 +1,39 @@
+{
+    "name": "@stumbleable/og-service",
+    "version": "1.0.0",
+    "description": "Open Graph image generation service for Stumbleable",
+    "main": "dist/server.js",
+    "scripts": {
+        "dev": "tsx watch src/server.ts",
+        "build": "tsc",
+        "start": "node dist/server.js",
+        "lint": "eslint src --ext .ts",
+        "type-check": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@fastify/cors": "^10.1.0",
+        "@fastify/env": "^5.0.3",
+        "@fastify/helmet": "^12.0.1",
+        "@fastify/rate-limit": "^10.3.0",
+        "@vercel/og": "^0.6.3",
+        "dotenv": "^16.6.1",
+        "fastify": "^5.6.1",
+        "fastify-plugin": "^5.1.0",
+        "pino-pretty": "^11.2.2",
+        "react": "^18.3.1",
+        "zod": "^3.23.8"
+    },
+    "devDependencies": {
+        "@types/node": "^20.16.5",
+        "tsx": "^4.19.1",
+        "typescript": "^5.6.2"
+    },
+    "keywords": [
+        "og-image",
+        "social-media",
+        "fastify",
+        "stumbleable"
+    ],
+    "author": "Stumbleable Team",
+    "license": "MIT"
+}

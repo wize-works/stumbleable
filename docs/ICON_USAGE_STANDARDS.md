@@ -24,7 +24,7 @@ Use **`fa-brands`** for social media and brand icons:
 ### Never use `fa-solid` alone
 ```tsx
 <!-- WRONG -->
-<i className="fa-solid fa-bookmark"></i>
+<i className="fa-solid fa-duotone fa-bookmark"></i>
 
 <!-- CORRECT -->
 <i className="fa-solid fa-duotone fa-bookmark"></i>
