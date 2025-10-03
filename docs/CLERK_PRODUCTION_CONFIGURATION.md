@@ -39,20 +39,22 @@ According to [Clerk's official documentation](https://clerk.com/docs/nextjs/guid
 
 **For Kubernetes (in `k8s/base/configmap.yaml`):**
 ```yaml
-# Clerk custom authentication pages
-NEXT_PUBLIC_CLERK_SIGN_IN_URL: "/sign-in"
-NEXT_PUBLIC_CLERK_SIGN_UP_URL: "/sign-up"
-NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL: "/dashboard"
-NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL: "/onboarding"
+# Clerk custom authentication pages (MUST be absolute URLs!)
+NEXT_PUBLIC_CLERK_SIGN_IN_URL: "https://stumbleable.com/sign-in"
+NEXT_PUBLIC_CLERK_SIGN_UP_URL: "https://stumbleable.com/sign-up"
+NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL: "https://stumbleable.com/dashboard"
+NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL: "https://stumbleable.com/onboarding"
 ```
 
 **For local development (in `.env.local`):**
 ```env
-NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
-NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
-NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/dashboard
-NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/onboarding
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=http://localhost:3000/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=http://localhost:3000/sign-up
+NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=http://localhost:3000/dashboard
+NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=http://localhost:3000/onboarding
 ```
+
+**CRITICAL:** These MUST be **absolute URLs** (with `https://` or `http://`), NOT relative paths! Next.js middleware requires absolute URLs for redirects.
 
 **Without these environment variables, Clerk will default to using the Account Portal subdomain (`accounts.stumbleable.com`) for authentication!**
 

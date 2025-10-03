@@ -40,11 +40,11 @@ data:
   # Feature flags
   NEXT_TELEMETRY_DISABLED: "1"
   
-  # Clerk custom authentication pages
-  NEXT_PUBLIC_CLERK_SIGN_IN_URL: "/sign-in"
-  NEXT_PUBLIC_CLERK_SIGN_UP_URL: "/sign-up"
-  NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL: "/dashboard"
-  NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL: "/onboarding"
+  # Clerk custom authentication pages (must be absolute URLs for middleware)
+  NEXT_PUBLIC_CLERK_SIGN_IN_URL: "https://stumbleable.com/sign-in"
+  NEXT_PUBLIC_CLERK_SIGN_UP_URL: "https://stumbleable.com/sign-up"
+  NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL: "https://stumbleable.com/dashboard"
+  NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL: "https://stumbleable.com/onboarding"
   
   # Logging
   LOG_LEVEL: "info"

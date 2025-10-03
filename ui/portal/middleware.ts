@@ -13,17 +13,11 @@ export default clerkMiddleware(
     async (auth, req) => {
         // Only protect specific routes
         if (isProtectedRoute(req)) {
-            // Use auth.protect() with explicit redirect configuration
-            await auth.protect({
-                unauthenticatedUrl: '/sign-in',
-                unauthorizedUrl: '/sign-in',
-            });
+            // Environment variables will handle the redirect URLs
+            await auth.protect();
         }
     },
     {
-        // Use custom authentication pages instead of Clerk hosted pages
-        signInUrl: '/sign-in',
-        signUpUrl: '/sign-up',
         // Explicitly authorize main domain to prevent subdomain issues
         authorizedParties: ['https://stumbleable.com', 'https://www.stumbleable.com'],
     }
