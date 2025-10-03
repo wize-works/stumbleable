@@ -1,9 +1,9 @@
 'use client';
 
+import { useToaster } from '@/components/toaster';
 import { EmailAPI, EmailPreferences } from '@/lib/api-client';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
 
 interface PreferenceGroup {
     title: string;
@@ -86,6 +86,7 @@ const preferenceGroups: PreferenceGroup[] = [
 export default function EmailPreferencesPage() {
     const { user, isLoaded } = useUser();
     const { getToken } = useAuth();
+    const { showToast } = useToaster();
     const [preferences, setPreferences] = useState<EmailPreferences | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -107,7 +108,7 @@ export default function EmailPreferencesPage() {
             setPreferences(prefs);
         } catch (error) {
             console.error('Failed to load email preferences:', error);
-            toast.error('Failed to load email preferences');
+            showToast('Failed to load email preferences', 'error');
         } finally {
             setLoading(false);
         }
@@ -145,10 +146,10 @@ export default function EmailPreferencesPage() {
             const updated = await EmailAPI.updatePreferences(user.id, updates, token || '');
             setPreferences(updated);
             setHasChanges(false);
-            toast.success('Email preferences saved');
+            showToast('Email preferences saved', 'success');
         } catch (error) {
             console.error('Failed to save email preferences:', error);
-            toast.error('Failed to save preferences');
+            showToast('Failed to save preferences', 'error');
         } finally {
             setSaving(false);
         }
@@ -168,10 +169,10 @@ export default function EmailPreferencesPage() {
             const token = await getToken();
             await EmailAPI.unsubscribeAll(user.id, token || '');
             await loadPreferences(); // Reload to get updated state
-            toast.success('Unsubscribed from all emails');
+            showToast('Unsubscribed from all emails', 'success');
         } catch (error) {
             console.error('Failed to unsubscribe:', error);
-            toast.error('Failed to unsubscribe');
+            showToast('Failed to unsubscribe', 'error');
         } finally {
             setSaving(false);
         }
@@ -185,10 +186,10 @@ export default function EmailPreferencesPage() {
             const token = await getToken();
             await EmailAPI.resubscribe(user.id, token || '');
             await loadPreferences(); // Reload to get updated state
-            toast.success('Successfully resubscribed to emails');
+            showToast('Successfully resubscribed to emails', 'success');
         } catch (error) {
             console.error('Failed to resubscribe:', error);
-            toast.error('Failed to resubscribe');
+            showToast('Failed to resubscribe', 'error');
         } finally {
             setSaving(false);
         }

@@ -297,19 +297,22 @@ export const supabase = createClient(supabaseUrl, supabaseKey);
 ```json
 {
   "dependencies": {
-    "next": "15.0.0",
-    "react": "18.3.1",
-    "react-dom": "18.3.1",
-    "@clerk/nextjs": "^5.x.x",
+    "next": "^15.4.6",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "@clerk/nextjs": "^6.31.1",
+    "@clerk/elements": "^0.23.54",
     "clsx": "^2.1.1",
-    "@radix-ui/react-slider": "^1.1.2"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "typescript": "^5.6.2",
-    "tailwindcss": "^3.4.10",
-    "postcss": "^8.4.41",
-    "autoprefixer": "^10.4.19",
-    "eslint": "^9.10.0",
+    "@tailwindcss/postcss": "^4.1.11",
+    "tailwindcss": "^4.1.11",
+    "postcss": "^8.4.45",
+    "autoprefixer": "^10.4.20",
+    "daisyui": "^5.0.50",
+    "eslint": "^9.9.0",
     "eslint-config-next": "^15.0.0"
   }
 }
