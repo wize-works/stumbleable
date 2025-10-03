@@ -11,11 +11,13 @@ const INTERACTION_API_URL = process.env.NEXT_PUBLIC_INTERACTION_API_URL || 'http
 const USER_API_URL = process.env.NEXT_PUBLIC_USER_API_URL || 'http://localhost:7003';
 const MODERATION_API_URL = process.env.NEXT_PUBLIC_MODERATION_API_URL || 'http://localhost:7005';
 const EMAIL_API_URL = process.env.NEXT_PUBLIC_EMAIL_API_URL || 'http://localhost:7006';
+const CRAWLER_API_URL = process.env.NEXT_PUBLIC_CRAWLER_API_URL || 'http://localhost:7004';
 const DISCOVERY_API = `${DISCOVERY_API_URL}/api`;
 const INTERACTION_API = `${INTERACTION_API_URL}/api`; // Direct access to service endpoints
 const USER_API = `${USER_API_URL}/api`;
 const MODERATION_API = `${MODERATION_API_URL}/api`;
 const EMAIL_API = `${EMAIL_API_URL}/api`;
+const CRAWLER_API = `${CRAWLER_API_URL}/api`;
 
 // Custom error class for API errors
 export class ApiError extends Error {
@@ -1430,6 +1432,190 @@ export class EmailAPI {
 }
 
 /**
+ * Crawler Service API Types
+ */
+export interface CrawlerSource {
+    id: string;
+    name: string;
+    type: 'rss' | 'sitemap' | 'web';
+    url: string;
+    domain: string;
+    crawl_frequency_hours: number;
+    topics: string[];
+    enabled: boolean;
+    created_at: string;
+    updated_at: string;
+    last_crawled_at?: string;
+    next_crawl_at?: string;
+}
+
+export interface CrawlerJob {
+    id: string;
+    source_id: string;
+    status: 'running' | 'completed' | 'failed';
+    started_at: string;
+    completed_at?: string;
+    items_found: number;
+    items_submitted: number;
+    items_failed: number;
+    error_message?: string;
+}
+
+/**
+ * Crawler Service API - RSS feeds, sitemaps, and website crawling
+ */
+export class CrawlerAPI {
+    /**
+     * Get all crawler sources
+     */
+    static async getSources(token: string): Promise<CrawlerSource[]> {
+        const response = await apiRequest<{ sources: CrawlerSource[] }>(
+            `${CRAWLER_API}/sources`,
+            {},
+            token
+        );
+        return response.sources;
+    }
+
+    /**
+     * Get a specific crawler source
+     */
+    static async getSource(sourceId: string, token: string): Promise<CrawlerSource> {
+        const response = await apiRequest<{ source: CrawlerSource }>(
+            `${CRAWLER_API}/sources/${sourceId}`,
+            {},
+            token
+        );
+        return response.source;
+    }
+
+    /**
+     * Create a new crawler source
+     */
+    static async createSource(data: {
+        name: string;
+        type: 'rss' | 'sitemap' | 'web';
+        url: string;
+        crawl_frequency_hours: number;
+        topics: string[];
+        enabled: boolean;
+    }, token: string): Promise<CrawlerSource> {
+        const response = await apiRequest<{ source: CrawlerSource }>(
+            `${CRAWLER_API}/sources`,
+            {
+                method: 'POST',
+                body: JSON.stringify(data),
+            },
+            token
+        );
+        return response.source;
+    }
+
+    /**
+     * Update a crawler source
+     */
+    static async updateSource(
+        sourceId: string,
+        data: Partial<{
+            name: string;
+            type: 'rss' | 'sitemap' | 'web';
+            url: string;
+            crawl_frequency_hours: number;
+            topics: string[];
+            enabled: boolean;
+        }>,
+        token: string
+    ): Promise<CrawlerSource> {
+        const response = await apiRequest<{ source: CrawlerSource }>(
+            `${CRAWLER_API}/sources/${sourceId}`,
+            {
+                method: 'PUT',
+                body: JSON.stringify(data),
+            },
+            token
+        );
+        return response.source;
+    }
+
+    /**
+     * Delete a crawler source
+     */
+    static async deleteSource(sourceId: string, token: string): Promise<void> {
+        await apiRequest<{ success: boolean }>(
+            `${CRAWLER_API}/sources/${sourceId}`,
+            {
+                method: 'DELETE',
+            },
+            token
+        );
+    }
+
+    /**
+     * Trigger manual crawl for a source
+     */
+    static async triggerCrawl(sourceId: string, token: string): Promise<CrawlerJob> {
+        const response = await apiRequest<{ job: CrawlerJob; message: string }>(
+            `${CRAWLER_API}/crawl/${sourceId}`,
+            {
+                method: 'POST',
+            },
+            token
+        );
+        return response.job;
+    }
+
+    /**
+     * Get all crawler jobs
+     */
+    static async getJobs(token: string): Promise<CrawlerJob[]> {
+        const response = await apiRequest<{ jobs: CrawlerJob[] }>(
+            `${CRAWLER_API}/jobs`,
+            {},
+            token
+        );
+        return response.jobs;
+    }
+
+    /**
+     * Get jobs for a specific source
+     */
+    static async getJobsForSource(sourceId: string, token: string): Promise<CrawlerJob[]> {
+        const response = await apiRequest<{ jobs: CrawlerJob[] }>(
+            `${CRAWLER_API}/jobs?source_id=${sourceId}`,
+            {},
+            token
+        );
+        return response.jobs;
+    }
+
+    /**
+     * Get a specific crawler job
+     */
+    static async getJob(jobId: string, token: string): Promise<CrawlerJob> {
+        const response = await apiRequest<{ job: CrawlerJob }>(
+            `${CRAWLER_API}/jobs/${jobId}`,
+            {},
+            token
+        );
+        return response.job;
+    }
+
+    /**
+     * Auto-discover feeds and sitemaps for a website (placeholder - not implemented yet)
+     */
+    static async autoDiscover(url: string): Promise<{
+        feeds: Array<{ url: string; type: string; title?: string }>;
+        sitemaps: Array<{ url: string; type: string }>;
+    }> {
+        // TODO: Implement autodiscover endpoint in crawler service
+        return {
+            feeds: [],
+            sitemaps: []
+        };
+    }
+}
+
+/**
  * Health check for API services
  */
 export async function checkServiceHealth(): Promise<{
@@ -1438,6 +1624,7 @@ export async function checkServiceHealth(): Promise<{
     user: boolean;
     moderation: boolean;
     email: boolean;
+    crawler: boolean;
 }> {
     try {
         const discoveryHealthy = await fetch(`${DISCOVERY_API_URL}/health`).then(() => true).catch(() => false);
@@ -1445,6 +1632,7 @@ export async function checkServiceHealth(): Promise<{
         const userHealthy = await fetch(`${USER_API_URL}/health`).then(() => true).catch(() => false);
         const moderationHealthy = await fetch(`${MODERATION_API_URL}/health`).then(() => true).catch(() => false);
         const emailHealthy = await fetch(`${EMAIL_API_URL}/health`).then(() => true).catch(() => false);
+        const crawlerHealthy = await fetch(`${CRAWLER_API_URL}/health`).then(() => true).catch(() => false);
 
         return {
             discovery: discoveryHealthy,
@@ -1452,6 +1640,7 @@ export async function checkServiceHealth(): Promise<{
             user: userHealthy,
             moderation: moderationHealthy,
             email: emailHealthy,
+            crawler: crawlerHealthy,
         };
     } catch {
         return {
@@ -1460,6 +1649,7 @@ export async function checkServiceHealth(): Promise<{
             user: false,
             moderation: false,
             email: false,
+            crawler: false,
         };
     }
 }

@@ -331,6 +331,13 @@ export default function AdminDashboard() {
                                     Content Moderation
                                 </Link>
                                 <Link
+                                    href="/admin/sources"
+                                    className="btn btn-block btn-outline justify-start"
+                                >
+                                    <i className="fa-solid fa-duotone fa-spider text-info"></i>
+                                    Crawler Sources
+                                </Link>
+                                <Link
                                     href="/admin/deletion-requests"
                                     className="btn btn-block btn-outline justify-start"
                                 >

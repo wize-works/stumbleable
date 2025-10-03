@@ -12,6 +12,7 @@ import { trendingCalculator } from './lib/trending-calculator';
 import requestLoggingPlugin from './middleware/request-logging';
 
 import { contentRoute } from './routes/content';
+import { enhanceRoute } from './routes/enhance';
 import { moderationRoutes } from './routes/moderation';
 import { nextDiscoveryRoute } from './routes/next';
 import { reportsRoutes } from './routes/reports';
@@ -181,6 +182,7 @@ async function buildApp() {
     await fastify.register(trendingDiscoveryRoute, { prefix: '/api' });
     await fastify.register(similarContentRoute, { prefix: '/api' });
     await fastify.register(contentRoute, { prefix: '/api' });
+    await fastify.register(enhanceRoute, { prefix: '/api' });
     await fastify.register(submitRoutes, { prefix: '/api' });
     await fastify.register(reportsRoutes, { prefix: '/api' });
     await fastify.register(moderationRoutes, { prefix: '/api' });

@@ -103,8 +103,22 @@ export class DiscoveryRepository {
 
     /**
      * Get discoveries excluding specified IDs with enhanced data
+     * Now with randomized database ordering to prevent predictable results
      */
     async getDiscoveriesExcluding(excludeIds: string[]): Promise<EnhancedDiscovery[]> {
+        // Add some database-level randomization by using different orderings
+        const randomOrderings = [
+            'quality_score desc',
+            'base_score desc',
+            'created_at desc',
+            'popularity_score desc nulls last',
+            'freshness_score desc nulls last'
+        ];
+
+        // Pick a random ordering based on current time to vary results
+        const orderIndex = Math.floor(Date.now() / (1000 * 60 * 30)) % randomOrderings.length; // Changes every 30 minutes
+        const selectedOrdering = randomOrderings[orderIndex];
+
         let query = supabase
             .from('content')
             .select(`
@@ -138,12 +152,18 @@ export class DiscoveryRepository {
                     engagement_rate
                 )
             `)
-            .eq('is_active', true)
-            .order('created_at', { ascending: false });
+            .eq('is_active', true);
 
         if (excludeIds.length > 0) {
             query = query.not('id', 'in', `(${excludeIds.map(id => `"${id}"`).join(',')})`);
         }
+
+        // Apply the randomized ordering to mix up database results
+        // This ensures even the raw data comes back in different orders
+        query = query.order(selectedOrdering.split(' ')[0], {
+            ascending: !selectedOrdering.includes('desc'),
+            nullsFirst: selectedOrdering.includes('nulls first')
+        });
 
         const { data, error } = await query;
 
@@ -737,6 +757,152 @@ export class DiscoveryRepository {
                 recentSubmissions: 0,
                 topDomains: [],
                 topTopics: []
+            };
+        }
+    }
+
+    /**
+     * Get content records by specific IDs
+     */
+    async getContentByIds(contentIds: string[]): Promise<Array<{ id: string; url: string }>> {
+        try {
+            const { data, error } = await supabase
+                .from('content')
+                .select('id, url')
+                .in('id', contentIds);
+
+            if (error) {
+                console.error('Error fetching content by IDs:', error);
+                return [];
+            }
+
+            return data || [];
+        } catch (error) {
+            console.error('Error in getContentByIds:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Get content records that need metadata enhancement
+     */
+    async getContentNeedingEnhancement(limit: number = 10): Promise<Array<{ id: string; url: string }>> {
+        try {
+            const { data, error } = await supabase
+                .from('content')
+                .select('id, url')
+                .or('image_url.is.null,author.is.null,content_text.is.null,word_count.is.null')
+                .order('created_at', { ascending: false })
+                .limit(limit);
+
+            if (error) {
+                console.error('Error fetching content needing enhancement:', error);
+                return [];
+            }
+
+            return data || [];
+        } catch (error) {
+            console.error('Error in getContentNeedingEnhancement:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Update content metadata
+     */
+    async updateContentMetadata(contentId: string, metadata: {
+        title?: string;
+        description?: string;
+        imageUrl?: string;
+        author?: string;
+        publishedAt?: string;
+        wordCount?: number;
+        contentText?: string;
+    }): Promise<void> {
+        try {
+            const updateData: any = {};
+
+            if (metadata.title) updateData.title = metadata.title;
+            if (metadata.description) updateData.description = metadata.description;
+            if (metadata.imageUrl) updateData.image_url = metadata.imageUrl;
+            if (metadata.author) updateData.author = metadata.author;
+            if (metadata.publishedAt) updateData.published_at = metadata.publishedAt;
+            if (metadata.wordCount) updateData.word_count = metadata.wordCount;
+            if (metadata.contentText) updateData.content_text = metadata.contentText;
+
+            if (Object.keys(updateData).length > 0) {
+                const { error } = await supabase
+                    .from('content')
+                    .update(updateData)
+                    .eq('id', contentId);
+
+                if (error) {
+                    console.error(`Error updating content ${contentId}:`, error);
+                }
+            }
+        } catch (error) {
+            console.error('Error in updateContentMetadata:', error);
+        }
+    }
+
+    /**
+     * Get enhancement statistics
+     */
+    async getEnhancementStats(): Promise<{
+        total: number;
+        needsEnhancement: number;
+        hasImage: number;
+        hasAuthor: number;
+        hasContent: number;
+        hasWordCount: number;
+    }> {
+        try {
+            const { count: total } = await supabase
+                .from('content')
+                .select('*', { count: 'exact', head: true });
+
+            const { count: needsEnhancement } = await supabase
+                .from('content')
+                .select('*', { count: 'exact', head: true })
+                .or('image_url.is.null,author.is.null,content_text.is.null,word_count.is.null');
+
+            const { count: hasImage } = await supabase
+                .from('content')
+                .select('*', { count: 'exact', head: true })
+                .not('image_url', 'is', null);
+
+            const { count: hasAuthor } = await supabase
+                .from('content')
+                .select('*', { count: 'exact', head: true })
+                .not('author', 'is', null);
+
+            const { count: hasContent } = await supabase
+                .from('content')
+                .select('*', { count: 'exact', head: true })
+                .not('content_text', 'is', null);
+
+            const { count: hasWordCount } = await supabase
+                .from('content')
+                .select('*', { count: 'exact', head: true })
+                .not('word_count', 'is', null);
+
+            return {
+                total: total || 0,
+                needsEnhancement: needsEnhancement || 0,
+                hasImage: hasImage || 0,
+                hasAuthor: hasAuthor || 0,
+                hasContent: hasContent || 0,
+                hasWordCount: hasWordCount || 0
+            };
+        } catch (error) {
+            console.error('Error getting enhancement stats:', error);
+            return {
+                total: 0,
+                needsEnhancement: 0,
+                hasImage: 0,
+                hasAuthor: 0,
+                hasContent: 0,
+                hasWordCount: 0
             };
         }
     }
