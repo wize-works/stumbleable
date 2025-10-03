@@ -8,16 +8,13 @@ import 'dotenv/config';
 import Fastify from 'fastify';
 
 import { getLogLevel } from './lib/logger';
-import { trendingCalculator } from './lib/trending-calculator';
 import requestLoggingPlugin from './middleware/request-logging';
 
-import { contentRoute } from './routes/content';
-import { enhanceRoute } from './routes/enhance';
-import { moderationRoutes } from './routes/moderation';
+// DISCOVERY SERVICE - CORE ROUTES ONLY
+// Focused on fast, read-only discovery operations
+import { contentRoute } from './routes/content'; // Keep for /saved page
 import { nextDiscoveryRoute } from './routes/next';
-import { reportsRoutes } from './routes/reports';
 import { similarContentRoute } from './routes/similar';
-import { submitRoutes } from './routes/submit';
 import { trendingDiscoveryRoute } from './routes/trending';
 
 // Environment schema
@@ -132,22 +129,20 @@ async function buildApp() {
 
     // Health check (MUST be registered BEFORE Clerk to avoid authentication requirement)
     // Also disable rate limiting for health checks
+    // CRITICAL: Keep this endpoint FAST and dependency-free for K8s probes
     fastify.get('/health', {
         config: {
             rateLimit: false // Disable rate limiting for health checks
         }
     }, async (request, reply) => {
-        return {
+        // Don't call any external services or database checks here
+        // K8s probes need fast responses (<1 second)
+        reply.code(200).send({
             status: 'healthy',
             service: 'discovery-service',
             timestamp: new Date().toISOString(),
-            version: '1.0.0',
-            rateLimit: {
-                enabled: true,
-                max: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
-                windowMs: parseInt(process.env.RATE_LIMIT_WINDOW || '60000', 10)
-            }
-        };
+            version: '1.0.0'
+        });
     });
 
     // Clerk authentication (registered AFTER health check)
@@ -177,15 +172,13 @@ async function buildApp() {
         credentials: true
     });
 
-    // Register routes
+    // Register CORE DISCOVERY routes only
+    // Heavy operations (enhance, submit, trending calculator) moved to crawler service
+    // Moderation/reports routes belong in moderation service
     await fastify.register(nextDiscoveryRoute, { prefix: '/api' });
     await fastify.register(trendingDiscoveryRoute, { prefix: '/api' });
     await fastify.register(similarContentRoute, { prefix: '/api' });
-    await fastify.register(contentRoute, { prefix: '/api' });
-    await fastify.register(enhanceRoute, { prefix: '/api' });
-    await fastify.register(submitRoutes, { prefix: '/api' });
-    await fastify.register(reportsRoutes, { prefix: '/api' });
-    await fastify.register(moderationRoutes, { prefix: '/api' });
+    await fastify.register(contentRoute, { prefix: '/api' }); // Simple content retrieval for saved items
 
     // Global error handler
     fastify.setErrorHandler((error, request, reply) => {
@@ -227,12 +220,11 @@ async function start() {
 
         console.log(`🚀 Discovery Service running on http://${host}:${port}`);
         console.log(`📊 Health check: http://${host}:${port}/health`);
-        console.log(`🔍 Next discovery: POST http://${host}:${port}/api/discovery/next`);
-        console.log(`📈 Trending: GET http://${host}:${port}/api/discovery/trending`);
+        console.log(`🔍 Next discovery: POST http://${host}:${port}/api/next`);
+        console.log(`📈 Trending: GET http://${host}:${port}/api/trending`);
+        console.log(`🔄 Similar: GET http://${host}:${port}/api/similar/:id`);
         console.log(`🛡️  Rate limiting: ${process.env.RATE_LIMIT_MAX || 100} requests per ${(parseInt(process.env.RATE_LIMIT_WINDOW || '60000', 10) / 1000)} seconds`);
-
-        // Start trending calculator (runs every 15 minutes)
-        trendingCalculator.start();
+        console.log(`⚡ Focused on fast discovery - content management moved to crawler-service`);
 
     } catch (error) {
         console.error('Error starting server:', error);
@@ -243,14 +235,12 @@ async function start() {
 // Graceful shutdown
 process.on('SIGTERM', async () => {
     console.log('SIGTERM received, shutting down gracefully');
-    trendingCalculator.stop();
     await fastify.close();
     process.exit(0);
 });
 
 process.on('SIGINT', async () => {
     console.log('SIGINT received, shutting down gracefully');
-    trendingCalculator.stop();
     await fastify.close();
     process.exit(0);
 });

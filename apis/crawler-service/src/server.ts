@@ -4,6 +4,7 @@ import cors from '@fastify/cors';
 import dotenv from 'dotenv';
 import Fastify from 'fastify';
 import { CrawlerScheduler } from './lib/scheduler';
+import { trendingCalculator } from './lib/trending-calculator';
 import { jobRoutes, setScheduler } from './routes/jobs';
 import { sourceRoutes } from './routes/sources';
 
@@ -51,12 +52,14 @@ async function buildApp() {
     });
 
     // Health check endpoint (MUST be registered BEFORE Clerk plugin to avoid authentication)
-    fastify.get('/health', async () => {
-        return {
+    // CRITICAL: Keep this endpoint FAST and dependency-free for K8s probes
+    fastify.get('/health', async (request, reply) => {
+        reply.code(200).send({
             status: 'healthy',
             service: 'crawler-service',
             timestamp: new Date().toISOString(),
-        };
+            version: '1.0.0'
+        });
     });
 
     // Clerk authentication (registered AFTER health check to avoid requiring auth for health)
@@ -104,6 +107,10 @@ const start = async () => {
         // Start the crawler scheduler
         scheduler.start();
 
+        // Start the trending calculator (runs every 15 minutes)
+        trendingCalculator.start();
+        console.log('📈 Trending calculator started');
+
     } catch (err) {
         console.error('Error starting server:', err);
         process.exit(1);
@@ -114,6 +121,7 @@ const start = async () => {
 const shutdown = async () => {
     console.log('\n🛑 Shutting down crawler service...');
     scheduler.stop();
+    trendingCalculator.stop();
     process.exit(0);
 };
 
