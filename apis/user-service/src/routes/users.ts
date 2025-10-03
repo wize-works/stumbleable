@@ -1,6 +1,7 @@
 import { getAuth } from '@clerk/fastify';
 import { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
+import { authenticateAndAuthorize, authenticateUser } from '../lib/auth';
 import { UserRepository } from '../lib/repository';
 import { CreateUserRequest, UpdatePreferencesRequest } from '../types';
 
@@ -28,21 +29,33 @@ const updatePreferencesSchema = z.object({
 export const userRoutes: FastifyPluginAsync = async (fastify) => {
 
     // Get user profile (does NOT auto-create - user must exist)
-    fastify.get<{ Params: { userId: string } }>('/users/:userId', async (request: FastifyRequest<{ Params: { userId: string } }>, reply: FastifyReply) => {
+    fastify.get('/users/:userId', async (request: FastifyRequest<{ Params: { userId: string } }>, reply: FastifyReply) => {
         try {
-            // Check authentication
-            const auth = getAuth(request as any);
-            if (!auth.isAuthenticated) {
-                return reply.status(401).send({
-                    error: 'User not authenticated'
-                });
-            }
-
             const { userId } = request.params;
 
             if (!userId) {
                 return reply.status(400).send({
                     error: 'User ID is required'
+                });
+            }
+
+            // Use robust authentication and authorization
+            const authCheck = authenticateAndAuthorize(request, userId);
+
+            // Log authentication details for debugging
+            fastify.log.info({
+                isValid: authCheck.isValid,
+                isAuthenticated: authCheck.authResult.isAuthenticated,
+                userId: authCheck.authResult.userId,
+                requestedUserId: userId,
+                error: authCheck.error || authCheck.authResult.error
+            }, 'Authentication check for get user');
+
+            if (!authCheck.isValid) {
+                const statusCode = authCheck.authResult.isAuthenticated ? 403 : 401;
+                return reply.status(statusCode).send({
+                    error: authCheck.error || 'Authentication failed',
+                    details: authCheck.authResult.error
                 });
             }
 
@@ -77,6 +90,31 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
             }
 
             const { userId, preferences } = validationResult.data;
+
+            // Authenticate the user to ensure they can create this user account
+            const authResult = authenticateUser(request);
+
+            // Log authentication details for debugging
+            fastify.log.info({
+                isAuthenticated: authResult.isAuthenticated,
+                userId: authResult.userId,
+                requestedUserId: userId,
+                error: authResult.error
+            }, 'Authentication check for create user');
+
+            if (!authResult.isAuthenticated) {
+                return reply.status(401).send({
+                    error: 'User not authenticated',
+                    details: authResult.error || 'Invalid or missing authentication token'
+                });
+            }
+
+            // Authorization check: user can only create their own account
+            if (authResult.userId !== userId) {
+                return reply.status(403).send({
+                    error: 'Forbidden: Cannot create account for another user'
+                });
+            }
 
             // Check if user already exists
             const existingUser = await repository.getUserById(userId);
@@ -119,6 +157,26 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
         try {
             const { userId } = request.params;
 
+            // Use robust authentication and authorization
+            const authCheck = authenticateAndAuthorize(request, userId);
+
+            // Log authentication details for debugging
+            fastify.log.info({
+                isValid: authCheck.isValid,
+                isAuthenticated: authCheck.authResult.isAuthenticated,
+                userId: authCheck.authResult.userId,
+                requestedUserId: userId,
+                error: authCheck.error || authCheck.authResult.error
+            }, 'Authentication check for update preferences');
+
+            if (!authCheck.isValid) {
+                const statusCode = authCheck.authResult.isAuthenticated ? 403 : 401;
+                return reply.status(statusCode).send({
+                    error: authCheck.error || 'Authentication failed',
+                    details: authCheck.authResult.error
+                });
+            }
+
             const validationResult = updatePreferencesSchema.safeParse(request.body);
             if (!validationResult.success) {
                 return reply.status(400).send({
@@ -159,19 +217,31 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
     // Accept community guidelines
     fastify.put<{ Params: { userId: string } }>('/users/:userId/accept-guidelines', async (request: FastifyRequest<{ Params: { userId: string } }>, reply: FastifyReply) => {
         try {
-            // Check authentication
-            const auth = getAuth(request as any);
-            if (!auth.isAuthenticated) {
-                return reply.status(401).send({
-                    error: 'User not authenticated'
-                });
-            }
-
             const { userId } = request.params;
 
             if (!userId) {
                 return reply.status(400).send({
                     error: 'User ID is required'
+                });
+            }
+
+            // Use robust authentication and authorization
+            const authCheck = authenticateAndAuthorize(request, userId);
+
+            // Log authentication details for debugging
+            fastify.log.info({
+                isValid: authCheck.isValid,
+                isAuthenticated: authCheck.authResult.isAuthenticated,
+                userId: authCheck.authResult.userId,
+                requestedUserId: userId,
+                error: authCheck.error || authCheck.authResult.error
+            }, 'Authentication check for accept-guidelines');
+
+            if (!authCheck.isValid) {
+                const statusCode = authCheck.authResult.isAuthenticated ? 403 : 401;
+                return reply.status(statusCode).send({
+                    error: authCheck.error || 'Authentication failed',
+                    details: authCheck.authResult.error
                 });
             }
 
@@ -195,19 +265,31 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
     // Request account deletion (with 30-day grace period)
     fastify.post<{ Params: { userId: string } }>('/users/:userId/deletion-request', async (request: FastifyRequest<{ Params: { userId: string } }>, reply: FastifyReply) => {
         try {
-            // Check authentication
-            const auth = getAuth(request as any);
-            if (!auth.isAuthenticated) {
-                return reply.status(401).send({
-                    error: 'User not authenticated'
-                });
-            }
-
             const { userId } = request.params;
 
             if (!userId) {
                 return reply.status(400).send({
                     error: 'User ID is required'
+                });
+            }
+
+            // Use robust authentication and authorization
+            const authCheck = authenticateAndAuthorize(request, userId);
+
+            // Log authentication details for debugging
+            fastify.log.info({
+                isValid: authCheck.isValid,
+                isAuthenticated: authCheck.authResult.isAuthenticated,
+                userId: authCheck.authResult.userId,
+                requestedUserId: userId,
+                error: authCheck.error || authCheck.authResult.error
+            }, 'Authentication check for deletion request');
+
+            if (!authCheck.isValid) {
+                const statusCode = authCheck.authResult.isAuthenticated ? 403 : 401;
+                return reply.status(statusCode).send({
+                    error: authCheck.error || 'Authentication failed',
+                    details: authCheck.authResult.error
                 });
             }
 
@@ -245,19 +327,31 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
     // Cancel deletion request (recover account during grace period)
     fastify.post<{ Params: { userId: string } }>('/users/:userId/cancel-deletion', async (request: FastifyRequest<{ Params: { userId: string } }>, reply: FastifyReply) => {
         try {
-            // Check authentication
-            const auth = getAuth(request as any);
-            if (!auth.isAuthenticated) {
-                return reply.status(401).send({
-                    error: 'User not authenticated'
-                });
-            }
-
             const { userId } = request.params;
 
             if (!userId) {
                 return reply.status(400).send({
                     error: 'User ID is required'
+                });
+            }
+
+            // Use robust authentication and authorization
+            const authCheck = authenticateAndAuthorize(request, userId);
+
+            // Log authentication details for debugging
+            fastify.log.info({
+                isValid: authCheck.isValid,
+                isAuthenticated: authCheck.authResult.isAuthenticated,
+                userId: authCheck.authResult.userId,
+                requestedUserId: userId,
+                error: authCheck.error || authCheck.authResult.error
+            }, 'Authentication check for cancel deletion');
+
+            if (!authCheck.isValid) {
+                const statusCode = authCheck.authResult.isAuthenticated ? 403 : 401;
+                return reply.status(statusCode).send({
+                    error: authCheck.error || 'Authentication failed',
+                    details: authCheck.authResult.error
                 });
             }
 
@@ -284,19 +378,31 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
     // Get deletion request status
     fastify.get<{ Params: { userId: string } }>('/users/:userId/deletion-request', async (request: FastifyRequest<{ Params: { userId: string } }>, reply: FastifyReply) => {
         try {
-            // Check authentication
-            const auth = getAuth(request as any);
-            if (!auth.isAuthenticated) {
-                return reply.status(401).send({
-                    error: 'User not authenticated'
-                });
-            }
-
             const { userId } = request.params;
 
             if (!userId) {
                 return reply.status(400).send({
                     error: 'User ID is required'
+                });
+            }
+
+            // Use robust authentication and authorization
+            const authCheck = authenticateAndAuthorize(request, userId);
+
+            // Log authentication details for debugging
+            fastify.log.info({
+                isValid: authCheck.isValid,
+                isAuthenticated: authCheck.authResult.isAuthenticated,
+                userId: authCheck.authResult.userId,
+                requestedUserId: userId,
+                error: authCheck.error || authCheck.authResult.error
+            }, 'Authentication check for get deletion request status');
+
+            if (!authCheck.isValid) {
+                const statusCode = authCheck.authResult.isAuthenticated ? 403 : 401;
+                return reply.status(statusCode).send({
+                    error: authCheck.error || 'Authentication failed',
+                    details: authCheck.authResult.error
                 });
             }
 
