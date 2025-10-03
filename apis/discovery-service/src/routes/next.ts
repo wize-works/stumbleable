@@ -234,32 +234,64 @@ export const nextDiscoveryRoute: FastifyPluginAsync = async (fastify) => {
 
             let selectedCandidate: EnhancedScoredCandidate;
 
-            if (Math.random() < totalRandomness && selectionPool.length > 1) {
+            // SAFETY: Ensure we always have candidates to select from
+            if (selectionPool.length === 0) {
+                // Fallback to any available candidate if pools are empty
+                if (shuffledCandidates.length > 0) {
+                    selectedCandidate = shuffledCandidates[0];
+                } else if (scoredCandidates.length > 0) {
+                    selectedCandidate = scoredCandidates[0];
+                } else {
+                    // This shouldn't happen, but handle gracefully
+                    throw new Error('No candidates available for selection');
+                }
+            } else if (Math.random() < totalRandomness && selectionPool.length > 1) {
                 // Weighted random selection with bias toward higher scores but more variety
                 const weights = selectionPool.map((c, i) => {
-                    const scoreWeight = Math.pow(c.score, 0.5); // Reduce score dominance
+                    const scoreWeight = Math.pow(c.score || 0.5, 0.5); // Reduce score dominance, handle undefined
                     const varietyBonus = i >= topScored.length ? 1.5 : 1; // Boost variety candidates
                     return scoreWeight * varietyBonus;
                 });
 
                 const totalWeight = weights.reduce((sum, w) => sum + w, 0);
-                let random = Math.random() * totalWeight;
 
-                selectedCandidate = selectionPool[0]; // fallback
-                for (let i = 0; i < selectionPool.length; i++) {
-                    random -= weights[i];
-                    if (random <= 0) {
-                        selectedCandidate = selectionPool[i];
-                        break;
+                if (totalWeight <= 0) {
+                    // Fallback if all weights are 0
+                    selectedCandidate = selectionPool[0];
+                } else {
+                    let random = Math.random() * totalWeight;
+                    selectedCandidate = selectionPool[0]; // safe fallback
+
+                    for (let i = 0; i < selectionPool.length; i++) {
+                        random -= weights[i];
+                        if (random <= 0) {
+                            selectedCandidate = selectionPool[i];
+                            break;
+                        }
                     }
                 }
             } else {
                 // Still pick randomly from top candidates, not always #1
                 const randomIndex = Math.floor(Math.random() * Math.min(3, selectionPool.length));
-                selectedCandidate = selectionPool[randomIndex];
+                selectedCandidate = selectionPool[randomIndex] || selectionPool[0]; // Safe fallback
             }
 
-            // Generate human-readable reason
+            // FINAL SAFETY CHECK: Ensure selectedCandidate is valid
+            if (!selectedCandidate || !selectedCandidate.discovery) {
+                fastify.log.error({
+                    selectionPoolLength: selectionPool.length,
+                    shuffledCandidatesLength: shuffledCandidates.length,
+                    scoredCandidatesLength: scoredCandidates.length,
+                    candidateCount: candidates.length
+                }, 'selectedCandidate is invalid, using fallback');
+
+                // Ultimate fallback
+                if (scoredCandidates.length > 0) {
+                    selectedCandidate = scoredCandidates[0];
+                } else {
+                    throw new Error('No valid candidates found after all fallbacks');
+                }
+            }            // Generate human-readable reason
             const reason = generateReason(
                 selectedCandidate.discovery,
                 user.preferredTopics,

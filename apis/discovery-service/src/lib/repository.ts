@@ -106,20 +106,9 @@ export class DiscoveryRepository {
      * Now with randomized database ordering to prevent predictable results
      */
     async getDiscoveriesExcluding(excludeIds: string[]): Promise<EnhancedDiscovery[]> {
-        // Add some database-level randomization by using different orderings
-        const randomOrderings = [
-            'quality_score desc',
-            'base_score desc',
-            'created_at desc',
-            'popularity_score desc nulls last',
-            'freshness_score desc nulls last'
-        ];
-
-        // Pick a random ordering based on current time to vary results
-        const orderIndex = Math.floor(Date.now() / (1000 * 60 * 30)) % randomOrderings.length; // Changes every 30 minutes
-        const selectedOrdering = randomOrderings[orderIndex];
-
-        let query = supabase
+        // Simplified randomization - just use a basic rotation to reduce database load
+        const useCreatedAtOrder = Math.floor(Date.now() / (1000 * 60 * 60)) % 2 === 0; // Changes every hour
+        const selectedOrdering = useCreatedAtOrder ? 'created_at desc' : 'quality_score desc'; let query = supabase
             .from('content')
             .select(`
                 id,
@@ -158,14 +147,12 @@ export class DiscoveryRepository {
             query = query.not('id', 'in', `(${excludeIds.map(id => `"${id}"`).join(',')})`);
         }
 
-        // Apply the randomized ordering to mix up database results
-        // This ensures even the raw data comes back in different orders
-        query = query.order(selectedOrdering.split(' ')[0], {
-            ascending: !selectedOrdering.includes('desc'),
-            nullsFirst: selectedOrdering.includes('nulls first')
-        });
-
-        const { data, error } = await query;
+        // Apply simplified ordering to reduce database load
+        if (useCreatedAtOrder) {
+            query = query.order('created_at', { ascending: false });
+        } else {
+            query = query.order('quality_score', { ascending: false });
+        } const { data, error } = await query;
 
         if (error) {
             console.error('Error fetching discoveries excluding IDs:', error);
