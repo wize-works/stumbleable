@@ -11,9 +11,10 @@ export default function SignUpPage() {
     const { isSignedIn } = useUser();
 
     useEffect(() => {
-        // Redirect to dashboard if user is signed in
+        // Redirect to onboarding after successful Clerk signup
+        // User creation in database is now handled by UserInitializer in layout
         if (isSignedIn) {
-            router.replace("/dashboard");
+            router.replace("/onboarding");
         }
     }, [isSignedIn, router]);
 

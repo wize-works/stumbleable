@@ -4,6 +4,8 @@ import { ReactNode } from 'react';
 import { Footer } from '../components/footer';
 import { Header } from '../components/header';
 import { ToasterProvider } from '../components/toaster';
+import { UserInitializer } from '../components/user-initializer';
+import { UserInitializationProvider } from '../lib/user-initialization-context';
 import './globals.css';
 
 // Force dynamic rendering to prevent static generation during Docker builds
@@ -138,11 +140,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 <body className="min-h-screen bg-base-100">
 
                     <ToasterProvider>
-                        <Header />
-                        <main className="flex-1">
-                            {children}
-                        </main>
-                        <Footer />
+                        <UserInitializationProvider>
+                            <UserInitializer />
+                            <Header />
+                            <main className="flex-1">
+                                {children}
+                            </main>
+                            <Footer />
+                        </UserInitializationProvider>
                     </ToasterProvider>
                     <Script src={fontAwesomeKitUrl} crossOrigin="anonymous" strategy="afterInteractive" />
                     <Script async src="https://helpninja.app/api/widget?t=hn_pk_sGLps5fACfWmzntqum9f6dmR&s=3ab35ffe-11fe-4a35-b609-8cbd826979ce&k=e2f6f6f7-0bf6-453f-b630-472d371db6b6&voice=casual" />

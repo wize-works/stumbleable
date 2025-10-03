@@ -8,6 +8,7 @@ import { ApiError, DiscoveryAPI, InteractionAPI, UserAPI } from '@/lib/api-clien
 import { useOnboardingCheck } from '@/lib/use-onboarding';
 import { useSessionTracking } from '@/lib/use-session-tracking';
 import { useSwipe } from '@/lib/use-swipe';
+import { useUserInitialization } from '@/lib/use-user-initialization';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -37,6 +38,9 @@ export default function StumblePage() {
 
     // Session tracking for real-time analytics
     const { session, trackDiscovery, trackInteraction } = useSessionTracking();
+
+    // Ensure user exists in database (redirects to onboarding if not)
+    const { userExists, isLoading: userInitLoading, error: userInitError } = useUserInitialization();
 
     // Check if user needs onboarding
     const { needsOnboarding, loading: onboardingLoading } = useOnboardingCheck();
@@ -68,7 +72,8 @@ export default function StumblePage() {
                     return;
                 }
 
-                const userData = await UserAPI.initializeUser(user.id, token);
+                // User should already exist from authentication flow - no fallback creation
+                const userData = await UserAPI.getUser(user.id, token);
                 setWildness(userData.wildness);
 
                 // Initialize saved cache for better UX
@@ -87,7 +92,16 @@ export default function StumblePage() {
                     return;
                 }
 
-                // Use defaults if user service is unavailable
+                // If user doesn't exist (404), this is a critical system error
+                if (error instanceof ApiError && error.status === 404) {
+                    console.error('CRITICAL: User not found in database after authentication!');
+                    setAuthFailed(true);
+                    setUserDataLoaded(true);
+                    showToast('Critical error: User account not found. Please sign out and sign back in.', 'error');
+                    return;
+                }
+
+                // Use defaults only for service unavailability, not missing users
                 setUserDataLoaded(true);
                 if (error instanceof ApiError) {
                     showToast(`Warning: ${error.message}. Using default preferences.`, 'warning');

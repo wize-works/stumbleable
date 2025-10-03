@@ -29,6 +29,16 @@ export interface UserPreferences {
 
 export interface CreateUserRequest {
     userId: string;
+    userData?: {
+        email?: string;
+        firstName?: string;
+        lastName?: string;
+        fullName?: string;
+        imageUrl?: string;
+        preferredTopics?: string[];
+        wildness?: number;
+    };
+    // Legacy support - can remove later
     preferences?: Partial<UserPreferences>;
 }
 

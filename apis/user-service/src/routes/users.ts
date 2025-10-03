@@ -10,6 +10,14 @@ const repository = new UserRepository();
 // Validation schemas
 const createUserSchema = z.object({
     userId: z.string().min(1),
+    userData: z.object({
+        email: z.string().email().optional(),
+        fullName: z.string().optional(),
+        imageUrl: z.string().url().optional(),
+        preferredTopics: z.array(z.string()).min(1).max(20).optional(),
+        wildness: z.number().min(0).max(100).optional()
+    }).optional(),
+    // Legacy support - can remove later
     preferences: z.object({
         preferredTopics: z.array(z.string()).min(1).max(20).optional(),
         wildness: z.number().min(0).max(100).optional()
@@ -89,7 +97,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
                 });
             }
 
-            const { userId, preferences } = validationResult.data;
+            const { userId, userData, preferences } = validationResult.data;
 
             // Authenticate the user to ensure they can create this user account
             const authResult = authenticateUser(request);
@@ -99,6 +107,8 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
                 isAuthenticated: authResult.isAuthenticated,
                 userId: authResult.userId,
                 requestedUserId: userId,
+                hasUserData: !!userData,
+                hasPreferences: !!preferences,
                 error: authResult.error
             }, 'Authentication check for create user');
 
@@ -125,9 +135,18 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
                 });
             }
 
+            // Merge userData and preferences (userData takes precedence)
+            const finalUserData = {
+                email: userData?.email,
+                fullName: userData?.fullName,
+                imageUrl: userData?.imageUrl,
+                preferredTopics: userData?.preferredTopics || preferences?.preferredTopics || ['technology', 'culture', 'science'],
+                wildness: userData?.wildness ?? preferences?.wildness ?? 35
+            };
+
             // Validate topics if provided
-            if (preferences?.preferredTopics) {
-                const validation = await repository.validateTopics(preferences.preferredTopics);
+            if (finalUserData.preferredTopics) {
+                const validation = await repository.validateTopics(finalUserData.preferredTopics);
                 if (validation.invalid.length > 0) {
                     return reply.status(400).send({
                         error: 'Invalid topic IDs',
@@ -136,7 +155,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
                 }
             }
 
-            const user = await repository.createUser(userId, preferences);
+            const user = await repository.createUser(userId, finalUserData);
             return reply.status(201).send({ user });
         } catch (error) {
             fastify.log.error(error, 'Error in POST /users');

@@ -1,16 +1,20 @@
 "use client";
 
+// User initialization now handled by UserInitializer in layout
+
 import * as Clerk from "@clerk/elements/common";
 import * as SignIn from "@clerk/elements/sign-in";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Suspense, useEffect } from "react";
+import { ApiError, UserAPI } from "@/lib/api-client";
 
 export default function SignInPage() {
     const router = useRouter();
     const { isSignedIn, isLoaded } = useUser();
 
-    // Redirect to dashboard if user is already signed in
+    // Redirect to dashboard after successful sign-in
+    // User creation/initialization is now handled by UserInitializer in layout
     useEffect(() => {
         if (isLoaded && isSignedIn) {
             router.replace("/dashboard");

@@ -41,18 +41,29 @@ export class UserRepository {
     }
 
     /**
-     * Create a new user with default preferences
+     * Create a new user with Clerk profile data and preferences
      */
-    async createUser(clerkUserId: string, preferences?: { preferredTopics?: string[]; wildness?: number }): Promise<User> {
-        const { data: userData, error: userError } = await supabase
+    async createUser(clerkUserId: string, userData?: {
+        email?: string;
+        firstName?: string;
+        lastName?: string;
+        fullName?: string;
+        imageUrl?: string;
+        preferredTopics?: string[];
+        wildness?: number;
+    }): Promise<User> {
+        const { data: newUser, error: userError } = await supabase
             .from('users')
             .insert({
                 clerk_user_id: clerkUserId,
+                email: userData?.email || null,
+                full_name: userData?.fullName || null,
+                avatar_url: userData?.imageUrl || null,
             })
             .select()
             .single();
 
-        if (userError || !userData) {
+        if (userError || !newUser) {
             throw new Error(`Failed to create user: ${userError?.message}`);
         }
 
@@ -60,9 +71,9 @@ export class UserRepository {
         const { error: prefsError } = await supabase
             .from('user_preferences')
             .insert({
-                user_id: userData.id,
-                wildness: preferences?.wildness || 50,
-                preferred_topics: preferences?.preferredTopics || ['technology', 'culture', 'science'],
+                user_id: newUser.id,
+                wildness: userData?.wildness ?? 35,
+                preferred_topics: userData?.preferredTopics || ['technology', 'culture', 'science'],
                 blocked_domains: [],
             });
 
@@ -71,12 +82,13 @@ export class UserRepository {
         }
 
         return {
-            id: userData.id, // Return internal database UUID, not Clerk user ID
-            preferredTopics: preferences?.preferredTopics || ['technology', 'culture', 'science'],
-            wildness: preferences?.wildness || 50,
+            id: newUser.id, // Return internal database UUID, not Clerk user ID
+            email: userData?.email,
+            preferredTopics: userData?.preferredTopics || ['technology', 'culture', 'science'],
+            wildness: userData?.wildness ?? 35,
             role: 'user', // New users always start as 'user' role
-            createdAt: userData.created_at,
-            updatedAt: userData.updated_at,
+            createdAt: newUser.created_at,
+            updatedAt: newUser.updated_at,
         };
     }
 

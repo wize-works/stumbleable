@@ -1,7 +1,7 @@
 'use client';
 
 import { useToaster } from '@/components/toaster';
-import { UserAPI } from '@/lib/api-client';
+import { ApiError, UserAPI } from '@/lib/api-client';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -73,12 +73,15 @@ export default function OnboardingPage() {
             const token = await getToken();
             if (!token) return;
 
+            // User should already exist in database from sign-up flow
+            // Just accept guidelines and update preferences
+
             // Accept guidelines first
             if (guidelinesAccepted) {
                 await UserAPI.acceptGuidelines(user.id, token);
             }
 
-            // Update user preferences (user already exists from sign-up or first visit)
+            // Update user preferences 
             await UserAPI.updatePreferences(user.id, {
                 preferredTopics: selectedTopics,
                 wildness
@@ -91,7 +94,16 @@ export default function OnboardingPage() {
             router.push('/stumble');
         } catch (error) {
             console.error('Error completing onboarding:', error);
-            // Show a user-friendly error message
+
+            // No fallback user creation - user MUST exist from authentication flow
+            // If user doesn't exist, this is a critical system error
+            if (error instanceof ApiError && error.status === 404) {
+                console.error('CRITICAL: User does not exist in database after authentication!');
+                showToast('Critical error: User account not found. Please contact support.', 'error');
+                return;
+            }
+
+            // Show a user-friendly error message for other errors
             showToast('There was an error saving your preferences. Please try again.', 'error');
         } finally {
             setLoading(false);
@@ -107,13 +119,13 @@ export default function OnboardingPage() {
             <div className="h-screen flex items-center justify-center bg-base-100">
                 <div className="flex flex-col items-center gap-4">
                     <div className="loading loading-spinner loading-xl text-primary"></div>
-                    <span className="text-xl">Loading...</span>
+                    <span className="text-xl">
+                        {!isLoaded ? 'Loading...' : 'Loading topics...'}
+                    </span>
                 </div>
             </div>
         );
-    }
-
-    if (!isSignedIn) {
+    } if (!isSignedIn) {
         return (
             <div className="h-screen flex items-center justify-center bg-base-100">
                 <div className="flex flex-col items-center gap-4">

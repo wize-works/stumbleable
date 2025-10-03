@@ -304,12 +304,20 @@ export class UserAPI {
     /**
      * Create user after Clerk authentication (called once after signup)
      */
-    static async createUser(userId: string, token: string, preferences?: { preferredTopics?: string[]; wildness?: number }): Promise<{ id: string; preferredTopics: string[]; wildness: number; guidelinesAcceptedAt?: string }> {
+    static async createUser(userId: string, token: string, userData?: {
+        email?: string;
+        firstName?: string;
+        lastName?: string;
+        fullName?: string;
+        imageUrl?: string;
+        preferredTopics?: string[];
+        wildness?: number;
+    }): Promise<{ id: string; preferredTopics: string[]; wildness: number; guidelinesAcceptedAt?: string }> {
         const response = await apiRequest<{ user: { id: string; preferredTopics: string[]; wildness: number; guidelinesAcceptedAt?: string } }>(
             `${USER_API}/users`,
             {
                 method: 'POST',
-                body: JSON.stringify({ userId, preferences }),
+                body: JSON.stringify({ userId, userData }),
             },
             token
         );
