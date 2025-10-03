@@ -64,9 +64,5 @@
     "engines": {
         "node": ">=18.0.0",
         "npm": ">=8.0.0"
-    },
-    "dependencies": {
-        "@clerk/clerk-sdk-node": "^4.13.23",
-        "@clerk/fastify": "^2.4.34"
     }
 }
