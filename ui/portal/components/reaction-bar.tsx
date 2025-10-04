@@ -5,6 +5,7 @@ import { cn } from '../lib/utils';
 import { AddToListButton } from './add-to-list-button';
 import ReportContentButton from './report-content-button';
 import Logo from './ui/logo';
+import { VerticalMenu } from './vertical-menu';
 
 interface ReactionBarProps {
     onReaction: (action: Interaction['action']) => void;
@@ -33,14 +34,6 @@ export function ReactionBar({
         return (
             <div className={cn("fixed bottom-4 sm:bottom-6 left-1/2 transform -translate-x-1/2 z-40", className)}>
                 <div className="flex items-center gap-2 sm:gap-3 bg-base-100/95 backdrop-blur-lg rounded-full px-4 sm:px-6 py-2 sm:py-3 shadow-2xl border border-base-300">
-                    <button
-                        onClick={() => onReaction('up')}
-                        className="btn btn-circle btn-sm sm:btn-md btn-success btn-outline hover:scale-110 active:scale-95 transition-transform touch-manipulation"
-                        title="Like (↑)"
-                        disabled={disabled}
-                    >
-                        <i className="fa-solid fa-duotone fa-thumbs-up text-sm sm:text-base"></i>
-                    </button>
 
                     <button
                         onClick={() => onReaction('save')}
@@ -52,6 +45,14 @@ export function ReactionBar({
                         disabled={disabled}
                     >
                         <i className="fa-solid fa-duotone fa-bookmark text-sm sm:text-base"></i>
+                    </button>
+                    <button
+                        onClick={() => onReaction('up')}
+                        className="btn btn-circle btn-sm sm:btn-md btn-success btn-outline hover:scale-110 active:scale-95 transition-transform touch-manipulation"
+                        title="Like (↑)"
+                        disabled={disabled}
+                    >
+                        <i className="fa-solid fa-duotone fa-thumbs-up text-sm sm:text-base"></i>
                     </button>
 
                     {/* Central Stumble Button */}
@@ -66,45 +67,6 @@ export function ReactionBar({
                         </button>
                     )}
 
-                    {/* Add to List button */}
-                    {discoveryId && (
-                        <AddToListButton
-                            discoveryId={discoveryId}
-                            onAdded={(listId, listTitle) => {
-                                onAddedToList?.(listId, listTitle);
-                            }}
-                            size="sm"
-                            variant="circle"
-                            className="btn-outline hover:scale-110 active:scale-95 transition-transform touch-manipulation hidden sm:flex"
-                        />
-                    )}
-                    <div className='fab fab-flower'>
-                        <div tabIndex={0} role='button' className='btn btn-info btn-circle'>
-                            <i className="fa-solid fa-duotone fa-info"></i>
-                        </div>
-                        <button className='fab-main-action btn btn-circle btn-success'>
-                            <i className="fa-solid fa-duotone fa-x text-sm sm:text-base"></i>
-                        </button>
-
-                        <div className='tooltip tooltip-top' data-tip='Share (Shift+S)'>
-                            <button
-                                className='btn btn-lg btn-circle btn-info'
-                                onClick={() => onReaction('share')}
-                                disabled={disabled}
-                            >
-                                <i className="fa-solid fa-duotone fa-share text-sm sm:text-base"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <button
-                        onClick={() => onReaction('share')}
-                        className="btn btn-circle btn-sm sm:btn-md btn-info btn-outline hover:scale-110 active:scale-95 transition-transform touch-manipulation"
-                        title="Share (Shift+S)"
-                        disabled={disabled}
-                    >
-                        <i className="fa-solid fa-duotone fa-share text-sm sm:text-base"></i>
-                    </button>
-
                     <button
                         onClick={() => onReaction('down')}
                         className="btn btn-circle btn-sm sm:btn-md btn-error btn-outline hover:scale-110 active:scale-95 transition-transform touch-manipulation"
@@ -114,14 +76,45 @@ export function ReactionBar({
                         <i className="fa-solid fa-duotone fa-thumbs-down text-sm sm:text-base"></i>
                     </button>
 
-                    {/* Report button */}
-                    {discoveryId && (
-                        <ReportContentButton
-                            discoveryId={discoveryId}
-                            className="btn-circle btn-error btn-outline hover:scale-110 active:scale-95 transition-transform touch-manipulation"
-                            onReportSuccess={onReportSuccess}
-                        />
-                    )}
+                    {/* More Actions Menu */}
+                    <VerticalMenu disabled={disabled}>
+                        {/* Share button */}
+                        <div className='tooltip tooltip-top' data-tip='Share'>
+                            <button
+                                className='btn btn-circle btn-info hover:scale-110 active:scale-95 transition-transform'
+                                onClick={() => onReaction('share')}
+                                disabled={disabled}
+                            >
+                                <i className="fa-solid fa-duotone fa-share text-sm sm:text-base"></i>
+                            </button>
+                        </div>
+
+                        {/* Add to List button */}
+                        {discoveryId && (
+                            <div className='tooltip tooltip-top' data-tip='Add to List'>
+                                <AddToListButton
+                                    discoveryId={discoveryId}
+                                    onAdded={(listId, listTitle) => {
+                                        onAddedToList?.(listId, listTitle);
+                                    }}
+                                    size="md"
+                                    variant="circle"
+                                    className="btn-accent hover:scale-110 active:scale-95 transition-transform"
+                                />
+                            </div>
+                        )}
+
+                        {/* Report button */}
+                        {discoveryId && (
+                            <div className='tooltip tooltip-top' data-tip='Report'>
+                                <ReportContentButton
+                                    discoveryId={discoveryId}
+                                    className="btn-circle btn-error hover:scale-110 active:scale-95 transition-transform"
+                                    onReportSuccess={onReportSuccess}
+                                />
+                            </div>
+                        )}
+                    </VerticalMenu>
                 </div>
             </div>
         );

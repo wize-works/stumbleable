@@ -103,8 +103,6 @@ export function AddToListButton({
         'btn',
         variant === 'circle' ? 'btn-circle' : variant === 'square' ? 'btn-square' : '',
         `btn-${size}`,
-        'btn-ghost',
-        'hover:btn-primary',
         className
     ].filter(Boolean).join(' ');
 

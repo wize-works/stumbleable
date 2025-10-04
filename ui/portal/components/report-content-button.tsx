@@ -89,7 +89,7 @@ export default function ReportContentButton({ discoveryId, className = '', onRep
 
     if (isReported) {
         return (
-            <button className={`btn ${isCircleButton ? 'btn-circle btn-sm sm:btn-md' : 'btn-sm'} btn-success ${className}`} disabled>
+            <button className={`btn ${isCircleButton ? 'btn-circle' : ''} btn-success ${className}`} disabled>
                 <i className={`fa-solid fa-duotone fa-check ${isCircleButton ? '' : 'mr-1'}`}></i>
                 {!isCircleButton && 'Reported'}
             </button>
@@ -99,7 +99,7 @@ export default function ReportContentButton({ discoveryId, className = '', onRep
     return (
         <>
             <button
-                className={`btn ${isCircleButton ? 'btn-circle btn-sm sm:btn-md' : 'btn-sm'} btn-ghost ${className}`}
+                className={`btn ${isCircleButton ? 'btn-circle' : ''} ${className}`}
                 onClick={() => setIsModalOpen(true)}
                 title="Report inappropriate content"
             >

@@ -73,11 +73,11 @@ export function Header() {
                             href="/stumble"
                             className={cn(
                                 'btn transition-colors',
-                                'px-3 sm:px-4 text-xs sm:text-sm',
+                                'px-3 sm:px-4 ',
                                 'touch-manipulation',
                                 (pathname === '/stumble' || pathname === '/')
                                     ? 'btn-primary'
-                                    : 'btn-ghost'
+                                    : 'btn-secondary'
                             )}
                         >
                             <i className="fa-solid fa-duotone fa-shuffle sm:mr-2"></i>
