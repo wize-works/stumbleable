@@ -1,7 +1,7 @@
 'use client';
 
+import { AnimatedShuffleHero } from '@/components/animated-shuffle-hero';
 import { DiscoveryPreviewCard, DiscoveryPreviewCardFallback, DiscoveryPreviewCardSkeleton } from '@/components/discovery-preview-card';
-import { LavaLampBackground } from '@/components/lava-lamp-background';
 import { RotatingText } from '@/components/rotating-text';
 import { StructuredData } from '@/components/structured-data';
 import type { Discovery } from '@/data/types';
@@ -35,10 +35,10 @@ export default function Home() {
         <>
             <StructuredData schemas={homepageSchemas} />
             <div className="min-h-screen bg-base-100 overflow-hidden">
-                {/* Hero Section with Lava Lamp Background */}
+                {/* Hero Section with Animated Shuffle Background */}
                 <section className="relative pt-20 pb-32 px-4 overflow-hidden min-h-screen">
-                    {/* Lava Lamp Background - contained within hero */}
-                    <LavaLampBackground />
+                    {/* Animated Shuffle Background - contained within hero */}
+                    <AnimatedShuffleHero />
                     <div className="container mx-auto max-w-7xl relative z-10">
                         <div className="text-center space-y-8">
                             {/* Badge */}
