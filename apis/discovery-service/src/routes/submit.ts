@@ -385,7 +385,8 @@ export const submitRoutes: FastifyPluginAsync = async (fastify) => {
                 topics,
                 readTime: Math.max(1, Math.floor((title.length + description.length) / 200)), // Estimate read time
                 submittedAt: new Date(),
-                allowsFraming: metadata.allowsFraming
+                allowsFraming: metadata.allowsFraming,
+                submittedBy: validationResult.data.userId // Track who submitted this content
             });
 
             fastify.log.info({

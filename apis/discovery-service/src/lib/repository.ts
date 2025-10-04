@@ -472,6 +472,7 @@ export class DiscoveryRepository {
         readTime: number;
         submittedAt: Date;
         allowsFraming?: boolean;
+        submittedBy?: string; // User ID who submitted the content
     }): Promise<Discovery> {
         const { data, error } = await supabase
             .from('content')
@@ -489,7 +490,8 @@ export class DiscoveryRepository {
                 freshness_score: 1.0, // Fresh content
                 base_score: 0.5,
                 is_active: true,
-                allows_framing: content.allowsFraming
+                allows_framing: content.allowsFraming,
+                submitted_by: content.submittedBy || null // Track who submitted this content
             })
             .select()
             .single();
@@ -987,4 +989,5 @@ export class DiscoveryRepository {
             };
         }
     }
+
 }

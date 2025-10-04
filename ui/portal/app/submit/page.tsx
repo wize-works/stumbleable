@@ -112,7 +112,8 @@ export default function SubmitPage() {
                     url: url.trim(),
                     title: title.trim() || undefined,
                     description: description.trim() || undefined,
-                    topics: selectedTopics.length > 0 ? selectedTopics : undefined
+                    topics: selectedTopics.length > 0 ? selectedTopics : undefined,
+                    userId: user?.id // Track who submitted the content
                 })
             });
 

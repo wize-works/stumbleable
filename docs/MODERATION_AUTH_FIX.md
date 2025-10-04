@@ -1,265 +1,123 @@
-# Moderation Routes Authentication Fix
+# Moderation Service Authentication & Database Fixes
 
-**Date:** January 18, 2025  
-**Issue:** 401 Unauthorized errors on all moderation endpoints  
-**Status:** ✅ Fixed
+## Issues Fixed
 
----
+### 1. User ID Conversion (Clerk ID → Database UUID)
+**Problem:** Moderation endpoints were receiving Clerk user IDs (e.g., `user_33Y570gkACu4Qe3WDnlZ23edbeB`) but database columns expect UUIDs.
 
-## 🐛 Problem
+**Fixed Endpoints:**
+- ✅ `/api/moderation/queue/:queueId/review` - Review content (approve/reject)
+- ✅ `/api/moderation/queue/bulk-approve` - Bulk approve
+- ✅ `/api/moderation/queue/bulk-reject` - Bulk reject  
+- ✅ `/api/moderation/reports/:reportId/resolve` - Resolve content reports
 
-All moderation API endpoints were returning `401 Unauthorized` errors:
+**Solution:** Added `getDatabaseUserId()` helper calls before passing user ID to repository methods.
 
-```
-GET http://localhost:7003/api/moderation/queue?status=pending&limit=50 401
-GET http://localhost:7003/api/moderation/reports?status=pending&limit=50 401
-GET http://localhost:7003/api/moderation/domains?limit=20 401
-GET http://localhost:7003/api/moderation/analytics 401
-```
+### 2. Database Schema Issues
 
----
+#### Domain Reputation Table
+**Problem:** Old trigger `update_domain_reputation_on_flag()` referenced dropped `score` column.
 
-## 🔍 Root Cause
+**Migrations Applied:**
+- `014_fix_domain_reputation_trigger.sql` - Initial trigger fix attempt
+- `015_complete_domain_reputation_schema.sql` - Complete schema update
 
-The `requireModeratorRole` middleware was trying to access the user ID incorrectly:
+**Changes:**
+- ✅ Added missing columns: `total_approved`, `total_rejected`, `is_blacklisted`, `blacklist_reason`, `notes`, `last_reviewed`, `updated_at`
+- ✅ Migrated `flagged_count` → `total_rejected`
+- ✅ Dropped old columns: `flagged_count`, `submission_count`
+- ✅ Fixed trigger to use `trust_score` instead of `score`
+- ✅ Added auto-update trigger for `updated_at`
+- ✅ Added indexes for performance
 
-### ❌ Before (Incorrect)
-```typescript
-async function requireModeratorRole(
-    request: FastifyRequest,
-    reply: FastifyReply
-) {
-    const userId = (request as any).userId;  // ❌ WRONG - userId not set yet!
-    
-    if (!userId) {
-        return reply.code(401).send({
-            error: 'Unauthorized',
-            message: 'Authentication required',
-        });
-    }
-    // ...
-}
-```
+#### Moderation Queue Table
+**Problem:** Column name mismatch between code and database.
 
-**Problem:** The middleware was looking for `request.userId`, but this value was never set. The Clerk Fastify plugin stores auth data in `request.auth` via the `getAuth()` function.
+**Fixed:**
+- ✅ Updated code to use correct column names: `moderated_by`, `moderated_at`, `moderator_notes`
+- ✅ Migration 012 had already renamed columns in database
 
----
+### 3. Error Logging Improvements
+**Problem:** Empty error objects in logs made debugging difficult.
 
-## ✅ Solution
+**Fixed:** All moderation endpoints now log:
+- `error.message` - Human-readable error message
+- `errorDetails` - Full error object for debugging
+- Contextual information (reportId, queueId, etc.)
 
-Updated the middleware to use Clerk's `getAuth()` function properly:
+## Authentication Configuration
 
-### ✅ After (Correct)
-```typescript
-import { getAuth } from '@clerk/fastify';  // ✅ Import getAuth
+The moderation service requires Clerk environment variables:
 
-async function requireModeratorRole(
-    request: FastifyRequest,
-    reply: FastifyReply
-) {
-    // ✅ Use Clerk's getAuth to extract user ID from JWT
-    const auth = getAuth(request);
-    
-    if (!auth || !auth.userId) {
-        return reply.code(401).send({
-            error: 'Unauthorized',
-            message: 'Authentication required',
-        });
-    }
-
-    const userId = auth.userId;  // ✅ Get userId from auth object
-    const isModerator = await repository.checkUserRole(userId, 'moderator');
-
-    if (!isModerator) {
-        return reply.code(403).send({
-            error: 'Forbidden',
-            message: 'Moderator role required',
-        });
-    }
-
-    // ✅ Attach userId to request for use in handlers
-    (request as any).userId = userId;
-}
+```env
+CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
 ```
 
----
+These are already configured in `apis/moderation-service/.env`.
 
-## 🔧 Additional Fixes
+## Testing Checklist
 
-### 1. User-facing Report Endpoint
+After restarting the moderation service, test:
 
-Updated the `/moderation/report` endpoint to use `getAuth()`:
+1. **Review Content:**
+   - [ ] Approve content in moderation queue
+   - [ ] Reject content in moderation queue
+   - [ ] Bulk approve multiple items
+   - [ ] Bulk reject multiple items
 
-```typescript
-// Report content (user-facing endpoint)
-fastify.post(
-    '/moderation/report',
-    async (request, reply) => {
-        // ✅ Use Clerk's getAuth to extract user ID from JWT
-        const auth = getAuth(request);
-        
-        if (!auth || !auth.userId) {
-            return reply.code(401).send({
-                error: 'Unauthorized',
-                message: 'Authentication required to report content',
-            });
-        }
+2. **Content Reports:**
+   - [ ] Resolve content report as "resolved"
+   - [ ] Dismiss content report as "dismissed"
+   - [ ] Verify reporter sees updated status
 
-        const userId = auth.userId;
-        const body = reportContentSchema.parse(request.body);
-        // ... rest of handler
-    }
-);
+3. **Domain Reputation:**
+   - [ ] Verify trust_score updates when content approved
+   - [ ] Verify trust_score decreases when content rejected
+   - [ ] Check total_approved and total_rejected counters
+
+4. **Error Handling:**
+   - [ ] Try operations without authentication → expect 401
+   - [ ] Try operations as non-moderator user → expect 403
+   - [ ] Verify error messages are helpful in logs
+
+## Restart Instructions
+
+```powershell
+# Navigate to root directory
+cd G:\code\@wizeworks\stumbleable
+
+# Stop all services (Ctrl+C if running)
+
+# Restart all services
+npm run dev
 ```
 
-### 2. Role Hierarchy Support
+Or restart just the moderation service:
 
-The middleware checks for `moderator` role, but **admins automatically pass** this check due to the role hierarchy in `checkUserRole`:
-
-```typescript
-// Role hierarchy (in repository.ts)
-const roleHierarchy: Record<string, number> = {
-    user: 1,
-    moderator: 2,
-    admin: 3,
-};
-
-// Admin (level 3) >= Moderator (level 2) ✅ Pass
-// Moderator (level 2) >= Moderator (level 2) ✅ Pass
-// User (level 1) >= Moderator (level 2) ❌ Fail
+```powershell
+cd G:\code\@wizeworks\stumbleable\apis\moderation-service
+npm run dev
 ```
 
-**This means:**
-- ✅ **Admin** users have full moderator access
-- ✅ **Moderator** users have moderator access  
-- ❌ **User** users cannot access moderation endpoints
+## Files Modified
 
-**Why this is efficient:**
-- Single database query instead of checking both roles
-- Clean, maintainable code
-- Follows role hierarchy pattern consistently
+### Code Changes:
+- `apis/moderation-service/src/routes/moderation.ts` - Added user ID conversion for all review/resolve endpoints
+- `apis/moderation-service/src/lib/repository.ts` - Already had correct column names
 
----
+### Database Migrations:
+- `database/migrations/014_fix_domain_reputation_trigger.sql` - Fixed trigger column references
+- `database/migrations/015_complete_domain_reputation_schema.sql` - Completed schema migration
 
-## 📊 Authentication Flow
+### Environment:
+- `apis/moderation-service/.env` - Already has Clerk configuration
 
-### How Clerk + Fastify Authentication Works
+## Next Steps
 
-1. **Frontend:** User authenticates with Clerk in Next.js
-2. **Frontend:** Gets JWT token via `getToken()` from `@clerk/nextjs`
-3. **Frontend:** Sends token in `Authorization: Bearer <token>` header
-4. **Backend:** Clerk Fastify plugin validates JWT automatically
-5. **Backend:** `getAuth(request)` extracts user data from validated token
-6. **Backend:** Middleware checks if user has moderator role
-7. **Backend:** Request proceeds if authorized, otherwise 401/403
+1. **Restart the moderation service** to ensure Clerk plugin is loaded
+2. **Test the moderation queue** - approve/reject content
+3. **Test content reports** - resolve/dismiss reports
+4. **Verify domain reputation** updates correctly
 
-### Request Flow Diagram
-```
-┌─────────────┐
-│   Browser   │
-│  (Next.js)  │
-└──────┬──────┘
-       │ 1. User authenticates
-       │ 2. getToken() → JWT
-       │
-       ▼
-┌─────────────────────────────────┐
-│  Authorization: Bearer <JWT>     │
-└─────────────┬───────────────────┘
-              │
-              ▼
-┌──────────────────────────────────┐
-│  Fastify + Clerk Plugin          │
-│  - Validates JWT signature       │
-│  - Extracts userId, sessionId    │
-│  - Makes available via getAuth() │
-└──────────────┬───────────────────┘
-               │
-               ▼
-┌──────────────────────────────────┐
-│  requireModeratorRole            │
-│  - const auth = getAuth(request) │
-│  - Check auth.userId exists      │
-│  - Check user has moderator role │
-└──────────────┬───────────────────┘
-               │
-               ▼
-┌──────────────────────────────────┐
-│  Route Handler                   │
-│  - Uses (request as any).userId  │
-│  - Performs moderation actions   │
-└──────────────────────────────────┘
-```
-
----
-
-## 🎯 Key Takeaways
-
-### ✅ DO
-- **Always use `getAuth(request)`** to get Clerk auth data
-- **Check both `auth` and `auth.userId`** exist before proceeding
-- **Import `getAuth` from `@clerk/fastify`** at the top of route files
-- **Attach userId to request** after validation for handler use
-
-### ❌ DON'T
-- **Don't access `request.userId` directly** without setting it first
-- **Don't assume auth data exists** without checking
-- **Don't use `request.auth` without `getAuth()`** - it won't be there
-- **Don't forget to import `getAuth`** from `@clerk/fastify`
-
----
-
-## 🧪 Testing
-
-After this fix, test the following:
-
-1. **Moderation Queue**
-   ```bash
-   # Should return pending items (if user is moderator)
-   GET http://localhost:7003/api/moderation/queue?status=pending
-   ```
-
-2. **Content Reports**
-   ```bash
-   # Should return pending reports
-   GET http://localhost:7003/api/moderation/reports?status=pending
-   ```
-
-3. **Domain Reputations**
-   ```bash
-   # Should return domain list
-   GET http://localhost:7003/api/moderation/domains?limit=20
-   ```
-
-4. **Analytics**
-   ```bash
-   # Should return moderation stats
-   GET http://localhost:7003/api/moderation/analytics
-   ```
-
-5. **User Report** (any authenticated user)
-   ```bash
-   # Should create a report
-   POST http://localhost:7003/api/moderation/report
-   Body: { discoveryId: "...", reason: "spam", description: "..." }
-   ```
-
----
-
-## 📝 Related Files Changed
-
-1. **`apis/user-service/src/routes/moderation.ts`**
-   - Added `import { getAuth } from '@clerk/fastify'`
-   - Updated `requireModeratorRole` middleware
-   - Updated `/moderation/report` handler
-
----
-
-## 🚀 Result
-
-✅ All moderation endpoints now properly authenticate  
-✅ Moderator role checking works correctly  
-✅ User-facing report endpoint requires auth  
-✅ No more 401 Unauthorized errors  
-
-The moderation system is now fully functional with proper RBAC! 🎉
+The 401 Unauthorized error should be resolved once the service restarts with proper Clerk initialization.
