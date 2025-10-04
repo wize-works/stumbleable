@@ -12,13 +12,12 @@ import { UserMenu } from './user-menu';
 const authenticatedNavigation = [
     { name: 'Stumble', href: '/stumble', icon: 'fa-shuffle' },
     { name: 'Submit', href: '/submit', icon: 'fa-plus' },
-    { name: 'Lists', href: '/lists', icon: 'fa-list' },
-    { name: 'Saved', href: '/saved', icon: 'fa-bookmark' },
-    { name: 'Analytics', href: '/analytics', icon: 'fa-chart-bar' },
+    { name: 'Explore', href: '/explore', icon: 'fa-compass' },
     { name: 'About', href: '/about', icon: 'fa-info-circle' },
 ];
 
 const publicNavigation = [
+    { name: 'Explore', href: '/explore', icon: 'fa-compass' },
     { name: 'About', href: '/about', icon: 'fa-info-circle' },
 ];
 
@@ -54,20 +53,43 @@ export function Header() {
         <header className="sticky top-0 z-50 bg-base-100/80 backdrop-blur-sm border-b border-base-300">
             <div className="mx-auto px-3 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-14 sm:h-16">
-                    {/* Logo */}
+                    {/* Logo - Icon only on mobile, full on desktop */}
                     <Link
                         href="/"
-                        className="flex items-center space-x-2 text-lg sm:text-xl font-bold text-primary hover:text-primary-focus transition-colors min-w-0"
+                        className="flex items-center text-lg sm:text-xl font-bold text-primary hover:text-primary-focus transition-colors min-w-0"
                     >
-                        <Logo size="sm" textSize="xxl" className="text-primary sm:size-md" textMode='full' />
+                        {/* Mobile: Icon only */}
+                        <div className="sm:hidden">
+                            <Logo size="sm" textMode='none' />
+                        </div>
+                        {/* Desktop: Full logo with text */}
+                        <div className="hidden sm:block">
+                            <Logo size="sm" textSize="xxl" textMode='full' />
+                        </div>
                     </Link>
 
                     {/* Navigation */}
                     <div className="flex items-center space-x-2">
-                        <nav className="flex items-center space-x-1">
-                            {navigation.map((item) => {
-                                const isActive = pathname === item.href ||
-                                    (item.href === '/stumble' && pathname === '/');
+                        {/* Stumble Button - Always visible */}
+                        <Link
+                            href="/stumble"
+                            className={cn(
+                                'btn transition-colors',
+                                'px-3 sm:px-4 text-xs sm:text-sm',
+                                'touch-manipulation',
+                                (pathname === '/stumble' || pathname === '/')
+                                    ? 'btn-primary'
+                                    : 'btn-ghost'
+                            )}
+                        >
+                            <i className="fa-solid fa-duotone fa-shuffle sm:mr-2"></i>
+                            <span className="hidden sm:inline">Stumble</span>
+                        </Link>
+
+                        {/* Desktop Navigation - Hidden on mobile */}
+                        <nav className="hidden sm:flex items-center space-x-1">
+                            {navigation.slice(1).map((item) => {
+                                const isActive = pathname === item.href;
 
                                 return (
                                     <Link
@@ -75,17 +97,14 @@ export function Header() {
                                         href={item.href}
                                         className={cn(
                                             'btn transition-colors',
-                                            'px-2 sm:px-4 text-xs sm:text-sm',
-                                            'touch-manipulation', // Better touch handling
+                                            'px-4 text-sm',
+                                            'touch-manipulation',
                                             isActive
                                                 ? 'btn-primary'
                                                 : 'btn-ghost'
                                         )}
                                     >
-                                        <span className="hidden sm:inline">{item.name}</span>
-                                        <span className="sm:hidden">
-                                            <i className={`fa-solid fa-duotone ${item.icon}`}></i>
-                                        </span>
+                                        {item.name}
                                     </Link>
                                 );
                             })}

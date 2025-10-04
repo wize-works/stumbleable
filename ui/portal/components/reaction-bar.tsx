@@ -78,7 +78,24 @@ export function ReactionBar({
                             className="btn-outline hover:scale-110 active:scale-95 transition-transform touch-manipulation hidden sm:flex"
                         />
                     )}
+                    <div className='fab fab-flower'>
+                        <div tabIndex={0} role='button' className='btn btn-info btn-circle'>
+                            <i className="fa-solid fa-duotone fa-info"></i>
+                        </div>
+                        <button className='fab-main-action btn btn-circle btn-success'>
+                            <i className="fa-solid fa-duotone fa-x text-sm sm:text-base"></i>
+                        </button>
 
+                        <div className='tooltip tooltip-top' data-tip='Share (Shift+S)'>
+                            <button
+                                className='btn btn-lg btn-circle btn-info'
+                                onClick={() => onReaction('share')}
+                                disabled={disabled}
+                            >
+                                <i className="fa-solid fa-duotone fa-share text-sm sm:text-base"></i>
+                            </button>
+                        </div>
+                    </div>
                     <button
                         onClick={() => onReaction('share')}
                         className="btn btn-circle btn-sm sm:btn-md btn-info btn-outline hover:scale-110 active:scale-95 transition-transform touch-manipulation"

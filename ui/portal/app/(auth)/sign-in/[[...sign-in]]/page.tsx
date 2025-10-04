@@ -7,7 +7,6 @@ import * as SignIn from "@clerk/elements/sign-in";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Suspense, useEffect } from "react";
-import { ApiError, UserAPI } from "@/lib/api-client";
 
 export default function SignInPage() {
     const router = useRouter();
@@ -53,7 +52,7 @@ export default function SignInPage() {
                                     {/* <Clerk.Connection name="microsoft" className="btn btn-outline rounded-xl"><Clerk.Icon />Microsoft</Clerk.Connection> */}
                                 </div>
                                 <div className="text-sm text-base-content/60 text-center">
-                                    New here? <a className="link link-primary" href="/auth/signup">Create an account</a>
+                                    New here? <a className="link link-primary" href="/sign-up">Create an account</a>
                                 </div>
                             </SignIn.Step>
                             <SignIn.Step name="sso-callback">
@@ -70,7 +69,7 @@ export default function SignInPage() {
                                     Reset password via email.
                                 </SignIn.SupportedStrategy>
                                 <div className="text-sm text-base-content/60 text-center">
-                                    Remembered your password? <a className="link link-primary" href="/auth/signin">Sign in</a>
+                                    Remembered your password? <a className="link link-primary" href="/sign-in">Sign in</a>
                                 </div>
                             </SignIn.Step>
                             <SignIn.Step name="reset-password" className="space-y-4">

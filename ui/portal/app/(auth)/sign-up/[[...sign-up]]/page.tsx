@@ -70,7 +70,7 @@ export default function SignUpPage() {
                                     <SignUp.Captcha className="w-full" />
 
                                     <div className="text-sm text-base-content/60 text-center">
-                                        Already have an account? <a className="link link-primary" href="/auth/signin">Sign in</a>
+                                        Already have an account? <a className="link link-primary" href="/sign-in">Sign in</a>
                                     </div>
                                 </div>
                             </SignUp.Step>
