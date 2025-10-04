@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import Fastify from 'fastify';
 import { CrawlerScheduler } from './lib/scheduler';
 import { trendingCalculator } from './lib/trending-calculator';
+import { enhanceRoute } from './routes/enhance';
 import { jobRoutes, setScheduler } from './routes/jobs';
 import { sourceRoutes } from './routes/sources';
 
@@ -81,6 +82,7 @@ async function buildApp() {
     // Register routes (with auth protection)
     await fastify.register(sourceRoutes, { prefix: '/api' });
     await fastify.register(jobRoutes, { prefix: '/api' });
+    await fastify.register(enhanceRoute, { prefix: '/api' });
 
     // Set scheduler reference for routes
     setScheduler(scheduler);

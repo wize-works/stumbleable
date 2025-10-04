@@ -20,6 +20,7 @@ export class DiscoveryRepository {
     /**
      * Transform raw database content into EnhancedDiscovery objects
      * OPTIMIZED: Streamlined transformation with fewer conditionals
+     * FIXED: Properly merge topics from JSONB column and content_topics table
      */
     private transformContentData(data: any[]): EnhancedDiscovery[] {
         return data.map(item => {
@@ -28,6 +29,15 @@ export class DiscoveryRepository {
                 name: ct.topics?.name || ct.name,
                 confidence: ct.confidence_score || 0.5
             }));
+
+            // Merge topics from both sources: JSONB column and relational table
+            // Prefer relational table topics if available (more structured)
+            let topics: string[] = [];
+            if (contentTopics && contentTopics.length > 0) {
+                topics = contentTopics.map((ct: any) => ct.name).filter((name: string) => name != null);
+            } else if (item.topics && Array.isArray(item.topics)) {
+                topics = item.topics;
+            }
 
             const metrics = item.content_metrics?.[0];
 
@@ -40,7 +50,7 @@ export class DiscoveryRepository {
                 imageStoragePath: item.image_storage_path,
                 faviconUrl: item.favicon_url,
                 domain: item.domain,
-                topics: item.topics || [],
+                topics: topics, // Use merged topics
                 readingTime: item.reading_time_minutes || item.reading_time || 5,
                 createdAt: item.created_at,
                 quality: item.quality_score || 0.5,
@@ -63,6 +73,7 @@ export class DiscoveryRepository {
 
     /**
      * Get all active discoveries with enhanced data
+     * FIXED: Changed to LEFT JOIN so content without content_topics entries is still returned
      */
     async getAllDiscoveries(): Promise<EnhancedDiscovery[]> {
         const { data, error } = await supabase
@@ -85,8 +96,8 @@ export class DiscoveryRepository {
                 popularity_score,
                 is_active,
                 allows_framing,
-                content_topics!inner(
-                    topics!inner(name),
+                content_topics(
+                    topics(name),
                     confidence_score
                 ),
                 content_metrics(
@@ -486,6 +497,42 @@ export class DiscoveryRepository {
         if (error) {
             console.error('Error creating discovery:', error);
             throw new Error('Failed to create discovery');
+        }
+
+        // CRITICAL FIX: Populate content_topics relational table
+        // This is required for discovery queries that use INNER JOIN on content_topics
+        if (content.topics && content.topics.length > 0) {
+            try {
+                // Look up topic IDs
+                const { data: topicData, error: topicError } = await supabase
+                    .from('topics')
+                    .select('id, name')
+                    .in('name', content.topics);
+
+                if (topicError) {
+                    console.error('Error fetching topic IDs:', topicError);
+                } else if (topicData && topicData.length > 0) {
+                    // Insert into content_topics junction table
+                    const contentTopics = topicData.map(topic => ({
+                        content_id: data.id,
+                        topic_id: topic.id,
+                        confidence_score: 0.8 // Default confidence for keyword-classified topics
+                    }));
+
+                    const { error: junctionError } = await supabase
+                        .from('content_topics')
+                        .insert(contentTopics);
+
+                    if (junctionError) {
+                        console.error('Error inserting content_topics:', junctionError);
+                    } else {
+                        console.log(`✅ Linked ${contentTopics.length} topics to content ${data.id}`);
+                    }
+                }
+            } catch (topicLinkError) {
+                // Don't fail the whole operation if topic linking fails
+                console.error('Non-fatal error linking topics:', topicLinkError);
+            }
         }
 
         return {

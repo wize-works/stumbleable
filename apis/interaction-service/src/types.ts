@@ -1,7 +1,7 @@
 export type Interaction = {
     id: string;
     discoveryId: string;
-    action: 'up' | 'down' | 'save' | 'unsave' | 'skip' | 'share';
+    action: 'up' | 'down' | 'save' | 'unsave' | 'skip' | 'share' | 'view';
     at: number; // Date.now()
 };
 

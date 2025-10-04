@@ -79,7 +79,7 @@ export function ReactionBar({
                     {/* More Actions Menu */}
                     <VerticalMenu disabled={disabled}>
                         {/* Share button */}
-                        <div className='tooltip tooltip-top' data-tip='Share'>
+                        <div className='tooltip tooltip-right' data-tip='Share'>
                             <button
                                 className='btn btn-circle btn-info hover:scale-110 active:scale-95 transition-transform'
                                 onClick={() => onReaction('share')}
@@ -91,7 +91,7 @@ export function ReactionBar({
 
                         {/* Add to List button */}
                         {discoveryId && (
-                            <div className='tooltip tooltip-top' data-tip='Add to List'>
+                            <div className='tooltip tooltip-right' data-tip='Add to List'>
                                 <AddToListButton
                                     discoveryId={discoveryId}
                                     onAdded={(listId, listTitle) => {
@@ -106,13 +106,11 @@ export function ReactionBar({
 
                         {/* Report button */}
                         {discoveryId && (
-                            <div className='tooltip tooltip-top' data-tip='Report'>
-                                <ReportContentButton
-                                    discoveryId={discoveryId}
-                                    className="btn-circle btn-error hover:scale-110 active:scale-95 transition-transform"
-                                    onReportSuccess={onReportSuccess}
-                                />
-                            </div>
+                            <ReportContentButton
+                                discoveryId={discoveryId}
+                                className="btn-circle btn-error hover:scale-110 active:scale-95 transition-transform"
+                                onReportSuccess={onReportSuccess}
+                            />
                         )}
                     </VerticalMenu>
                 </div>

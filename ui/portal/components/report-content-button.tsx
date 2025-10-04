@@ -20,6 +20,29 @@ export default function ReportContentButton({ discoveryId, className = '', onRep
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isReported, setIsReported] = useState(false);
 
+    // Use a ref to prevent Strict Mode from resetting the modal state
+    const modalStateRef = React.useRef(false);
+
+    const openModal = () => {
+        console.log('� Opening modal');
+        modalStateRef.current = true;
+        setIsModalOpen(true);
+    };
+
+    const closeModal = () => {
+        console.log('🔒 Closing modal');
+        modalStateRef.current = false;
+        setIsModalOpen(false);
+    };
+
+    // Restore modal state after Strict Mode remount
+    React.useEffect(() => {
+        if (modalStateRef.current && !isModalOpen) {
+            console.log('🔄 Restoring modal state after remount');
+            setIsModalOpen(true);
+        }
+    }, [isModalOpen]);
+
     const reportReasons = [
         { value: 'spam', label: 'Spam or promotional content' },
         { value: 'inappropriate', label: 'Inappropriate content' },
@@ -107,20 +130,28 @@ export default function ReportContentButton({ discoveryId, className = '', onRep
                 {!isCircleButton && 'Report'}
             </button>
 
-            {/* Report Modal - rendered as portal at document body level */}
-            {isModalOpen && typeof document !== 'undefined' && createPortal(
+            {/* DaisyUI Modal - handles backdrop clicks automatically */}
+            {isModalOpen && createPortal(
                 <div className="modal modal-open">
                     <div className="modal-box max-w-lg">
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+                            onClick={() => setIsModalOpen(false)}
+                        >
+                            ✕
+                        </button>
+
                         <h3 className="font-bold text-lg mb-4">Report Content</h3>
 
                         <form onSubmit={handleSubmitReport}>
                             <div className="form-control mb-4">
-                                <label className="label">
+                                <label className="label pb-4">
                                     <span className="label-text">Why are you reporting this content?</span>
                                 </label>
-                                <div className="space-y-2">
+                                <div className="space-y-2 grid grid-cols-2 gap-2">
                                     {reportReasons.map((reason) => (
-                                        <label key={reason.value} className="cursor-pointer label justify-start">
+                                        <label key={reason.value} className="cursor-pointer label justify-start ">
                                             <input
                                                 type="radio"
                                                 name="reason"
@@ -130,7 +161,7 @@ export default function ReportContentButton({ discoveryId, className = '', onRep
                                                 className="radio radio-primary mr-3"
                                                 required
                                             />
-                                            <span className="label-text">{reason.label}</span>
+                                            <span className="label-text text-wrap">{reason.label}</span>
                                         </label>
                                     ))}
                                 </div>
@@ -141,7 +172,7 @@ export default function ReportContentButton({ discoveryId, className = '', onRep
                                     <span className="label-text">Additional details (optional)</span>
                                 </label>
                                 <textarea
-                                    className="textarea textarea-bordered"
+                                    className="textarea textarea-bordered w-full"
                                     placeholder="Provide more context about the issue..."
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
@@ -182,8 +213,10 @@ export default function ReportContentButton({ discoveryId, className = '', onRep
                             </div>
                         </form>
                     </div>
-                    {/* Modal backdrop - clicking outside closes the modal */}
-                    <div className="modal-backdrop" onClick={() => setIsModalOpen(false)}></div>
+                    {/* DaisyUI modal backdrop - clicking closes the modal automatically */}
+                    <form method="dialog" className="modal-backdrop">
+                        <button onClick={() => setIsModalOpen(false)}>close</button>
+                    </form>
                 </div>,
                 document.body
             )}

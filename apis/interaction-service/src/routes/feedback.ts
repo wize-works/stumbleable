@@ -7,7 +7,7 @@ import { FeedbackRequest } from '../types';
 // Validation schemas
 const FeedbackRequestSchema = z.object({
     discoveryId: z.string().min(1),
-    action: z.enum(['up', 'down', 'save', 'unsave', 'skip', 'share']),
+    action: z.enum(['up', 'down', 'save', 'unsave', 'skip', 'share', 'view']),
     userId: z.string().optional(),
 });
 

@@ -41,7 +41,8 @@ class InteractionStore {
             'save': 'save',
             'unsave': 'save', // We'll handle unsave separately
             'share': 'share',
-            'skip': 'skip'
+            'skip': 'skip',
+            'view': 'view'
         };
 
         const dbType = typeMapping[action] || action;
@@ -67,6 +68,30 @@ class InteractionStore {
         }
 
         // Record interaction (save actions will trigger saved_content creation via DB trigger)
+        // For 'view' type, handle duplicate gracefully (user already viewed this content)
+        if (dbType === 'view' && userId) {
+            // Check if view already exists
+            const { data: existingView } = await supabase
+                .from('user_interactions')
+                .select('id, created_at')
+                .match({
+                    user_id: userId,
+                    content_id: discoveryId,
+                    type: 'view'
+                })
+                .single();
+
+            if (existingView) {
+                // View already recorded, return existing record
+                return {
+                    id: existingView.id,
+                    discoveryId,
+                    action: action as Interaction['action'],
+                    at: new Date(existingView.created_at).getTime(),
+                };
+            }
+        }
+
         const { data: interactionData, error: interactionError } = await supabase
             .from('user_interactions')
             .insert({
@@ -79,6 +104,17 @@ class InteractionStore {
             .single();
 
         if (interactionError) {
+            // If it's a duplicate key error for views, that's okay - just return a synthetic response
+            if (interactionError.code === '23505' && dbType === 'view') {
+                console.log('View already recorded for user:', userId, 'content:', discoveryId);
+                return {
+                    id: `view-${Date.now()}`,
+                    discoveryId,
+                    action: action as Interaction['action'],
+                    at: Date.now(),
+                };
+            }
+
             console.error('Error recording interaction:', interactionError);
             throw new Error('Failed to record interaction');
         }

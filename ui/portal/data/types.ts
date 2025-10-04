@@ -26,7 +26,7 @@ export type Discovery = {
 export type Interaction = {
     id: string;
     discoveryId: string;
-    action: 'up' | 'down' | 'save' | 'skip' | 'share';
+    action: 'up' | 'down' | 'save' | 'skip' | 'share' | 'view';
     at: number;            // Date.now()
 };
 

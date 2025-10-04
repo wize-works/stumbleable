@@ -22,9 +22,28 @@ export function VerticalMenu({
     // Close menu when clicking outside
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
-            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
+            const target = event.target as HTMLElement;
+
+            // Don't close if clicking inside the menu
+            if (menuRef.current && menuRef.current.contains(target)) {
+                return;
             }
+
+            // Don't close if clicking inside a modal/dialog
+            if (target.closest('dialog, [role="dialog"], .modal')) {
+                console.log('[VerticalMenu] Click inside modal detected, keeping menu open');
+                return;
+            }
+
+            // Don't close if clicking on a modal backdrop (let the modal handle it)
+            if (target.classList.contains('modal-backdrop') || target.closest('.modal-backdrop')) {
+                console.log('[VerticalMenu] Click on modal backdrop, keeping menu open');
+                return;
+            }
+
+            // Otherwise, close the menu
+            console.log('[VerticalMenu] Click outside detected, closing menu');
+            setIsOpen(false);
         }
 
         if (isOpen) {
@@ -75,7 +94,6 @@ export function VerticalMenu({
                                     transform: isOpen ? 'translateY(0)' : 'translateY(20px)',
                                     transitionDelay: `${index * 50}ms`
                                 }}
-                                onClick={() => setIsOpen(false)}
                             >
                                 {child}
                             </div>

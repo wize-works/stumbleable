@@ -1,9 +1,7 @@
+import * as cheerio from 'cheerio';
 import { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
-import * as cheerio from 'cheerio';
-import { DiscoveryRepository } from '../lib/repository';
-
-const repository = new DiscoveryRepository();
+import { supabase } from '../lib/supabase';
 
 // Validation schemas
 const EnhanceRequestSchema = z.object({
@@ -14,15 +12,21 @@ const EnhanceRequestSchema = z.object({
 interface ExtractedMetadata {
     title?: string;
     description?: string;
-    imageUrl?: string;
+    image_url?: string;
     author?: string;
-    publishedAt?: string;
-    wordCount?: number;
-    contentText?: string;
+    published_at?: string;
+    word_count?: number;
+    content_text?: string;
+}
+
+interface ContentRecord {
+    id: string;
+    url: string;
 }
 
 /**
  * Content metadata enhancement routes
+ * Scrapes missing metadata from web pages and updates the database
  */
 export const enhanceRoute: FastifyPluginAsync = async (fastify) => {
 
@@ -35,14 +39,27 @@ export const enhanceRoute: FastifyPluginAsync = async (fastify) => {
             const body = EnhanceRequestSchema.parse(request.body);
 
             // Get content records that need enhancement
-            let contentRecords;
+            let contentRecords: ContentRecord[];
 
             if (body.contentIds && body.contentIds.length > 0) {
                 // Enhance specific content IDs
-                contentRecords = await repository.getContentByIds(body.contentIds);
+                const { data, error } = await supabase
+                    .from('content')
+                    .select('id, url')
+                    .in('id', body.contentIds);
+
+                if (error) throw error;
+                contentRecords = data || [];
             } else {
                 // Get records that need enhancement (missing metadata)
-                contentRecords = await repository.getContentNeedingEnhancement(body.batchSize);
+                const { data, error } = await supabase
+                    .from('content')
+                    .select('id, url')
+                    .or('image_url.is.null,author.is.null,content_text.is.null,word_count.is.null')
+                    .limit(body.batchSize);
+
+                if (error) throw error;
+                contentRecords = data || [];
             }
 
             if (!contentRecords || contentRecords.length === 0) {
@@ -66,7 +83,14 @@ export const enhanceRoute: FastifyPluginAsync = async (fastify) => {
                     const metadata = await extractMetadata(record.url);
 
                     if (Object.keys(metadata).length > 0) {
-                        await repository.updateContentMetadata(record.id, metadata);
+                        // Update the database
+                        const { error } = await supabase
+                            .from('content')
+                            .update(metadata)
+                            .eq('id', record.id);
+
+                        if (error) throw error;
+
                         enhanced++;
 
                         results.push({
@@ -127,15 +151,57 @@ export const enhanceRoute: FastifyPluginAsync = async (fastify) => {
      */
     fastify.get('/enhance/status', async (request: FastifyRequest, reply: FastifyReply) => {
         try {
-            const stats = await repository.getEnhancementStats();
+            // Get total content count
+            const { count: totalCount, error: totalError } = await supabase
+                .from('content')
+                .select('*', { count: 'exact', head: true });
+
+            if (totalError) throw totalError;
+
+            // Get counts for each field
+            const { count: hasImage, error: imageError } = await supabase
+                .from('content')
+                .select('*', { count: 'exact', head: true })
+                .not('image_url', 'is', null);
+
+            if (imageError) throw imageError;
+
+            const { count: hasAuthor, error: authorError } = await supabase
+                .from('content')
+                .select('*', { count: 'exact', head: true })
+                .not('author', 'is', null);
+
+            if (authorError) throw authorError;
+
+            const { count: hasContent, error: contentError } = await supabase
+                .from('content')
+                .select('*', { count: 'exact', head: true })
+                .not('content_text', 'is', null);
+
+            if (contentError) throw contentError;
+
+            const { count: hasWordCount, error: wordCountError } = await supabase
+                .from('content')
+                .select('*', { count: 'exact', head: true })
+                .not('word_count', 'is', null);
+
+            if (wordCountError) throw wordCountError;
+
+            // Calculate needs enhancement (missing any metadata)
+            const { count: needsEnhancement, error: needsError } = await supabase
+                .from('content')
+                .select('*', { count: 'exact', head: true })
+                .or('image_url.is.null,author.is.null,content_text.is.null,word_count.is.null');
+
+            if (needsError) throw needsError;
 
             return reply.send({
-                total_content: stats.total,
-                needs_enhancement: stats.needsEnhancement,
-                has_image: stats.hasImage,
-                has_author: stats.hasAuthor,
-                has_content: stats.hasContent,
-                has_word_count: stats.hasWordCount
+                total_content: totalCount || 0,
+                needs_enhancement: needsEnhancement || 0,
+                has_image: hasImage || 0,
+                has_author: hasAuthor || 0,
+                has_content: hasContent || 0,
+                has_word_count: hasWordCount || 0
             });
 
         } catch (error) {
@@ -175,26 +241,24 @@ async function extractMetadata(url: string): Promise<ExtractedMetadata> {
         const metadata: ExtractedMetadata = {};
 
         // Extract title
-        metadata.title =
+        const rawTitle =
             $('meta[property="og:title"]').attr('content') ||
             $('meta[name="twitter:title"]').attr('content') ||
             $('title').text() ||
             $('h1').first().text();
 
-        // Clean title
-        if (metadata.title) {
-            metadata.title = metadata.title.trim().substring(0, 200);
+        if (rawTitle) {
+            metadata.title = rawTitle.trim().substring(0, 200);
         }
 
         // Extract description
-        metadata.description =
+        const rawDescription =
             $('meta[property="og:description"]').attr('content') ||
             $('meta[name="twitter:description"]').attr('content') ||
             $('meta[name="description"]').attr('content');
 
-        // Clean description
-        if (metadata.description) {
-            metadata.description = metadata.description.trim().substring(0, 500);
+        if (rawDescription) {
+            metadata.description = rawDescription.trim().substring(0, 500);
         }
 
         // Extract image
@@ -202,20 +266,19 @@ async function extractMetadata(url: string): Promise<ExtractedMetadata> {
         const twitterImage = $('meta[name="twitter:image"]').attr('content');
         const firstImg = $('img').first().attr('src');
 
-        if (ogImage) metadata.imageUrl = resolveUrl(ogImage, url);
-        else if (twitterImage) metadata.imageUrl = resolveUrl(twitterImage, url);
-        else if (firstImg) metadata.imageUrl = resolveUrl(firstImg, url);
+        if (ogImage) metadata.image_url = resolveUrl(ogImage, url);
+        else if (twitterImage) metadata.image_url = resolveUrl(twitterImage, url);
+        else if (firstImg) metadata.image_url = resolveUrl(firstImg, url);
 
         // Extract author
-        metadata.author =
+        const rawAuthor =
             $('meta[name="author"]').attr('content') ||
             $('meta[property="article:author"]').attr('content') ||
             $('.author').first().text() ||
             $('[rel="author"]').first().text();
 
-        // Clean author
-        if (metadata.author) {
-            metadata.author = metadata.author.trim().substring(0, 100);
+        if (rawAuthor) {
+            metadata.author = rawAuthor.trim().substring(0, 100);
         }
 
         // Extract published date
@@ -226,7 +289,7 @@ async function extractMetadata(url: string): Promise<ExtractedMetadata> {
 
         if (publishedDate) {
             try {
-                metadata.publishedAt = new Date(publishedDate).toISOString();
+                metadata.published_at = new Date(publishedDate).toISOString();
             } catch (e) {
                 // Invalid date format, skip
             }
@@ -262,8 +325,8 @@ async function extractMetadata(url: string): Promise<ExtractedMetadata> {
                 .substring(0, 2000); // Limit to 2000 chars
 
             if (contentText.length > 50) {
-                metadata.contentText = contentText;
-                metadata.wordCount = contentText.split(/\s+/).length;
+                metadata.content_text = contentText;
+                metadata.word_count = contentText.split(/\s+/).length;
             }
         }
 

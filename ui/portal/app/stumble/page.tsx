@@ -185,6 +185,14 @@ export default function StumblePage() {
             setDiscoveryReason(response.reason);
             seenIdsRef.current.add(response.discovery.id);
 
+            // Record view interaction for metrics tracking
+            try {
+                await InteractionAPI.recordFeedback(response.discovery.id, 'view', token);
+            } catch (error) {
+                console.error('Error recording view:', error);
+                // Non-critical, don't block the flow
+            }
+
             // Check if we know this content blocks iframe embedding from database
             if (response.discovery.allowsFraming === false) {
                 console.log('[Stumble] Content known to block iframes - showing warning:', response.discovery.domain);
@@ -277,6 +285,7 @@ export default function StumblePage() {
                 save: isSaved ? 'Removed from saved' : 'Saved!',
                 share: 'Link copied!',
                 skip: 'Skipped!',
+                view: 'Viewed', // Not typically shown to user
             };
 
             showToast(messages[action], action === 'up' ? 'success' : action === 'down' ? 'info' : action === 'save' ? 'warning' : 'info');
