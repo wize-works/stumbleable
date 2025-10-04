@@ -19,38 +19,46 @@ export interface EnhancedDiscovery extends Discovery {
 export class DiscoveryRepository {
     /**
      * Transform raw database content into EnhancedDiscovery objects
+     * OPTIMIZED: Streamlined transformation with fewer conditionals
      */
     private transformContentData(data: any[]): EnhancedDiscovery[] {
-        return data.map(item => ({
-            id: item.id,
-            url: item.url,
-            title: item.title,
-            description: item.description || '',
-            image: item.image_url || '',
-            imageStoragePath: item.image_storage_path || undefined,
-            faviconUrl: item.favicon_url || undefined,
-            domain: item.domain,
-            topics: item.topics || [],
-            readingTime: item.reading_time_minutes || item.reading_time || 5,
-            createdAt: item.created_at,
-            quality: item.quality_score || 0.5,
-            baseScore: item.base_score || 0.5,
-            popularityScore: item.popularity_score || 0.5,
-            isActive: item.is_active !== false,
-            allowsFraming: item.allows_framing,
-            contentTopics: item.content_topics?.map((ct: any) => ({
+        return data.map(item => {
+            // Pre-calculate optional values
+            const contentTopics = item.content_topics?.map((ct: any) => ({
                 name: ct.topics?.name || ct.name,
                 confidence: ct.confidence_score || 0.5
-            })) || [],
-            metrics: item.content_metrics?.[0] ? {
-                views_count: item.content_metrics[0].views_count || 0,
-                likes_count: item.content_metrics[0].likes_count || 0,
-                saves_count: item.content_metrics[0].saves_count || 0,
-                shares_count: item.content_metrics[0].shares_count || 0,
-                skip_count: item.content_metrics[0].skip_count || 0,
-                engagement_rate: item.content_metrics[0].engagement_rate || 0
-            } : undefined
-        }));
+            }));
+
+            const metrics = item.content_metrics?.[0];
+
+            return {
+                id: item.id,
+                url: item.url,
+                title: item.title,
+                description: item.description || '',
+                image: item.image_url || '',
+                imageStoragePath: item.image_storage_path,
+                faviconUrl: item.favicon_url,
+                domain: item.domain,
+                topics: item.topics || [],
+                readingTime: item.reading_time_minutes || item.reading_time || 5,
+                createdAt: item.created_at,
+                quality: item.quality_score || 0.5,
+                baseScore: item.base_score || 0.5,
+                popularityScore: item.popularity_score || 0.5,
+                isActive: item.is_active !== false,
+                allowsFraming: item.allows_framing,
+                contentTopics: contentTopics || [],
+                metrics: metrics ? {
+                    views_count: metrics.views_count || 0,
+                    likes_count: metrics.likes_count || 0,
+                    saves_count: metrics.saves_count || 0,
+                    shares_count: metrics.shares_count || 0,
+                    skip_count: metrics.skip_count || 0,
+                    engagement_rate: metrics.engagement_rate || 0
+                } : undefined
+            };
+        });
     }
 
     /**
@@ -103,12 +111,14 @@ export class DiscoveryRepository {
 
     /**
      * Get discoveries excluding specified IDs with enhanced data
-     * Now with randomized database ordering to prevent predictable results
+     * OPTIMIZED: Reduced joins and lighter queries for faster response
      */
     async getDiscoveriesExcluding(excludeIds: string[]): Promise<EnhancedDiscovery[]> {
         // Simplified randomization - just use a basic rotation to reduce database load
         const useCreatedAtOrder = Math.floor(Date.now() / (1000 * 60 * 60)) % 2 === 0; // Changes every hour
-        const selectedOrdering = useCreatedAtOrder ? 'created_at desc' : 'quality_score desc'; let query = supabase
+
+        // OPTIMIZATION: Fetch only essential fields, reduce join complexity
+        let query = supabase
             .from('content')
             .select(`
                 id,
@@ -127,23 +137,12 @@ export class DiscoveryRepository {
                 base_score,
                 popularity_score,
                 is_active,
-                allows_framing,
-                content_topics(
-                    topics(name),
-                    confidence_score
-                ),
-                content_metrics(
-                    views_count,
-                    likes_count,
-                    saves_count,
-                    shares_count,
-                    skip_count,
-                    engagement_rate
-                )
+                allows_framing
             `)
-            .eq('is_active', true);
+            .eq('is_active', true)
+            .limit(200); // OPTIMIZATION: Limit result set
 
-        if (excludeIds.length > 0) {
+        if (excludeIds.length > 0 && excludeIds.length < 50) { // OPTIMIZATION: Skip if too many excludes
             query = query.not('id', 'in', `(${excludeIds.map(id => `"${id}"`).join(',')})`);
         }
 
@@ -152,7 +151,9 @@ export class DiscoveryRepository {
             query = query.order('created_at', { ascending: false });
         } else {
             query = query.order('quality_score', { ascending: false });
-        } const { data, error } = await query;
+        }
+
+        const { data, error } = await query;
 
         if (error) {
             console.error('Error fetching discoveries excluding IDs:', error);
@@ -521,6 +522,52 @@ export class DiscoveryRepository {
         } catch (error) {
             console.error('Error fetching domain reputation:', error);
             return 0.5; // Default neutral score
+        }
+    }
+
+    /**
+     * OPTIMIZATION: Batch fetch domain reputations for multiple domains in single query
+     */
+    async getBatchDomainReputations(domains: string[]): Promise<Record<string, number>> {
+        if (domains.length === 0) {
+            return {};
+        }
+
+        try {
+            const { data, error } = await supabase
+                .from('domain_reputation')
+                .select('domain, score')
+                .in('domain', domains);
+
+            if (error || !data) {
+                // Return neutral scores for all domains
+                return domains.reduce((acc, domain) => {
+                    acc[domain] = 0.5;
+                    return acc;
+                }, {} as Record<string, number>);
+            }
+
+            // Build reputation map
+            const reputations: Record<string, number> = {};
+
+            // First, set all domains to neutral default
+            domains.forEach(domain => {
+                reputations[domain] = 0.5;
+            });
+
+            // Then update with actual scores
+            data.forEach(item => {
+                reputations[item.domain] = Math.max(0, Math.min(1, item.score));
+            });
+
+            return reputations;
+        } catch (error) {
+            console.error('Error batch fetching domain reputations:', error);
+            // Return neutral scores for all domains
+            return domains.reduce((acc, domain) => {
+                acc[domain] = 0.5;
+                return acc;
+            }, {} as Record<string, number>);
         }
     }
 

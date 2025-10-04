@@ -62,10 +62,11 @@ export const nextDiscoveryRoute: FastifyPluginAsync = async (fastify) => {
 
             const { wildness, seenIds } = validationResult.data;
 
-            // PERFORMANCE: Parallelize initial data fetching
-            const [user, candidates] = await Promise.all([
+            // PERFORMANCE: Parallelize ALL initial data fetching including stats
+            const [user, candidates, globalStats] = await Promise.all([
                 repository.getUserById(userId),
-                repository.getDiscoveriesExcluding(seenIds)
+                repository.getDiscoveriesExcluding(seenIds),
+                repository.getGlobalEngagementStats() // Fetch global stats in parallel
             ]);
 
             // Use default user preferences for new Clerk users
@@ -102,11 +103,8 @@ export const nextDiscoveryRoute: FastifyPluginAsync = async (fastify) => {
                 });
             }
 
-            // PERFORMANCE: Parallelize stats and history fetching
-            const [globalStats, interactionHistory] = await Promise.all([
-                repository.getGlobalEngagementStats(),
-                repository.getUserInteractionHistory(userPrefs.id || userId, 100)
-            ]);
+            // PERFORMANCE: Fetch interaction history with reduced limit for speed
+            const interactionHistory = await repository.getUserInteractionHistory(userPrefs.id || userId, 50);
 
             // Create scoring context
             const now = new Date();
@@ -118,15 +116,9 @@ export const nextDiscoveryRoute: FastifyPluginAsync = async (fastify) => {
                 dayOfWeek: now.getDay()
             };
 
-            // Fetch domain reputations for all unique domains (H2.2 - batch optimization)
+            // OPTIMIZATION: Batch fetch domain reputations in single query
             const uniqueDomains = [...new Set(filteredCandidates.map(c => c.domain))];
-            const domainReputations: Record<string, number> = {};
-
-            await Promise.all(
-                uniqueDomains.map(async domain => {
-                    domainReputations[domain] = await repository.getDomainReputation(domain);
-                })
-            );
+            const domainReputations = await repository.getBatchDomainReputations(uniqueDomains);
 
             // Calculate scores for all candidates with enhanced features
             const scoredCandidates: EnhancedScoredCandidate[] = filteredCandidates.map(discovery => {
