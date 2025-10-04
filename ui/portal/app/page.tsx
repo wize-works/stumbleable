@@ -1,5 +1,7 @@
 'use client';
 
+import { DiscoveryPreviewCard, DiscoveryPreviewCardFallback, DiscoveryPreviewCardSkeleton } from '@/components/discovery-preview-card';
+import { LavaLampBackground } from '@/components/lava-lamp-background';
 import { RotatingText } from '@/components/rotating-text';
 import { StructuredData } from '@/components/structured-data';
 import type { Discovery } from '@/data/types';
@@ -33,17 +35,11 @@ export default function Home() {
         <>
             <StructuredData schemas={homepageSchemas} />
             <div className="min-h-screen bg-base-100 overflow-hidden">
-                {/* Animated Background */}
-                <div className="fixed inset-0 -z-10">
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5"></div>
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
-                    <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-                    <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-pulse delay-500"></div>
-                </div>
-
-                {/* Hero Section */}
-                <section className="relative pt-20 pb-32 px-4">
-                    <div className="container mx-auto max-w-7xl">
+                {/* Hero Section with Lava Lamp Background */}
+                <section className="relative pt-20 pb-32 px-4 overflow-hidden min-h-screen">
+                    {/* Lava Lamp Background - contained within hero */}
+                    <LavaLampBackground />
+                    <div className="container mx-auto max-w-7xl relative z-10">
                         <div className="text-center space-y-8">
                             {/* Badge */}
                             <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-full text-sm font-medium text-primary animate-fade-in">
@@ -108,91 +104,50 @@ export default function Home() {
                                 <div className="relative bg-base-100 rounded-3xl shadow-2xl overflow-hidden border border-base-300">
                                     <div className="p-8 sm:p-12">
                                         <div className="flex items-center justify-center mb-8">
-                                            <div className="btn btn-circle btn-primary btn-lg shadow-xl group-hover:scale-110 transition-transform duration-300">
-                                                <i className="fa-solid fa-duotone fa-shuffle text-2xl"></i>
-                                            </div>
+                                            <button
+                                                type="button"
+                                                aria-label="Stumble featured discoveries"
+                                                className="btn btn-circle btn-primary btn-lg shadow-xl group-hover:scale-110 transition-transform duration-300"
+                                                onClick={async () => {
+                                                    try {
+                                                        setLoadingDiscoveries(true);
+                                                        const discoveries = await DiscoveryAPI.getTrending();
+                                                        const shuffled = [...discoveries].sort(() => Math.random() - 0.5);
+                                                        setFeaturedDiscoveries(shuffled.slice(0, 3));
+                                                    } catch (err) {
+                                                        console.error('Error stumbling featured discoveries:', err);
+                                                    } finally {
+                                                        setLoadingDiscoveries(false);
+                                                    }
+                                                }}
+                                                disabled={loadingDiscoveries}
+                                                title="Stumble"
+                                            >
+                                                {loadingDiscoveries ? (
+                                                    <span className="loading loading-spinner loading-sm text-base-100" />
+                                                ) : (
+                                                    <i className="fa-solid fa-duotone fa-shuffle text-2xl"></i>
+                                                )}
+                                            </button>
                                         </div>
 
-                                        <div className="grid sm:grid-cols-3 gap-4">
+                                        <div className="grid sm:grid-cols-3 gap-6">
                                             {/* Live discovery cards */}
                                             {loadingDiscoveries ? (
                                                 // Loading skeletons
-                                                [0, 1, 2].map((i) => (
-                                                    <div key={i} className="card bg-base-200 shadow-lg">
-                                                        <div className="card-body items-center text-center p-6">
-                                                            <div className="skeleton w-16 h-16 rounded-full mb-3"></div>
-                                                            <div className="skeleton h-4 w-24 mb-2"></div>
-                                                            <div className="skeleton h-3 w-32"></div>
-                                                        </div>
-                                                    </div>
-                                                ))
+                                                <DiscoveryPreviewCardSkeleton count={3} />
                                             ) : featuredDiscoveries.length > 0 ? (
-                                                // Real discoveries
-                                                featuredDiscoveries.map((discovery, i) => {
-                                                    const colors = ['primary', 'secondary', 'accent'];
-                                                    const topicIcons: Record<string, string> = {
-                                                        technology: 'fa-microchip',
-                                                        science: 'fa-flask',
-                                                        art: 'fa-palette',
-                                                        photography: 'fa-camera',
-                                                        gaming: 'fa-gamepad',
-                                                        music: 'fa-music',
-                                                        food: 'fa-utensils',
-                                                        travel: 'fa-plane',
-                                                        nature: 'fa-tree',
-                                                        diy: 'fa-hammer',
-                                                        fitness: 'fa-dumbbell',
-                                                        writing: 'fa-pen-fancy',
-                                                        business: 'fa-briefcase',
-                                                        education: 'fa-graduation-cap',
-                                                        health: 'fa-heart-pulse',
-                                                    };
-                                                    const primaryTopic = discovery.topics?.[0] || 'technology';
-                                                    const icon = topicIcons[primaryTopic.toLowerCase()] || 'fa-star';
-                                                    const color = colors[i % 3];
-
-                                                    return (
-                                                        <a
-                                                            key={discovery.id}
-                                                            href={discovery.url}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className={`card bg-base-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 delay-${i * 100}`}
-                                                        >
-                                                            <div className="card-body items-center text-center p-6">
-                                                                <div className={`text-4xl mb-3 text-${color}`}>
-                                                                    <i className={`fa-solid fa-duotone ${icon}`}></i>
-                                                                </div>
-                                                                <h4 className="font-semibold line-clamp-1">{discovery.title}</h4>
-                                                                <p className="text-xs text-base-content/60 line-clamp-1 capitalize">{primaryTopic}</p>
-                                                                <div className="badge badge-sm badge-outline mt-2">
-                                                                    <i className="fa-solid fa-duotone fa-fire mr-1 text-accent"></i>
-                                                                    Trending
-                                                                </div>
-                                                            </div>
-                                                        </a>
-                                                    );
-                                                })
+                                                // Real discoveries with images
+                                                featuredDiscoveries.map((discovery, i) => (
+                                                    <DiscoveryPreviewCard
+                                                        key={discovery.id}
+                                                        discovery={discovery}
+                                                        index={i}
+                                                    />
+                                                ))
                                             ) : (
                                                 // Fallback to static cards if no data
-                                                [
-                                                    { icon: 'fa-palette', topic: 'Art & Design', color: 'primary' },
-                                                    { icon: 'fa-rocket', topic: 'Technology', color: 'secondary' },
-                                                    { icon: 'fa-mountain', topic: 'Adventure', color: 'accent' },
-                                                ].map((item, i) => (
-                                                    <div
-                                                        key={i}
-                                                        className={`card bg-base-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 delay-${i * 100}`}
-                                                    >
-                                                        <div className="card-body items-center text-center p-6">
-                                                            <div className={`text-4xl mb-3 text-${item.color}`}>
-                                                                <i className={`fa-solid fa-duotone ${item.icon}`}></i>
-                                                            </div>
-                                                            <h4 className="font-semibold">{item.topic}</h4>
-                                                            <p className="text-xs text-base-content/60">Discover something new</p>
-                                                        </div>
-                                                    </div>
-                                                ))
+                                                <DiscoveryPreviewCardFallback />
                                             )}
                                         </div>
                                     </div>
