@@ -13,6 +13,7 @@ import requestLoggingPlugin from './middleware/request-logging';
 // DISCOVERY SERVICE - CORE ROUTES ONLY
 // Focused on fast, read-only discovery operations
 import { contentRoute } from './routes/content'; // Keep for /saved page
+import { exploreDiscoveryRoute } from './routes/explore';
 import { nextDiscoveryRoute } from './routes/next';
 import { similarContentRoute } from './routes/similar';
 import { trendingDiscoveryRoute } from './routes/trending';
@@ -176,6 +177,7 @@ async function buildApp() {
     // Heavy operations (enhance, submit, trending calculator) moved to crawler service
     // Moderation/reports routes belong in moderation service
     await fastify.register(nextDiscoveryRoute, { prefix: '/api' });
+    await fastify.register(exploreDiscoveryRoute, { prefix: '/api' });
     await fastify.register(trendingDiscoveryRoute, { prefix: '/api' });
     await fastify.register(similarContentRoute, { prefix: '/api' });
     await fastify.register(contentRoute, { prefix: '/api' }); // Simple content retrieval for saved items
@@ -221,7 +223,8 @@ async function start() {
         console.log(`🚀 Discovery Service running on http://${host}:${port}`);
         console.log(`📊 Health check: http://${host}:${port}/health`);
         console.log(`🔍 Next discovery: POST http://${host}:${port}/api/next`);
-        console.log(`📈 Trending: GET http://${host}:${port}/api/trending`);
+        console.log(`� Explore: GET http://${host}:${port}/api/explore`);
+        console.log(`�📈 Trending: GET http://${host}:${port}/api/trending`);
         console.log(`🔄 Similar: GET http://${host}:${port}/api/similar/:id`);
         console.log(`🛡️  Rate limiting: ${process.env.RATE_LIMIT_MAX || 100} requests per ${(parseInt(process.env.RATE_LIMIT_WINDOW || '60000', 10) / 1000)} seconds`);
         console.log(`⚡ Focused on fast discovery - content management moved to crawler-service`);

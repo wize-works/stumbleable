@@ -147,6 +147,38 @@ export class DiscoveryAPI {
         const response = await apiRequest<TrendingResponse>(`${DISCOVERY_API}/trending`, {}, token);
         return response.discoveries;
     }
+
+    /**
+     * Explore discoveries with optional topic filtering
+     */
+    static async explore(params: {
+        topic?: string;
+        limit?: number;
+        offset?: number;
+        sortBy?: 'recent' | 'popular' | 'quality';
+        token?: string;
+    }): Promise<{
+        discoveries: Discovery[];
+        pagination: {
+            limit: number;
+            offset: number;
+            total: number;
+            hasMore: boolean;
+        };
+        filters: {
+            topic: string | null;
+            sortBy: string;
+        };
+    }> {
+        const queryParams = new URLSearchParams();
+        if (params.topic) queryParams.append('topic', params.topic);
+        if (params.limit) queryParams.append('limit', params.limit.toString());
+        if (params.offset) queryParams.append('offset', params.offset.toString());
+        if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+
+        const url = `${DISCOVERY_API}/explore${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+        return await apiRequest(url, {}, params.token);
+    }
 }
 
 /**

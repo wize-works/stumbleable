@@ -1037,4 +1037,192 @@ export class DiscoveryRepository {
         }
     }
 
+    /**
+     * Get discoveries filtered by topic with pagination
+     */
+    async getDiscoveriesByTopic(
+        topic: string,
+        limit: number = 24,
+        offset: number = 0,
+        sortBy: 'recent' | 'popular' | 'quality' = 'recent'
+    ): Promise<{ discoveries: EnhancedDiscovery[]; total: number }> {
+        try {
+            // First, count total matching content
+            const { count: totalCount, error: countError } = await supabase
+                .from('content')
+                .select('id', { count: 'exact', head: true })
+                .eq('is_active', true)
+                .contains('topics', [topic]);
+
+            if (countError) {
+                console.error('Error counting discoveries by topic:', countError);
+                return { discoveries: [], total: 0 };
+            }
+
+            // Build query for fetching content
+            let query = supabase
+                .from('content')
+                .select(`
+                    id,
+                    url,
+                    title,
+                    description,
+                    image_url,
+                    image_storage_path,
+                    favicon_url,
+                    domain,
+                    topics,
+                    reading_time_minutes,
+                    created_at,
+                    quality_score,
+                    freshness_score,
+                    base_score,
+                    popularity_score,
+                    is_active,
+                    allows_framing,
+                    content_topics(
+                        topics(name),
+                        confidence_score
+                    ),
+                    content_metrics(
+                        views_count,
+                        likes_count,
+                        saves_count,
+                        shares_count,
+                        skip_count,
+                        engagement_rate
+                    )
+                `)
+                .eq('is_active', true)
+                .contains('topics', [topic]);
+
+            // Apply sorting
+            switch (sortBy) {
+                case 'recent':
+                    query = query.order('created_at', { ascending: false });
+                    break;
+                case 'popular':
+                    query = query.order('popularity_score', { ascending: false });
+                    break;
+                case 'quality':
+                    query = query.order('quality_score', { ascending: false });
+                    break;
+            }
+
+            // Apply pagination
+            query = query.range(offset, offset + limit - 1);
+
+            const { data, error } = await query;
+
+            if (error) {
+                console.error('Error fetching discoveries by topic:', error);
+                return { discoveries: [], total: 0 };
+            }
+
+            return {
+                discoveries: this.transformContentData(data || []),
+                total: totalCount || 0
+            };
+        } catch (error) {
+            console.error('Error in getDiscoveriesByTopic:', error);
+            return { discoveries: [], total: 0 };
+        }
+    }
+
+    /**
+     * Get discoveries with pagination (no topic filter)
+     */
+    async getDiscoveriesWithPagination(
+        limit: number = 24,
+        offset: number = 0,
+        sortBy: 'recent' | 'popular' | 'quality' = 'recent'
+    ): Promise<EnhancedDiscovery[]> {
+        try {
+            let query = supabase
+                .from('content')
+                .select(`
+                    id,
+                    url,
+                    title,
+                    description,
+                    image_url,
+                    image_storage_path,
+                    favicon_url,
+                    domain,
+                    topics,
+                    reading_time_minutes,
+                    created_at,
+                    quality_score,
+                    freshness_score,
+                    base_score,
+                    popularity_score,
+                    is_active,
+                    allows_framing,
+                    content_topics(
+                        topics(name),
+                        confidence_score
+                    ),
+                    content_metrics(
+                        views_count,
+                        likes_count,
+                        saves_count,
+                        shares_count,
+                        skip_count,
+                        engagement_rate
+                    )
+                `)
+                .eq('is_active', true);
+
+            // Apply sorting
+            switch (sortBy) {
+                case 'recent':
+                    query = query.order('created_at', { ascending: false });
+                    break;
+                case 'popular':
+                    query = query.order('popularity_score', { ascending: false });
+                    break;
+                case 'quality':
+                    query = query.order('quality_score', { ascending: false });
+                    break;
+            }
+
+            // Apply pagination
+            query = query.range(offset, offset + limit - 1);
+
+            const { data, error } = await query;
+
+            if (error) {
+                console.error('Error fetching discoveries with pagination:', error);
+                return [];
+            }
+
+            return this.transformContentData(data || []);
+        } catch (error) {
+            console.error('Error in getDiscoveriesWithPagination:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Get total count of active discoveries
+     */
+    async getTotalDiscoveriesCount(): Promise<number> {
+        try {
+            const { count, error } = await supabase
+                .from('content')
+                .select('*', { count: 'exact', head: true })
+                .eq('is_active', true);
+
+            if (error) {
+                console.error('Error counting total discoveries:', error);
+                return 0;
+            }
+
+            return count || 0;
+        } catch (error) {
+            console.error('Error in getTotalDiscoveriesCount:', error);
+            return 0;
+        }
+    }
+
 }

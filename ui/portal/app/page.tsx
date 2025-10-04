@@ -157,6 +157,33 @@ export default function Home() {
                     </div>
                 </section>
 
+                {/* Explore by Topic CTA */}
+                <section className="relative py-16 px-4 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
+                    <div className="container mx-auto max-w-4xl">
+                        <div className="card bg-base-100 shadow-2xl">
+                            <div className="card-body items-center text-center p-8 sm:p-12">
+                                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mb-6">
+                                    <i className="fa-solid fa-duotone fa-compass text-3xl text-base-100"></i>
+                                </div>
+                                <h2 className="card-title text-3xl sm:text-4xl mb-4">
+                                    Prefer to Browse?
+                                </h2>
+                                <p className="text-base-content/70 text-lg mb-6 max-w-2xl">
+                                    Explore discoveries by topic or filter by what interests you most. Take control of your discovery journey.
+                                </p>
+                                <Link
+                                    href="/explore"
+                                    className="btn btn-primary btn-lg gap-2"
+                                >
+                                    <i className="fa-solid fa-grid-2"></i>
+                                    Explore by Topic
+                                    <i className="fa-solid fa-arrow-right"></i>
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 {/* How It Works Section */}
                 <section className="relative py-20 px-4 bg-base-200/50">
                     <div className="container mx-auto max-w-6xl">
