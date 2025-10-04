@@ -175,9 +175,9 @@ export default function Home() {
                                     href="/explore"
                                     className="btn btn-primary btn-lg gap-2"
                                 >
-                                    <i className="fa-solid fa-grid-2"></i>
+                                    <i className="fa-solid fa-duotone fa-grid-2"></i>
                                     Explore by Topic
-                                    <i className="fa-solid fa-arrow-right"></i>
+                                    <i className="fa-solid fa-duotone fa-arrow-right"></i>
                                 </Link>
                             </div>
                         </div>
