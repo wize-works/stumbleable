@@ -89,6 +89,11 @@ export function Footer() {
                         <h3 className="font-semibold text-base-content mb-4">Company</h3>
                         <ul className="space-y-2">
                             <li>
+                                <Link href="/about" className="text-sm text-base-content/60 hover:text-primary transition-colors">
+                                    About
+                                </Link>
+                            </li>
+                            <li>
                                 <span className="text-sm text-base-content/60 flex items-center gap-2">
                                     Blog
                                     <span className="badge badge-xs badge-secondary">coming soon</span>
