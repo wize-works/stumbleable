@@ -117,6 +117,29 @@ export function UserMenu() {
                         </div>
                     </div>
 
+                    {/* Mobile Navigation - Only visible on mobile */}
+                    <div className="py-1 sm:hidden">
+                        <Link
+                            href="/submit"
+                            className="flex items-center px-4 py-2 text-sm text-base-content hover:bg-base-200 transition-colors"
+                            onClick={() => setIsOpen(false)}
+                        >
+                            <i className="fa-solid fa-duotone fa-plus w-4 h-4 mr-3 text-base-content/60"></i>
+                            Submit
+                        </Link>
+
+                        <Link
+                            href="/explore"
+                            className="flex items-center px-4 py-2 text-sm text-base-content hover:bg-base-200 transition-colors"
+                            onClick={() => setIsOpen(false)}
+                        >
+                            <i className="fa-solid fa-duotone fa-compass w-4 h-4 mr-3 text-base-content/60"></i>
+                            Explore
+                        </Link>
+
+                        <div className="border-t border-base-300 my-1"></div>
+                    </div>
+
                     {/* Menu Items */}
                     <div className="py-1">
                         <Link

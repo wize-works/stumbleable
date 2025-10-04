@@ -13,12 +13,10 @@ const authenticatedNavigation = [
     { name: 'Stumble', href: '/stumble', icon: 'fa-shuffle' },
     { name: 'Submit', href: '/submit', icon: 'fa-plus' },
     { name: 'Explore', href: '/explore', icon: 'fa-compass' },
-    { name: 'About', href: '/about', icon: 'fa-info-circle' },
 ];
 
 const publicNavigation = [
     { name: 'Explore', href: '/explore', icon: 'fa-compass' },
-    { name: 'About', href: '/about', icon: 'fa-info-circle' },
 ];
 
 function AuthSection() {
