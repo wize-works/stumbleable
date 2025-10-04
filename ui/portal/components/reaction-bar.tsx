@@ -3,17 +3,19 @@
 import { Interaction } from '../data/types';
 import { cn } from '../lib/utils';
 import { AddToListButton } from './add-to-list-button';
+import ReportContentButton from './report-content-button';
 import Logo from './ui/logo';
 
 interface ReactionBarProps {
     onReaction: (action: Interaction['action']) => void;
     onStumble?: () => void;
     isSaved?: boolean;
-    discoveryId?: string; // For "Add to List" functionality
+    discoveryId?: string; // For "Add to List" and "Report" functionality
     className?: string;
     disabled?: boolean;
     floating?: boolean;
     onAddedToList?: (listId: string, listTitle: string) => void;
+    onReportSuccess?: () => void; // Callback when content is successfully reported
 }
 
 export function ReactionBar({
@@ -24,7 +26,8 @@ export function ReactionBar({
     className = '',
     disabled = false,
     floating = true,
-    onAddedToList
+    onAddedToList,
+    onReportSuccess
 }: ReactionBarProps) {
     if (floating) {
         return (
@@ -93,6 +96,15 @@ export function ReactionBar({
                     >
                         <i className="fa-solid fa-duotone fa-thumbs-down text-sm sm:text-base"></i>
                     </button>
+
+                    {/* Report button */}
+                    {discoveryId && (
+                        <ReportContentButton
+                            discoveryId={discoveryId}
+                            className="btn-circle btn-error btn-outline hover:scale-110 active:scale-95 transition-transform touch-manipulation"
+                            onReportSuccess={onReportSuccess}
+                        />
+                    )}
                 </div>
             </div>
         );

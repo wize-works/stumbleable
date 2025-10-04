@@ -251,6 +251,8 @@ export class ModerationRepository {
 
     /**
      * Resolve content report
+     * If dismissed (false report), reactivates the content
+     * If resolved (confirmed issue), content stays quarantined
      */
     async resolveContentReport(
         reportId: string,
@@ -277,11 +279,32 @@ export class ModerationRepository {
             throw new Error(`Failed to resolve content report: ${error.message}`);
         }
 
+        // If dismissed (false alarm), check if there are other pending reports
+        // Only reactivate if this was the last pending report
+        if (status === 'dismissed') {
+            const { data: otherPendingReports } = await supabase
+                .from('content_reports')
+                .select('id')
+                .eq('content_id', data.content_id)
+                .eq('status', 'pending')
+                .limit(1);
+
+            // No other pending reports - safe to reactivate
+            if (!otherPendingReports || otherPendingReports.length === 0) {
+                await supabase
+                    .from('content')
+                    .update({ is_active: true })
+                    .eq('id', data.content_id);
+            }
+        }
+        // If resolved (confirmed issue), content stays quarantined (is_active = false)
+
         return data;
     }
 
     /**
      * Create content report (user-facing)
+     * Automatically quarantines content until moderator review
      */
     async reportContent(
         contentId: string,
@@ -290,6 +313,7 @@ export class ModerationRepository {
         reason: string,
         description?: string
     ): Promise<ContentReport> {
+        // Create the report
         const { data, error } = await supabase
             .from('content_reports')
             .insert({
@@ -306,6 +330,13 @@ export class ModerationRepository {
         if (error) {
             throw error; // Let the route handler deal with unique constraint violations
         }
+
+        // Immediately quarantine the content to prevent further circulation
+        // This protects users from potentially harmful content (porn, offensive, etc.)
+        await supabase
+            .from('content')
+            .update({ is_active: false })
+            .eq('id', contentId);
 
         return data;
     }

@@ -2,13 +2,15 @@ import { useToaster } from '@/components/toaster';
 import { ModerationAPI } from '@/lib/api-client';
 import { useAuth, useUser } from '@clerk/nextjs';
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 
 interface ReportContentButtonProps {
     discoveryId: string;
     className?: string;
+    onReportSuccess?: () => void; // Callback to trigger after successful report
 }
 
-export default function ReportContentButton({ discoveryId, className = '' }: ReportContentButtonProps) {
+export default function ReportContentButton({ discoveryId, className = '', onReportSuccess }: ReportContentButtonProps) {
     const { user } = useUser();
     const { getToken } = useAuth();
     const { showToast } = useToaster();
@@ -57,7 +59,14 @@ export default function ReportContentButton({ discoveryId, className = '' }: Rep
             setDescription('');
 
             // Show success message
-            showToast('Content reported successfully. Moderators will review it shortly.', 'success');
+            showToast('Content reported and removed from circulation. Loading next discovery...', 'success');
+
+            // Automatically navigate to next discovery after reporting
+            if (onReportSuccess) {
+                setTimeout(() => {
+                    onReportSuccess();
+                }, 500); // Small delay to show the success message
+            }
 
             // Reset reported state after 3 seconds
             setTimeout(() => setIsReported(false), 3000);
@@ -75,11 +84,14 @@ export default function ReportContentButton({ discoveryId, className = '' }: Rep
         return null; // Don't show report button for unauthenticated users
     }
 
+    // Check if this is a circle button (no text, icon only)
+    const isCircleButton = className.includes('btn-circle');
+
     if (isReported) {
         return (
-            <button className={`btn btn-sm btn-success ${className}`} disabled>
-                <i className="fa-solid fa-duotone fa-check mr-1"></i>
-                Reported
+            <button className={`btn ${isCircleButton ? 'btn-circle btn-sm sm:btn-md' : 'btn-sm'} btn-success ${className}`} disabled>
+                <i className={`fa-solid fa-duotone fa-check ${isCircleButton ? '' : 'mr-1'}`}></i>
+                {!isCircleButton && 'Reported'}
             </button>
         );
     }
@@ -87,18 +99,18 @@ export default function ReportContentButton({ discoveryId, className = '' }: Rep
     return (
         <>
             <button
-                className={`btn btn-sm btn-ghost ${className}`}
+                className={`btn ${isCircleButton ? 'btn-circle btn-sm sm:btn-md' : 'btn-sm'} btn-ghost ${className}`}
                 onClick={() => setIsModalOpen(true)}
                 title="Report inappropriate content"
             >
-                <i className="fa-solid fa-duotone fa-flag mr-1"></i>
-                Report
+                <i className={`fa-solid fa-duotone fa-flag ${isCircleButton ? 'text-sm sm:text-base' : 'mr-1'}`}></i>
+                {!isCircleButton && 'Report'}
             </button>
 
-            {/* Report Modal */}
-            {isModalOpen && (
+            {/* Report Modal - rendered as portal at document body level */}
+            {isModalOpen && typeof document !== 'undefined' && createPortal(
                 <div className="modal modal-open">
-                    <div className="modal-box">
+                    <div className="modal-box max-w-lg">
                         <h3 className="font-bold text-lg mb-4">Report Content</h3>
 
                         <form onSubmit={handleSubmitReport}>
@@ -170,7 +182,10 @@ export default function ReportContentButton({ discoveryId, className = '' }: Rep
                             </div>
                         </form>
                     </div>
-                </div>
+                    {/* Modal backdrop - clicking outside closes the modal */}
+                    <div className="modal-backdrop" onClick={() => setIsModalOpen(false)}></div>
+                </div>,
+                document.body
             )}
         </>
     );

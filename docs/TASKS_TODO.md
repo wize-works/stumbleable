@@ -359,3 +359,8 @@ Each task must include:
 ---
 
 **Note**: This task list is based on the comprehensive PRD requirements and current implementation status. Priority should be given to Critical tasks to achieve a functional MVP, then work systematically through High priority items for the full v1.0 release.
+
+
+on the stumble page, when needing to add a list, it left the page i wanted to stay on. should be a modal instead of a new page.
+
+we need to create a unique 404 page for when a user goes to a non-existent list, e.g. /list/1234 when that list doesn't exist. or any other invalid route.

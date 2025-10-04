@@ -542,6 +542,7 @@ export default function StumblePage() {
                 onAddedToList={(listId, listTitle) => {
                     showToast(`Added to "${listTitle}"`, 'success');
                 }}
+                onReportSuccess={handleStumble} // Auto-navigate to next discovery after reporting
             />
 
             {/* Mobile/Tablet Wildness Control */}

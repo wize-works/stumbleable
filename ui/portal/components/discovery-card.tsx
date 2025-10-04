@@ -10,6 +10,7 @@ interface DiscoveryCardProps {
     showTrending?: boolean;
     isTrending?: boolean;
     reason?: string;
+    onReportSuccess?: () => void; // Callback when content is reported
 }
 
 export function DiscoveryCard({
@@ -17,7 +18,8 @@ export function DiscoveryCard({
     className = '',
     showTrending = true,
     isTrending = false,
-    reason
+    reason,
+    onReportSuccess
 }: DiscoveryCardProps) {
     // Prefer stored image path over external URL
     const imageUrl = discovery.imageStoragePath || discovery.image;
@@ -119,7 +121,10 @@ export function DiscoveryCard({
 
                 {/* Report Button */}
                 <div className="flex justify-end">
-                    <ReportContentButton discoveryId={discovery.id} />
+                    <ReportContentButton
+                        discoveryId={discovery.id}
+                        onReportSuccess={onReportSuccess}
+                    />
                 </div>
             </div>
         </article>

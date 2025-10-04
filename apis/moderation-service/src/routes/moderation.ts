@@ -1,9 +1,25 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { ModerationRepository } from '../lib/repository.js';
+import { supabase } from '../lib/supabase.js';
 import { requireAuth, requireModeratorRole } from '../middleware/auth.js';
 
 const repository = new ModerationRepository();
+
+/**
+ * Helper function to convert Clerk user ID to database UUID
+ * Returns null if user not found
+ */
+async function getDatabaseUserId(clerkUserId: string): Promise<string | null> {
+    const { data: user, error } = await supabase
+        .from('users')
+        .select('id')
+        .eq('clerk_user_id', clerkUserId)
+        .single();
+
+    if (error || !user) return null;
+    return user.id;
+}
 
 // ============================================================================
 // Request Validation Schemas
@@ -313,14 +329,27 @@ export async function moderationRoutes(fastify: FastifyInstance) {
         '/moderation/report',
         { preHandler: requireAuth },
         async (request, reply) => {
-            const userId = (request as any).userId;
+            const clerkUserId = (request as any).userId;
             const body = reportContentSchema.parse(request.body);
 
             try {
+                // Convert Clerk user ID to database UUID
+                let dbUserId = clerkUserId;
+                if (clerkUserId.startsWith('user_')) {
+                    const convertedId = await getDatabaseUserId(clerkUserId);
+                    if (!convertedId) {
+                        return reply.code(404).send({
+                            error: 'Not Found',
+                            message: 'User not found in database',
+                        });
+                    }
+                    dbUserId = convertedId;
+                }
+
                 const report = await repository.reportContent(
                     body.contentId,
                     body.contentType,
-                    userId,
+                    dbUserId,
                     body.reason,
                     body.description
                 );
