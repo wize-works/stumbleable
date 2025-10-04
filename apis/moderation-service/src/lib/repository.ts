@@ -86,10 +86,9 @@ export class ModerationRepository {
             .from('moderation_queue')
             .update({
                 status,
-                reviewed_by: moderatorId,
-                reviewed_at: now,
-                review_notes: notes,
-                updated_at: now,
+                moderated_by: moderatorId,
+                moderated_at: now,
+                moderator_notes: notes,
             })
             .eq('id', queueId)
             .select()
@@ -195,13 +194,39 @@ export class ModerationRepository {
 
     /**
      * List content reports with filtering and pagination
+     * Enriched with content details, engagement metrics, reporter history, and domain reputation
      */
     async listContentReports(params: ListContentReportsParams) {
         const { status = 'all', discoveryId, limit = 20, offset = 0 } = params;
 
         let query = supabase
             .from('content_reports')
-            .select('*', { count: 'exact' })
+            .select(`
+                *,
+                reported_by_user:users!content_reports_reported_by_fkey(
+                    id,
+                    email,
+                    full_name,
+                    role
+                ),
+                resolved_by_user:users!content_reports_resolved_by_fkey(
+                    id,
+                    email,
+                    full_name
+                ),
+                content!content_reports_content_id_fkey(
+                    id,
+                    url,
+                    title,
+                    description,
+                    domain,
+                    image_url,
+                    reading_time_minutes,
+                    topics,
+                    published_at,
+                    created_at
+                )
+            `, { count: 'exact' })
             .order('created_at', { ascending: false });
 
         // Filter by status
@@ -217,14 +242,80 @@ export class ModerationRepository {
         // Pagination
         query = query.range(offset, offset + limit - 1);
 
-        const { data, error, count } = await query;
+        const { data: reports, error, count } = await query;
 
         if (error) {
             throw new Error(`Failed to list content reports: ${error.message}`);
         }
 
+        // Enrich reports with additional context
+        const enrichedReports = await Promise.all(
+            (reports || []).map(async (report) => {
+                try {
+                    // Get engagement metrics for the content
+                    const { data: metrics } = await supabase
+                        .from('content_metrics')
+                        .select('views_count, likes_count, saves_count, shares_count')
+                        .eq('content_id', report.content_id)
+                        .maybeSingle();
+
+                    // Get domain reputation
+                    const { data: domainRep } = await supabase
+                        .from('domain_reputation')
+                        .select('trust_score, total_approved, total_rejected, is_blacklisted')
+                        .eq('domain', report.content?.domain)
+                        .maybeSingle();
+
+                    // Get reporter's history
+                    const { data: reporterStats } = await supabase
+                        .from('content_reports')
+                        .select('id, status')
+                        .eq('reported_by', report.reported_by);
+
+                    const reporterTotalReports = reporterStats?.length || 0;
+                    const reporterResolvedReports = reporterStats?.filter(r => r.status === 'resolved').length || 0;
+                    const reporterDismissedReports = reporterStats?.filter(r => r.status === 'dismissed').length || 0;
+
+                    // Get similar reports for this content
+                    const { data: similarReports } = await supabase
+                        .from('content_reports')
+                        .select('id, reported_by, reason, status')
+                        .eq('content_id', report.content_id)
+                        .neq('id', report.id)
+                        .limit(10);
+
+                    return {
+                        ...report,
+                        engagement: metrics || { views_count: 0, likes_count: 0, saves_count: 0, shares_count: 0 },
+                        domain_reputation: domainRep || null,
+                        reporter_history: {
+                            total_reports: reporterTotalReports,
+                            resolved_reports: reporterResolvedReports,
+                            dismissed_reports: reporterDismissedReports,
+                            accuracy_rate: reporterTotalReports > 0
+                                ? Math.round((reporterResolvedReports / reporterTotalReports) * 100)
+                                : 0
+                        },
+                        similar_reports: similarReports || [],
+                        similar_reports_count: similarReports?.length || 0
+                    };
+                } catch (enrichError) {
+                    // If enrichment fails, return report with basic data
+                    console.error('Failed to enrich report:', enrichError);
+                    return {
+                        ...report,
+                        engagement: { views_count: 0, likes_count: 0, saves_count: 0, shares_count: 0 },
+                        domain_reputation: null,
+                        reporter_history: { total_reports: 0, resolved_reports: 0, dismissed_reports: 0, accuracy_rate: 0 },
+                        similar_reports: [],
+                        similar_reports_count: 0
+                    };
+                }
+            })
+        );
+
         return {
-            reports: data || [],
+            reports: enrichedReports,
             total: count || 0,
             limit,
             offset,

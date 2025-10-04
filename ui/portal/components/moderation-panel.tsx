@@ -150,7 +150,7 @@ export default function ModerationPanel() {
                 <ModerationStatsCards stats={analytics} loading={loading && !analytics} />
 
                 {/* Tab Navigation */}
-                <div className="tabs tabs-bordered mb-8">
+                <div className="tabs tabs-border space-x-4 mb-8">
                     <button
                         className={`tab tab-lg ${activeTab === 'queue' ? 'tab-active' : ''}`}
                         onClick={() => setActiveTab('queue')}

@@ -834,10 +834,35 @@ export class UserRepository {
             admin: roleData?.filter(u => u.role === 'admin').length || 0,
         };
 
-        // TODO: Add actual user activity tracking
-        // For now, return placeholder values
-        const activeUsers7Days = 0;
-        const activeUsers30Days = 0;
+        // Get active users based on interactions in the last 7 and 30 days
+        const { data: activeUsers7Data, error: active7Error } = await supabase
+            .from('user_interactions')
+            .select('user_id')
+            .gte('created_at', sevenDaysAgo.toISOString())
+            .limit(10000); // Reasonable limit for performance
+
+        if (active7Error) {
+            console.error('Failed to get active users (7 days):', active7Error.message);
+        }
+
+        const { data: activeUsers30Data, error: active30Error } = await supabase
+            .from('user_interactions')
+            .select('user_id')
+            .gte('created_at', thirtyDaysAgo.toISOString())
+            .limit(10000); // Reasonable limit for performance
+
+        if (active30Error) {
+            console.error('Failed to get active users (30 days):', active30Error.message);
+        }
+
+        // Count unique users who had interactions
+        const activeUsers7Days = activeUsers7Data
+            ? new Set(activeUsers7Data.map(i => i.user_id)).size
+            : 0;
+
+        const activeUsers30Days = activeUsers30Data
+            ? new Set(activeUsers30Data.map(i => i.user_id)).size
+            : 0;
 
         return {
             totalUsers: totalUsers || 0,

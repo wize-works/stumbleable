@@ -1,3 +1,4 @@
+import Breadcrumbs from '@/components/breadcrumbs';
 import ModerationPanel from '@/components/moderation-panel';
 import { auth } from '@clerk/nextjs/server';
 import { Metadata } from 'next';
@@ -21,5 +22,16 @@ export default async function ModerationPage() {
     // 2. API endpoint validation (user-service checks roles)
     // 3. Client-side UX (ModerationPanel checks and shows appropriate UI)
 
-    return <ModerationPanel />;
+    return (
+        <div className="min-h-screen">
+            <div className="container mx-auto px-4 py-8">
+                <Breadcrumbs items={[
+                    { label: 'Home', href: '/' },
+                    { label: 'Admin Dashboard', href: '/admin' },
+                    { label: 'Content Moderation', href: '/admin/moderation' }
+                ]} />
+                <ModerationPanel />
+            </div>
+        </div>
+    );
 }

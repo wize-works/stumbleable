@@ -364,3 +364,5 @@ Each task must include:
 on the stumble page, when needing to add a list, it left the page i wanted to stay on. should be a modal instead of a new page.
 
 we need to create a unique 404 page for when a user goes to a non-existent list, e.g. /list/1234 when that list doesn't exist. or any other invalid route.
+
+we need to tie the user who submits content to their user account, so that when content violates TOS and is removed, we can notify the user who submitted it.

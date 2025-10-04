@@ -1,5 +1,6 @@
 'use client';
 
+import Breadcrumbs from '@/components/breadcrumbs';
 import { useToaster } from '@/components/toaster';
 import { AdminAPI } from '@/lib/api-client';
 import { useAuth, useUser } from '@clerk/nextjs';
@@ -163,11 +164,18 @@ export default function AdminDeletionRequestsPage() {
     return (
         <div className="min-h-screen bg-base-100 py-20 px-4">
             <div className="container mx-auto max-w-7xl">
+                {/* Breadcrumbs */}
+                <Breadcrumbs items={[
+                    { label: 'Home', href: '/' },
+                    { label: 'Admin Dashboard', href: '/admin' },
+                    { label: 'Deletion Requests', href: '/admin/deletion-requests' }
+                ]} />
+
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-4xl sm:text-5xl font-bold text-base-content mb-4">
                         <i className="fa-solid fa-duotone fa-shield-check text-primary mr-3"></i>
-                        Admin Dashboard
+                        Account Deletion Requests
                     </h1>
                     <p className="text-lg text-base-content/70">
                         Manage account deletion requests and monitor platform activity

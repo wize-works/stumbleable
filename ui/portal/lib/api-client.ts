@@ -496,6 +496,34 @@ export class UserAPI {
     }
 
     /**
+     * Get recent users (admin only)
+     */
+    static async getRecentUsers(days: number, token: string): Promise<{
+        users: Array<{
+            id: string;
+            email: string;
+            full_name?: string;
+            created_at: string;
+            role?: string;
+        }>;
+    }> {
+        const response = await apiRequest<{
+            users: Array<{
+                id: string;
+                email: string;
+                full_name?: string;
+                created_at: string;
+                role?: string;
+            }>;
+        }>(
+            `${USER_API}/admin/users/recent?days=${days}`,
+            {},
+            token
+        );
+        return response;
+    }
+
+    /**
      * Request account deletion (starts 30-day grace period)
      */
     static async requestDeletion(userId: string, token: string): Promise<{
@@ -1012,12 +1040,14 @@ export interface ModerationQueueItem {
 
 export interface ContentReport {
     id: string;
-    discovery_id: string;
+    content_id: string;
+    content_type?: 'discovery' | 'submission';
     reported_by: string;
     reported_by_user?: {
         id: string;
         email: string;
         full_name?: string;
+        role?: string;
     };
     reason: 'spam' | 'inappropriate' | 'broken-link' | 'misleading' | 'copyright' | 'other';
     description?: string;
@@ -1028,15 +1058,47 @@ export interface ContentReport {
         email: string;
         full_name?: string;
     };
-    moderator_notes?: string;
+    resolution_notes?: string;
     created_at: string;
     resolved_at?: string;
+    updated_at?: string;
     content?: {
         id: string;
         url: string;
         title: string;
+        description?: string;
         domain: string;
+        image_url?: string;
+        reading_time_minutes?: number;
+        topics?: string[];
+        published_at?: string;
+        created_at?: string;
     };
+    engagement?: {
+        views_count: number;
+        likes_count: number;
+        saves_count: number;
+        shares_count: number;
+    };
+    domain_reputation?: {
+        trust_score: number;
+        total_approved: number;
+        total_rejected: number;
+        is_blacklisted: boolean;
+    } | null;
+    reporter_history?: {
+        total_reports: number;
+        resolved_reports: number;
+        dismissed_reports: number;
+        accuracy_rate: number;
+    };
+    similar_reports?: Array<{
+        id: string;
+        reported_by: string;
+        reason: string;
+        status: string;
+    }>;
+    similar_reports_count?: number;
 }
 
 export interface DomainReputation {

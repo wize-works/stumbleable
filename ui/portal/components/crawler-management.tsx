@@ -209,7 +209,7 @@ export default function CrawlerManagement() {
                     onClick={() => setShowAddForm(!showAddForm)}
                     className="btn btn-primary"
                 >
-                    <i className="fa-solid fa-plus mr-2" />
+                    <i className="fa-solid fa-duotone fa-plus mr-2" />
                     Add Source
                 </button>
             </div>
@@ -226,19 +226,19 @@ export default function CrawlerManagement() {
                                 onClick={resetForm}
                                 className="btn btn-ghost btn-sm"
                             >
-                                <i className="fa-solid fa-times" />
+                                <i className="fa-solid fa-duotone fa-times" />
                             </button>
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="form-control">
-                                    <label className="label">
+                                    <label className="label w-full">
                                         <span className="label-text">Name</span>
                                     </label>
                                     <input
                                         type="text"
-                                        className="input input-bordered"
+                                        className="input input-bordered w-full"
                                         value={formData.name}
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                         placeholder="e.g., TechCrunch RSS"
@@ -247,11 +247,11 @@ export default function CrawlerManagement() {
                                 </div>
 
                                 <div className="form-control">
-                                    <label className="label">
+                                    <label className="label w-full">
                                         <span className="label-text">Type</span>
                                     </label>
                                     <select
-                                        className="select select-bordered"
+                                        className="select select-bordered w-full"
                                         value={formData.type}
                                         onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
                                     >
@@ -263,18 +263,18 @@ export default function CrawlerManagement() {
                             </div>
 
                             <div className="form-control">
-                                <label className="label">
+                                <label className="label w-full">
                                     <span className="label-text">URL</span>
                                 </label>
                                 <input
                                     type="url"
-                                    className="input input-bordered"
+                                    className="input input-bordered w-full"
                                     value={formData.url}
                                     onChange={(e) => setFormData({ ...formData, url: e.target.value })}
                                     placeholder="https://example.com/feed.xml"
                                     required
                                 />
-                                <label className="label">
+                                <label className="label w-full">
                                     <span className="label-text-alt">
                                         {formData.type === 'rss' && 'RSS/Atom feed URL'}
                                         {formData.type === 'sitemap' && 'XML sitemap URL'}
@@ -285,12 +285,12 @@ export default function CrawlerManagement() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="form-control">
-                                    <label className="label">
+                                    <label className="label w-full">
                                         <span className="label-text">Crawl Frequency (hours)</span>
                                     </label>
                                     <input
                                         type="number"
-                                        className="input input-bordered"
+                                        className="input input-bordered w-full"
                                         value={formData.crawl_frequency_hours}
                                         onChange={(e) => setFormData({ ...formData, crawl_frequency_hours: parseInt(e.target.value) })}
                                         min="1"
@@ -299,12 +299,12 @@ export default function CrawlerManagement() {
                                 </div>
 
                                 <div className="form-control">
-                                    <label className="label">
+                                    <label className="label w-full">
                                         <span className="label-text">Topics (comma-separated)</span>
                                     </label>
                                     <input
                                         type="text"
-                                        className="input input-bordered"
+                                        className="input input-bordered w-full"
                                         value={formData.topics.join(', ')}
                                         onChange={(e) => setFormData({
                                             ...formData,
@@ -347,7 +347,7 @@ export default function CrawlerManagement() {
 
                     {sources.length === 0 ? (
                         <div className="text-center py-8">
-                            <i className="fa-solid fa-rss text-4xl text-base-content/30 mb-4" />
+                            <i className="fa-solid fa-duotone fa-rss text-4xl text-base-content/30 mb-4" />
                             <p className="text-base-content/60">No content sources configured</p>
                             <p className="text-sm text-base-content/40 mt-2">
                                 Add RSS feeds, sitemaps, or websites to start discovering content automatically
@@ -423,7 +423,7 @@ export default function CrawlerManagement() {
                                                         className="btn btn-ghost btn-sm"
                                                         title="Edit"
                                                     >
-                                                        <i className="fa-solid fa-edit" />
+                                                        <i className="fa-solid fa-duotone fa-edit" />
                                                     </button>
                                                     <button
                                                         onClick={() => handleTriggerCrawl(source.id)}
@@ -431,7 +431,7 @@ export default function CrawlerManagement() {
                                                         title="Start Manual Crawl"
                                                         disabled={!source.enabled}
                                                     >
-                                                        <i className="fa-solid fa-play" />
+                                                        <i className="fa-solid fa-duotone fa-play" />
                                                     </button>
                                                     <button
                                                         onClick={() => handleToggleEnabled(source)}
@@ -439,7 +439,7 @@ export default function CrawlerManagement() {
                                                             }`}
                                                         title={source.enabled ? 'Disable' : 'Enable'}
                                                     >
-                                                        <i className={`fa-solid ${source.enabled ? 'fa-pause' : 'fa-play'
+                                                        <i className={`fa-solid fa-duotone ${source.enabled ? 'fa-pause' : 'fa-play'
                                                             }`} />
                                                     </button>
                                                     <button
@@ -447,7 +447,7 @@ export default function CrawlerManagement() {
                                                         className="btn btn-error btn-sm"
                                                         title="Delete"
                                                     >
-                                                        <i className="fa-solid fa-trash" />
+                                                        <i className="fa-solid fa-duotone fa-trash" />
                                                     </button>
                                                 </div>
                                             </td>
@@ -491,10 +491,10 @@ export default function CrawlerManagement() {
                                             <td>
                                                 <div
                                                     className={`badge ${job.status === 'completed'
-                                                            ? 'badge-success'
-                                                            : job.status === 'failed'
-                                                                ? 'badge-error'
-                                                                : 'badge-warning'
+                                                        ? 'badge-success'
+                                                        : job.status === 'failed'
+                                                            ? 'badge-error'
+                                                            : 'badge-warning'
                                                         }`}
                                                 >
                                                     {job.status}

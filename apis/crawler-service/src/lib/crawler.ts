@@ -191,7 +191,13 @@ export class CrawlerEngine {
             }));
         }
 
-        throw new Error('Could not discover any feeds or sitemaps for website');
+        // Fallback: No feeds or sitemaps found, just return the homepage itself
+        console.log(`No feeds or sitemaps found for ${domain}, using homepage as content`);
+        return [{
+            url: source.url,
+            title: undefined, // Will be fetched during metadata enhancement
+            description: undefined
+        }];
     }
 
     /**
@@ -208,17 +214,15 @@ export class CrawlerEngine {
         const crawlDelay = await this.robotsService.getCrawlDelay(source.domain);
 
         for (const item of items) {
-            // Check if already crawled recently
-            const { data: existing } = await supabase
-                .from('crawler_history')
+            // Check if content already exists in the content table
+            const { data: existingContent } = await supabase
+                .from('content')
                 .select('id')
-                .eq('source_id', source.id)
                 .eq('url', item.url)
-                .gte('discovered_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()) // Last 7 days
                 .single();
 
-            if (existing) {
-                console.log(`Skipping already crawled URL: ${item.url}`);
+            if (existingContent) {
+                console.log(`Skipping already submitted URL: ${item.url}`);
                 continue;
             }
 
@@ -233,21 +237,29 @@ export class CrawlerEngine {
             await this.delay(crawlDelay);
 
             try {
-                // Submit to discovery service
-                const response = await fetch(`${DISCOVERY_SERVICE_URL}/api/submit`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        url: item.url,
-                        title: item.title,
-                        description: item.description,
-                        topics: source.topics || []
-                    })
-                });
+                // Extract domain from URL
+                const urlObj = new URL(item.url);
+                const domain = urlObj.hostname;
 
-                const result = await response.json() as { error?: string };
+                // Insert directly into content table
+                const { data: content, error: insertError } = await supabase
+                    .from('content')
+                    .insert({
+                        url: item.url,
+                        title: item.title || 'Untitled',
+                        description: item.description,
+                        domain: domain,
+                        topics: source.topics || [],
+                        is_active: true // Content is active by default, moderation handled separately
+                        // Note: source_id references 'sources' table, not 'crawler_sources'
+                        // Crawler source tracking is done via crawler_history table
+                    })
+                    .select()
+                    .single();
+
+                if (insertError) {
+                    throw insertError;
+                }
 
                 // Record in history
                 await supabase.from('crawler_history').insert({
@@ -256,16 +268,12 @@ export class CrawlerEngine {
                     url: item.url,
                     title: item.title,
                     discovered_at: new Date().toISOString(),
-                    submitted: response.ok,
-                    submission_status: response.status === 201 ? 'approved' : response.status === 202 ? 'pending_review' : undefined,
-                    error_message: response.ok ? undefined : (result.error || 'Unknown error')
+                    submitted: true,
+                    submission_status: 'approved', // Content inserted successfully
+                    error_message: undefined
                 });
 
-                if (response.ok) {
-                    submitted++;
-                } else {
-                    failed++;
-                }
+                submitted++;
             } catch (error) {
                 console.error(`Error submitting ${item.url}:`, error);
                 failed++;

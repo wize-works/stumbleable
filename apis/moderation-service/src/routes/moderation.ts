@@ -138,14 +138,23 @@ export async function moderationRoutes(fastify: FastifyInstance) {
         { preHandler: requireModeratorRole },
         async (request, reply) => {
             const { queueId } = request.params as { queueId: string };
-            const userId = (request as any).userId;
+            const clerkUserId = (request as any).userId;
             const body = reviewContentSchema.parse(request.body);
 
             try {
+                // Convert Clerk user ID to database UUID
+                const dbUserId = await getDatabaseUserId(clerkUserId);
+                if (!dbUserId) {
+                    return reply.code(404).send({
+                        error: 'Not Found',
+                        message: 'User not found in database',
+                    });
+                }
+
                 const updated = await repository.reviewContent(
                     queueId,
                     body.status,
-                    userId,
+                    dbUserId,
                     body.moderatorNotes
                 );
 
@@ -154,10 +163,14 @@ export async function moderationRoutes(fastify: FastifyInstance) {
                     item: updated,
                 });
             } catch (error) {
-                request.log.error({ error, queueId }, 'Failed to review content');
+                request.log.error({
+                    error: error instanceof Error ? error.message : error,
+                    errorDetails: error,
+                    queueId
+                }, 'Failed to review content');
                 return reply.code(500).send({
                     error: 'Internal Server Error',
-                    message: 'Failed to review content',
+                    message: error instanceof Error ? error.message : 'Failed to review content',
                 });
             }
         }
@@ -168,14 +181,23 @@ export async function moderationRoutes(fastify: FastifyInstance) {
         '/moderation/queue/bulk-approve',
         { preHandler: requireModeratorRole },
         async (request, reply) => {
-            const userId = (request as any).userId;
+            const clerkUserId = (request as any).userId;
             const body = bulkReviewSchema.parse(request.body);
 
             try {
+                // Convert Clerk user ID to database UUID
+                const dbUserId = await getDatabaseUserId(clerkUserId);
+                if (!dbUserId) {
+                    return reply.code(404).send({
+                        error: 'Not Found',
+                        message: 'User not found in database',
+                    });
+                }
+
                 const results = await repository.bulkReviewContent(
                     body.queueIds,
                     'approved',
-                    userId,
+                    dbUserId,
                     body.moderatorNotes
                 );
 
@@ -184,7 +206,10 @@ export async function moderationRoutes(fastify: FastifyInstance) {
                     ...results,
                 });
             } catch (error) {
-                request.log.error({ error }, 'Failed to bulk approve content');
+                request.log.error({
+                    error: error instanceof Error ? error.message : error,
+                    errorDetails: error
+                }, 'Failed to bulk approve content');
                 return reply.code(500).send({
                     error: 'Internal Server Error',
                     message: 'Failed to bulk approve content',
@@ -198,14 +223,23 @@ export async function moderationRoutes(fastify: FastifyInstance) {
         '/moderation/queue/bulk-reject',
         { preHandler: requireModeratorRole },
         async (request, reply) => {
-            const userId = (request as any).userId;
+            const clerkUserId = (request as any).userId;
             const body = bulkReviewSchema.parse(request.body);
 
             try {
+                // Convert Clerk user ID to database UUID
+                const dbUserId = await getDatabaseUserId(clerkUserId);
+                if (!dbUserId) {
+                    return reply.code(404).send({
+                        error: 'Not Found',
+                        message: 'User not found in database',
+                    });
+                }
+
                 const results = await repository.bulkReviewContent(
                     body.queueIds,
                     'rejected',
-                    userId,
+                    dbUserId,
                     body.moderatorNotes
                 );
 
@@ -214,10 +248,13 @@ export async function moderationRoutes(fastify: FastifyInstance) {
                     ...results,
                 });
             } catch (error) {
-                request.log.error({ error }, 'Failed to bulk reject content');
+                request.log.error({
+                    error: error instanceof Error ? error.message : error,
+                    errorDetails: error
+                }, 'Failed to bulk reject content');
                 return reply.code(500).send({
                     error: 'Internal Server Error',
-                    message: 'Failed to bulk reject content',
+                    message: error instanceof Error ? error.message : 'Failed to bulk reject content',
                 });
             }
         }
@@ -299,14 +336,23 @@ export async function moderationRoutes(fastify: FastifyInstance) {
         { preHandler: requireModeratorRole },
         async (request, reply) => {
             const { reportId } = request.params as { reportId: string };
-            const userId = (request as any).userId;
+            const clerkUserId = (request as any).userId;
             const body = resolveReportSchema.parse(request.body);
 
             try {
+                // Convert Clerk user ID to database UUID
+                const dbUserId = await getDatabaseUserId(clerkUserId);
+                if (!dbUserId) {
+                    return reply.code(404).send({
+                        error: 'Not Found',
+                        message: 'User not found in database',
+                    });
+                }
+
                 const updated = await repository.resolveContentReport(
                     reportId,
                     body.status,
-                    userId,
+                    dbUserId,
                     body.notes
                 );
 
@@ -315,10 +361,14 @@ export async function moderationRoutes(fastify: FastifyInstance) {
                     report: updated,
                 });
             } catch (error) {
-                request.log.error({ error, reportId }, 'Failed to resolve content report');
+                request.log.error({
+                    error: error instanceof Error ? error.message : error,
+                    errorDetails: error,
+                    reportId
+                }, 'Failed to resolve content report');
                 return reply.code(500).send({
                     error: 'Internal Server Error',
-                    message: 'Failed to resolve content report',
+                    message: error instanceof Error ? error.message : 'Failed to resolve content report',
                 });
             }
         }

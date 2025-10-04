@@ -25,6 +25,12 @@ interface AdminStats {
     };
 }
 
+interface ServiceStatus {
+    name: string;
+    status: 'online' | 'offline' | 'unknown';
+    responseTime?: number;
+}
+
 interface RecentActivity {
     id: string;
     type: 'user_registered' | 'content_flagged' | 'deletion_requested' | 'content_approved';
@@ -44,6 +50,7 @@ export default function AdminDashboard() {
     const [error, setError] = useState<string | null>(null);
     const [userRole, setUserRole] = useState<'user' | 'moderator' | 'admin' | null>(null);
     const [checkingRole, setCheckingRole] = useState(true);
+    const [serviceStatuses, setServiceStatuses] = useState<ServiceStatus[]>([]);
 
     // Check user role
     useEffect(() => {
@@ -80,7 +87,48 @@ export default function AdminDashboard() {
         if (!isAdmin || checkingRole) return;
 
         fetchAdminData();
+        checkServiceHealth();
+
+        // Refresh service health every 30 seconds
+        const healthCheckInterval = setInterval(checkServiceHealth, 30000);
+        return () => clearInterval(healthCheckInterval);
     }, [isAdmin, checkingRole]);
+
+    const checkServiceHealth = async () => {
+        const services = [
+            { name: 'Discovery Service', url: process.env.NEXT_PUBLIC_DISCOVERY_API_URL || 'http://localhost:7001' },
+            { name: 'User Service', url: process.env.NEXT_PUBLIC_USER_API_URL || 'http://localhost:7003' },
+            { name: 'Interaction Service', url: process.env.NEXT_PUBLIC_INTERACTION_API_URL || 'http://localhost:7002' },
+            { name: 'Moderation Service', url: process.env.NEXT_PUBLIC_MODERATION_API_URL || 'http://localhost:7005' },
+            { name: 'Crawler Service', url: process.env.NEXT_PUBLIC_CRAWLER_API_URL || 'http://localhost:7004' },
+        ];
+
+        const statuses: ServiceStatus[] = await Promise.all(
+            services.map(async (service) => {
+                try {
+                    const start = Date.now();
+                    const response = await fetch(`${service.url}/health`, {
+                        method: 'GET',
+                        signal: AbortSignal.timeout(5000), // 5 second timeout
+                    });
+                    const responseTime = Date.now() - start;
+
+                    return {
+                        name: service.name,
+                        status: response.ok ? 'online' : 'offline',
+                        responseTime,
+                    } as ServiceStatus;
+                } catch (error) {
+                    return {
+                        name: service.name,
+                        status: 'offline',
+                    } as ServiceStatus;
+                }
+            })
+        );
+
+        setServiceStatuses(statuses);
+    };
 
     const fetchAdminData = async () => {
         try {
@@ -119,14 +167,90 @@ export default function AdminDashboard() {
 
             setStats(aggregatedStats);
 
-            // TODO: Fetch recent activity from activity log API
-            setRecentActivity([]);
+            // Fetch recent activity from multiple sources
+            await fetchRecentActivity(token);
         } catch (error) {
             console.error('Error fetching admin data:', error);
             setError('Failed to load admin dashboard data');
             showToast('Failed to load admin data', 'error');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchRecentActivity = async (token: string) => {
+        try {
+            // Fetch data from multiple sources in parallel
+            const [recentUsers, recentReports, recentDeletionRequests, moderationQueue] = await Promise.all([
+                UserAPI.getRecentUsers(7, token).catch(() => ({ users: [] })),
+                ModerationAPI.listContentReports({ status: 'pending', limit: 10 }, token).catch(() => ({ reports: [] })),
+                AdminAPI.listDeletionRequests({ status: 'pending', limit: 10 }, token).catch(() => ({ requests: [] })),
+                ModerationAPI.listModerationQueue({ status: 'approved', limit: 10 }, token).catch(() => ({ items: [] })),
+            ]);
+
+            const activities: RecentActivity[] = [];
+
+            // Add new user registrations
+            if (recentUsers.users) {
+                recentUsers.users.slice(0, 5).forEach((user: any) => {
+                    activities.push({
+                        id: `user-${user.id}`,
+                        type: 'user_registered',
+                        message: `New user registered: ${user.full_name || user.email}`,
+                        timestamp: user.created_at,
+                        link: undefined,
+                    });
+                });
+            }
+
+            // Add content reports
+            if (recentReports.reports) {
+                recentReports.reports.slice(0, 5).forEach((report: any) => {
+                    activities.push({
+                        id: `report-${report.id}`,
+                        type: 'content_flagged',
+                        message: `Content reported: ${report.content?.title || 'Untitled'} (${report.reason})`,
+                        timestamp: report.created_at,
+                        link: `/admin/moderation?tab=reports`,
+                    });
+                });
+            }
+
+            // Add deletion requests
+            if (recentDeletionRequests.requests) {
+                recentDeletionRequests.requests.slice(0, 5).forEach((request: any) => {
+                    activities.push({
+                        id: `deletion-${request.id}`,
+                        type: 'deletion_requested',
+                        message: `Account deletion requested by ${request.user_email}`,
+                        timestamp: request.requested_at,
+                        link: `/admin/deletion-requests`,
+                    });
+                });
+            }
+
+            // Add moderation queue items
+            if (moderationQueue.items) {
+                moderationQueue.items.slice(0, 3).forEach((item: any) => {
+                    if (item.moderated_at) {
+                        activities.push({
+                            id: `mod-${item.id}`,
+                            type: 'content_approved',
+                            message: `Content ${item.status === 'approved' ? 'approved' : 'rejected'}: ${item.title || 'Untitled'}`,
+                            timestamp: item.moderated_at,
+                            link: `/admin/moderation`,
+                        });
+                    }
+                });
+            }
+
+            // Sort by timestamp (most recent first) and take top 20
+            activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+            setRecentActivity(activities.slice(0, 20));
+        } catch (error) {
+            console.error('Error fetching recent activity:', error);
+            // Don't fail the whole dashboard if activity fetch fails
+            setRecentActivity([]);
         }
     };
 
@@ -185,60 +309,78 @@ export default function AdminDashboard() {
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                     {/* Pending Moderation */}
-                    <div className="card bg-warning/10 shadow-md border border-warning/20">
-                        <div className="card-body">
-                            <h3 className="text-sm font-semibold text-base-content/70 uppercase tracking-wide">
+                    <div className="stats bg-warning/10 shadow-md border border-warning/20">
+                        <div className="stat">
+                            <div className="stat-figure text-warning">
+                                <i className="fa-solid fa-duotone fa-gavel text-4xl"></i>
+                            </div>
+                            <h3 className="stat-title font-semibold text-base-content/70 uppercase tracking-wide">
                                 Pending Moderation
                             </h3>
-                            <p className="text-3xl font-bold text-warning">
+                            <div className="stat-value text-warning">
                                 {stats?.pendingModeration ?? 0}
-                            </p>
-                            <Link href="/admin/moderation" className="text-xs text-warning hover:underline mt-2">
-                                View Queue →
-                            </Link>
+                            </div>
+                            <div className='stat-actions'>
+                                <Link href="/admin/moderation" className="btn btn-warning btn-sm">
+                                    View Queue →
+                                </Link>
+                            </div>
                         </div>
                     </div>
 
                     {/* Deletion Requests */}
-                    <div className="card bg-error/10 shadow-md border border-error/20">
-                        <div className="card-body">
-                            <h3 className="text-sm font-semibold text-base-content/70 uppercase tracking-wide">
+                    <div className="stats bg-error/10 shadow-md border border-error/20">
+                        <div className="stat">
+                            <div className="stat-figure text-error">
+                                <i className="fa-solid fa-duotone fa-user-slash text-4xl"></i>
+                            </div>
+                            <h3 className="stat-title font-semibold text-base-content/70 uppercase tracking-wide">
                                 Deletion Requests
                             </h3>
-                            <p className="text-3xl font-bold text-error">
+                            <div className="stat-value text-error">
                                 {stats?.pendingDeletionRequests ?? 0}
-                            </p>
-                            <Link href="/admin/deletion-requests" className="text-xs text-error hover:underline mt-2">
-                                Manage Requests →
-                            </Link>
+                            </div>
+                            <div className='stat-actions'>
+                                <Link href="/admin/deletion-requests" className="btn btn-error btn-sm">
+                                    Manage Requests →
+                                </Link>
+                            </div>
                         </div>
                     </div>
 
                     {/* Content Reports */}
-                    <div className="card bg-info/10 shadow-md border border-info/20">
-                        <div className="card-body">
-                            <h3 className="text-sm font-semibold text-base-content/70 uppercase tracking-wide">
+                    <div className="stats bg-info/10 shadow-md border border-info/20">
+                        <div className="stat">
+                            <div className="stat-figure text-info">
+                                <i className="fa-solid fa-duotone fa-flag text-4xl"></i>
+                            </div>
+                            <h3 className="stat-title font-semibold text-base-content/70 uppercase tracking-wide">
                                 Content Reports
                             </h3>
-                            <p className="text-3xl font-bold text-info">
+                            <div className="stat-value text-info">
                                 {stats?.totalReports ?? 0}
-                            </p>
-                            <Link href="/admin/moderation?tab=reports" className="text-xs text-info hover:underline mt-2">
-                                Review Reports →
-                            </Link>
+                            </div>
+                            <div className='stat-actions'>
+                                <Link href="/admin/moderation?tab=reports" className="btn btn-info btn-sm">
+                                    Review Reports →
+                                </Link>
+                            </div>
                         </div>
                     </div>
 
                     {/* Total Users */}
-                    <div className="card bg-success/10 shadow-md border border-success/20">
-                        <div className="card-body">
-                            <h3 className="text-sm font-semibold text-base-content/70 uppercase tracking-wide">
+                    <div className="stats bg-success/10 shadow-md border border-success/20">
+                        <div className="stat">
+                            <div className="stat-figure text-success">
+                                <i className="fa-solid fa-duotone fa-users text-4xl"></i>
+                            </div>
+                            <h3 className="stat-title font-semibold text-base-content/70 uppercase tracking-wide">
                                 Total Users
                             </h3>
-                            <p className="text-3xl font-bold text-success">
+                            <div className="stat-value text-success">
                                 {stats?.totalUsers ?? '—'}
-                            </p>
-                            <div className="text-xs text-base-content/60 mt-2">
+                            </div>
+                            <div className="stat-desc text-base-content/60">
                                 Platform registered users
                             </div>
                         </div>
@@ -255,35 +397,50 @@ export default function AdminDashboard() {
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                             {/* New Users */}
-                            <div className="stat bg-base-100 rounded-lg p-4">
-                                <div className="stat-title text-sm">New Users</div>
-                                <div className="stat-value text-2xl text-primary">
-                                    {stats?.newUsers7Days ?? 0}
-                                </div>
-                                <div className="stat-desc text-xs mt-1">
-                                    Last 7 days ({stats?.newUsersToday ?? 0} today)
+                            <div className="stats bg-base-100 shadow">
+                                <div className="stat">
+                                    <div className="stat-figure text-primary">
+                                        <i className="fa-solid fa-duotone fa-user-plus text-3xl"></i>
+                                    </div>
+                                    <div className="stat-title">New Users</div>
+                                    <div className="stat-value text-primary">
+                                        {stats?.newUsers7Days ?? 0}
+                                    </div>
+                                    <div className="stat-desc">
+                                        Last 7 days ({stats?.newUsersToday ?? 0} today)
+                                    </div>
                                 </div>
                             </div>
 
                             {/* Active Users */}
-                            <div className="stat bg-base-100 rounded-lg p-4">
-                                <div className="stat-title text-sm">Active Users</div>
-                                <div className="stat-value text-2xl text-success">
-                                    {stats?.activeUsers7Days ?? '—'}
-                                </div>
-                                <div className="stat-desc text-xs mt-1">
-                                    Last 7 days ({stats?.activeUsers30Days ?? 0} in 30d)
+                            <div className="stats bg-base-100 shadow">
+                                <div className="stat">
+                                    <div className="stat-figure text-success">
+                                        <i className="fa-solid fa-duotone fa-user-check text-3xl"></i>
+                                    </div>
+                                    <div className="stat-title">Active Users</div>
+                                    <div className="stat-value text-success">
+                                        {stats?.activeUsers7Days ?? '—'}
+                                    </div>
+                                    <div className="stat-desc">
+                                        Last 7 days ({stats?.activeUsers30Days ?? 0} in 30d)
+                                    </div>
                                 </div>
                             </div>
 
                             {/* Growth Rate */}
-                            <div className="stat bg-base-100 rounded-lg p-4">
-                                <div className="stat-title text-sm">30-Day Growth</div>
-                                <div className="stat-value text-2xl text-info">
-                                    {stats?.newUsers30Days ?? 0}
-                                </div>
-                                <div className="stat-desc text-xs mt-1">
-                                    New registrations
+                            <div className="stats bg-base-100 shadow">
+                                <div className="stat">
+                                    <div className="stat-figure text-info">
+                                        <i className="fa-solid fa-duotone fa-chart-line text-3xl"></i>
+                                    </div>
+                                    <div className="stat-title">30-Day Growth</div>
+                                    <div className="stat-value text-info">
+                                        {stats?.newUsers30Days ?? 0}
+                                    </div>
+                                    <div className="stat-desc">
+                                        New registrations
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -294,18 +451,36 @@ export default function AdminDashboard() {
                                 <h3 className="text-sm font-semibold text-base-content/70 uppercase tracking-wide mb-3">
                                     Users by Role
                                 </h3>
-                                <div className="grid grid-cols-3 gap-3">
-                                    <div className="bg-base-100 rounded-lg p-3 text-center">
-                                        <div className="text-xs text-base-content/60 mb-1">Users</div>
-                                        <div className="text-xl font-bold">{stats.usersByRole.user}</div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="stats bg-base-100 shadow">
+                                        <div className="stat">
+                                            <div className="stat-figure text-base-content">
+                                                <i className="fa-solid fa-duotone fa-user text-3xl"></i>
+                                            </div>
+                                            <div className="stat-title">Users</div>
+                                            <div className="stat-value">{stats.usersByRole.user}</div>
+                                            <div className="stat-desc">Regular members</div>
+                                        </div>
                                     </div>
-                                    <div className="bg-base-100 rounded-lg p-3 text-center">
-                                        <div className="text-xs text-base-content/60 mb-1">Moderators</div>
-                                        <div className="text-xl font-bold text-warning">{stats.usersByRole.moderator}</div>
+                                    <div className="stats bg-base-100 shadow">
+                                        <div className="stat">
+                                            <div className="stat-figure text-warning">
+                                                <i className="fa-solid fa-duotone fa-shield text-3xl"></i>
+                                            </div>
+                                            <div className="stat-title">Moderators</div>
+                                            <div className="stat-value text-warning">{stats.usersByRole.moderator}</div>
+                                            <div className="stat-desc">Content reviewers</div>
+                                        </div>
                                     </div>
-                                    <div className="bg-base-100 rounded-lg p-3 text-center">
-                                        <div className="text-xs text-base-content/60 mb-1">Admins</div>
-                                        <div className="text-xl font-bold text-error">{stats.usersByRole.admin}</div>
+                                    <div className="stats bg-base-100 shadow">
+                                        <div className="stat">
+                                            <div className="stat-figure text-error">
+                                                <i className="fa-solid fa-duotone fa-crown text-3xl"></i>
+                                            </div>
+                                            <div className="stat-title">Admins</div>
+                                            <div className="stat-value text-error">{stats.usersByRole.admin}</div>
+                                            <div className="stat-desc">Platform administrators</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -344,15 +519,13 @@ export default function AdminDashboard() {
                                     <i className="fa-solid fa-duotone fa-user-slash text-error"></i>
                                     Deletion Requests
                                 </Link>
-                                <button
+                                <Link
+                                    href="/admin/analytics"
                                     className="btn btn-block btn-outline justify-start"
-                                    disabled
-                                    title="Coming soon"
                                 >
                                     <i className="fa-solid fa-duotone fa-chart-line text-info"></i>
                                     Analytics Dashboard
-                                    <span className="badge badge-sm">Soon</span>
-                                </button>
+                                </Link>
                                 <button
                                     className="btn btn-block btn-outline justify-start"
                                     disabled
@@ -369,27 +542,70 @@ export default function AdminDashboard() {
                     {/* System Status */}
                     <div className="card bg-base-200 shadow-md">
                         <div className="card-body">
-                            <h2 className="card-title text-xl mb-4">
-                                <i className="fa-solid fa-duotone fa-server text-success"></i>
-                                System Status
-                            </h2>
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="card-title text-xl">
+                                    <i className={`fa-solid fa-duotone fa-server ${serviceStatuses.every(s => s.status === 'online') ? 'text-success' :
+                                        serviceStatuses.some(s => s.status === 'offline') ? 'text-error' :
+                                            'text-warning'
+                                        }`}></i>
+                                    System Status
+                                </h2>
+                                <button
+                                    onClick={checkServiceHealth}
+                                    className="btn btn-ghost btn-xs"
+                                    title="Refresh status"
+                                >
+                                    <i className="fa-solid fa-duotone fa-rotate-right"></i>
+                                </button>
+                            </div>
                             <div className="space-y-3">
-                                <div className="flex items-center justify-between p-3 bg-base-100 rounded">
-                                    <span className="text-sm font-medium">Discovery Service</span>
-                                    <span className="badge badge-success badge-sm">Online</span>
-                                </div>
-                                <div className="flex items-center justify-between p-3 bg-base-100 rounded">
-                                    <span className="text-sm font-medium">User Service</span>
-                                    <span className="badge badge-success badge-sm">Online</span>
-                                </div>
-                                <div className="flex items-center justify-between p-3 bg-base-100 rounded">
-                                    <span className="text-sm font-medium">Moderation Service</span>
-                                    <span className="badge badge-success badge-sm">Online</span>
-                                </div>
-                                <div className="flex items-center justify-between p-3 bg-base-100 rounded">
-                                    <span className="text-sm font-medium">Crawler Service</span>
-                                    <span className="badge badge-success badge-sm">Online</span>
-                                </div>
+                                {serviceStatuses.length === 0 ? (
+                                    <div className="text-center py-4 text-base-content/60">
+                                        <div className="loading loading-spinner loading-sm"></div>
+                                        <p className="text-xs mt-2">Checking services...</p>
+                                    </div>
+                                ) : (
+                                    serviceStatuses.map((service) => (
+                                        <div
+                                            key={service.name}
+                                            className="flex items-center justify-between p-3 bg-base-100 rounded"
+                                        >
+                                            <div className="flex-1">
+                                                <span className="text-sm font-medium">{service.name}</span>
+                                                {service.responseTime && (
+                                                    <span className="text-xs text-base-content/60 ml-2">
+                                                        ({service.responseTime}ms)
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <span
+                                                className={`badge badge-sm ${service.status === 'online'
+                                                    ? 'badge-success'
+                                                    : service.status === 'offline'
+                                                        ? 'badge-error'
+                                                        : 'badge-warning'
+                                                    }`}
+                                            >
+                                                {service.status === 'online' ? (
+                                                    <>
+                                                        <i className="fa-solid fa-duotone fa-check mr-1"></i>
+                                                        Online
+                                                    </>
+                                                ) : service.status === 'offline' ? (
+                                                    <>
+                                                        <i className="fa-solid fa-duotone fa-xmark mr-1"></i>
+                                                        Offline
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <i className="fa-solid fa-duotone fa-question mr-1"></i>
+                                                        Unknown
+                                                    </>
+                                                )}
+                                            </span>
+                                        </div>
+                                    ))
+                                )}
                             </div>
                         </div>
                     </div>
