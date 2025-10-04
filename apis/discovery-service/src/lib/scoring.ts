@@ -450,3 +450,268 @@ export function calculateWindowedTrendingScore(
 
     return Math.min(1.0, (engagementRate * velocity * recencyMultiplier) / 5);
 }
+
+/**
+ * H2.3: Advanced Personalization Functions
+ */
+
+/**
+ * Calculate time-of-day preference score
+ * Users may prefer different content types at different times of day
+ */
+export function calculateTimeOfDayScore(
+    userHistory: Array<{ hour: number; topics: string[]; engagement: 'positive' | 'negative' }>,
+    contentTopics: string[],
+    currentHour: number
+): number {
+    // Filter history for similar time of day (±2 hours)
+    const relevantHistory = userHistory.filter(item => {
+        const hourDiff = Math.abs(item.hour - currentHour);
+        return hourDiff <= 2 || hourDiff >= 22; // Account for wrap-around
+    });
+
+    if (relevantHistory.length === 0) {
+        return 0.5; // Neutral if no history
+    }
+
+    // Calculate topic match score for this time
+    let positiveMatches = 0;
+    let negativeMatches = 0;
+
+    relevantHistory.forEach(item => {
+        const hasTopicMatch = item.topics.some(t => contentTopics.includes(t));
+        if (hasTopicMatch) {
+            if (item.engagement === 'positive') {
+                positiveMatches++;
+            } else {
+                negativeMatches++;
+            }
+        }
+    });
+
+    const totalMatches = positiveMatches + negativeMatches;
+    if (totalMatches === 0) {
+        return 0.5;
+    }
+
+    // Return score based on positive/negative ratio
+    return 0.3 + (positiveMatches / totalMatches) * 0.7;
+}
+
+/**
+ * Calculate content diversity bonus
+ * Rewards showing content from topics/domains the user hasn't seen recently
+ */
+export function calculateDiversityBonus(
+    recentlySeenTopics: Record<string, number>, // topic -> count
+    recentlySeenDomains: Record<string, number>, // domain -> count
+    contentTopics: string[],
+    contentDomain: string,
+    totalRecentContent: number
+): number {
+    if (totalRecentContent === 0) {
+        return 0.5; // Neutral for new users
+    }
+
+    // Calculate topic diversity
+    const unseenTopics = contentTopics.filter(t => !recentlySeenTopics[t]);
+    const topicDiversityRatio = unseenTopics.length / Math.max(1, contentTopics.length);
+
+    // Calculate domain diversity
+    const domainSeenCount = recentlySeenDomains[contentDomain] || 0;
+    const domainDiversityScore = 1 - Math.min(1, domainSeenCount / (totalRecentContent * 0.2));
+
+    // Combine scores
+    return (topicDiversityRatio * 0.6 + domainDiversityScore * 0.4);
+}
+
+/**
+ * Calculate user cluster similarity score (collaborative filtering)
+ * Users with similar preferences get similar recommendations
+ */
+export function calculateClusterSimilarity(
+    userClusterTopics: Record<string, number>, // topic -> popularity in cluster
+    contentTopics: string[]
+): number {
+    if (Object.keys(userClusterTopics).length === 0 || contentTopics.length === 0) {
+        return 0.5;
+    }
+
+    let totalScore = 0;
+    let maxPossibleScore = 0;
+
+    contentTopics.forEach(topic => {
+        const clusterPopularity = userClusterTopics[topic] || 0;
+        totalScore += clusterPopularity;
+        maxPossibleScore += 1; // Max popularity is 1
+    });
+
+    return maxPossibleScore > 0
+        ? totalScore / maxPossibleScore
+        : 0.5;
+}
+
+/**
+ * Calculate adaptive wildness recommendation
+ * Suggests optimal wildness based on user's engagement patterns
+ */
+export function calculateAdaptiveWildness(
+    currentWildness: number,
+    recentEngagement: {
+        highSimilarityLikeRate: number; // Like rate for high-similarity content
+        lowSimilarityLikeRate: number; // Like rate for diverse content
+        skipRate: number;
+        totalInteractions: number;
+    }
+): { suggestedWildness: number; reason: string } {
+    if (recentEngagement.totalInteractions < 10) {
+        return {
+            suggestedWildness: currentWildness,
+            reason: 'Not enough interaction history'
+        };
+    }
+
+    // If user likes diverse content more, suggest higher wildness
+    if (recentEngagement.lowSimilarityLikeRate > recentEngagement.highSimilarityLikeRate + 0.2) {
+        return {
+            suggestedWildness: Math.min(100, currentWildness + 15),
+            reason: 'You seem to enjoy diverse content - try increasing wildness!'
+        };
+    }
+
+    // If user likes similar content more, suggest lower wildness
+    if (recentEngagement.highSimilarityLikeRate > recentEngagement.lowSimilarityLikeRate + 0.2) {
+        return {
+            suggestedWildness: Math.max(0, currentWildness - 15),
+            reason: 'You prefer content close to your interests - try lower wildness'
+        };
+    }
+
+    // High skip rate = need different wildness
+    if (recentEngagement.skipRate > 0.6) {
+        if (currentWildness < 50) {
+            return {
+                suggestedWildness: currentWildness + 20,
+                reason: 'Skipping a lot? Try exploring more diverse content'
+            };
+        } else {
+            return {
+                suggestedWildness: currentWildness - 20,
+                reason: 'Skipping a lot? Try content closer to your interests'
+            };
+        }
+    }
+
+    return {
+        suggestedWildness: currentWildness,
+        reason: 'Your current wildness setting seems optimal'
+    };
+}
+
+/**
+ * Enhanced personalization score with advanced features
+ * H2.3: Combines multiple personalization signals
+ */
+export function calculateEnhancedPersonalization(
+    contentTopics: string[],
+    contentDomain: string,
+    userProfile: {
+        interactionHistory: {
+            likedTopics: Record<string, number>;
+            dislikedTopics: Record<string, number>;
+            likedDomains: Record<string, number>;
+        };
+        recentActivity: {
+            seenTopics: Record<string, number>;
+            seenDomains: Record<string, number>;
+            totalRecent: number;
+        };
+        timePreferences?: Array<{ hour: number; topics: string[]; engagement: 'positive' | 'negative' }>;
+        clusterTopics?: Record<string, number>;
+    },
+    domainReputation: number,
+    currentHour: number
+): number {
+    // Base personalization (from existing function)
+    const basePersonalization = calculatePersonalizationScore(
+        contentTopics,
+        contentDomain,
+        userProfile.interactionHistory,
+        domainReputation
+    );
+
+    // Diversity bonus (prevent filter bubble)
+    const diversityBonus = calculateDiversityBonus(
+        userProfile.recentActivity.seenTopics,
+        userProfile.recentActivity.seenDomains,
+        contentTopics,
+        contentDomain,
+        userProfile.recentActivity.totalRecent
+    );
+
+    // Time-of-day preferences
+    const timeOfDayScore = userProfile.timePreferences
+        ? calculateTimeOfDayScore(userProfile.timePreferences, contentTopics, currentHour)
+        : 0.5;
+
+    // Collaborative filtering via user clusters
+    const clusterScore = userProfile.clusterTopics
+        ? calculateClusterSimilarity(userProfile.clusterTopics, contentTopics)
+        : 0.5;
+
+    // Weighted combination
+    const enhancedScore =
+        basePersonalization * 0.45 +
+        diversityBonus * 0.25 +
+        timeOfDayScore * 0.15 +
+        clusterScore * 0.15;
+
+    return Math.max(0, Math.min(1, enhancedScore));
+}
+
+/**
+ * Calculate engagement prediction score
+ * Predicts likelihood user will engage positively with content
+ */
+export function predictEngagement(
+    contentFeatures: {
+        topics: string[];
+        domain: string;
+        quality: number;
+        readingTime: number;
+        ageHours: number;
+    },
+    userFeatures: {
+        avgSessionLength: number; // in minutes
+        preferredReadingTime: number; // in minutes
+        preferredTopics: string[];
+        avgQualityPreference: number;
+        timeOfDay: number;
+    }
+): number {
+    // Topic match
+    const topicMatches = contentFeatures.topics.filter(t =>
+        userFeatures.preferredTopics.includes(t)
+    ).length;
+    const topicScore = topicMatches / Math.max(1, contentFeatures.topics.length);
+
+    // Reading time match
+    const readingTimeDiff = Math.abs(contentFeatures.readingTime - userFeatures.preferredReadingTime);
+    const readingTimeScore = Math.max(0, 1 - readingTimeDiff / 30); // 30 min max diff
+
+    // Quality match
+    const qualityDiff = Math.abs(contentFeatures.quality - userFeatures.avgQualityPreference);
+    const qualityScore = 1 - qualityDiff;
+
+    // Freshness preference (some users prefer new content, others don't care)
+    const freshnessScore = contentFeatures.ageHours < 24 ? 1 : 0.8;
+
+    // Combine predictions
+    const engagementPrediction =
+        topicScore * 0.35 +
+        readingTimeScore * 0.20 +
+        qualityScore * 0.25 +
+        freshnessScore * 0.20;
+
+    return Math.max(0, Math.min(1, engagementPrediction));
+}
