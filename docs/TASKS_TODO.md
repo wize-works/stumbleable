@@ -476,4 +476,11 @@ Each task must include:
 
 (done)we need to tie the user who submits content to their user account, so that when content violates TOS and is removed, we can notify the user who submitted it.
 
-i think that we need to create a way for a user to share a stumble with a friend, either via social media or just copying a link. this should not just be to the site, but rather to the specific stumbleable page for that content.
+(done - Oct 4, 2025)we need to create a way for a user to share a stumble with a friend, either via social media or just copying a link. this should not just be to the site, but rather to the specific stumbleable page for that content.
+  - ✅ Added GET /api/content/:id endpoint to discovery-service
+  - ✅ Updated stumble page to handle ?id= URL parameter for deep linking
+  - ✅ URL updates automatically when stumbling (shallow routing, no reload)
+  - ✅ Created ShareButton component with dropdown (Copy Link, Twitter, Facebook, LinkedIn, Native Share)
+  - ✅ Added dynamic Open Graph meta tags for rich social media previews
+  - ✅ Browser back/forward buttons work correctly
+  - ✅ Full documentation in SHAREABLE_STUMBLE_LINKS.md

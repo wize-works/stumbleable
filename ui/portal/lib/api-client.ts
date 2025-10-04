@@ -149,6 +149,23 @@ export class DiscoveryAPI {
     }
 
     /**
+     * Get a specific discovery by ID (for shared links and deep linking)
+     */
+    static async getById(params: {
+        id: string;
+        token: string;
+    }): Promise<NextDiscoveryResponse> {
+        const response = await apiRequest<NextDiscoveryResponse>(
+            `${DISCOVERY_API}/content/${params.id}`,
+            {},
+            params.token
+        );
+
+        console.log(`Discovery loaded by ID: ${response.discovery.title}`);
+        return response;
+    }
+
+    /**
      * Explore discoveries with optional topic filtering
      */
     static async explore(params: {

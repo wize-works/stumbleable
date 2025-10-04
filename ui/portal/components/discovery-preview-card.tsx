@@ -46,15 +46,13 @@ export function DiscoveryPreviewCard({ discovery, index = 0 }: DiscoveryPreviewC
 
                 {/* CTA Button */}
                 <div className="card-actions">
-                    <a
-                        href={discovery.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                    <Link
+                        href={`/stumble?id=${discovery.id}`}
                         className={`btn btn-${color} w-full group/btn`}
                     >
                         <span>Explore Now</span>
                         <i className="fa-solid fa-duotone fa-arrow-right ml-2 group-hover/btn:translate-x-1 transition-transform"></i>
-                    </a>
+                    </Link>
                 </div>
             </div>
         </div>

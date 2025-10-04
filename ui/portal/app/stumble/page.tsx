@@ -10,7 +10,7 @@ import { useSessionTracking } from '@/lib/use-session-tracking';
 import { useSwipe } from '@/lib/use-swipe';
 import { useUserInitialization } from '@/lib/use-user-initialization';
 import { useAuth, useUser } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { DiscoveryCard } from '../../components/discovery-card';
 import { DiscoveryDetailsBar } from '../../components/discovery-details-bar';
@@ -20,6 +20,7 @@ export default function StumblePage() {
     const { user, isLoaded, isSignedIn } = useUser();
     const { getToken } = useAuth();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [currentDiscovery, setCurrentDiscovery] = useState<Discovery | null>(null);
     const [wildness, setWildness] = useState(35); // default wildness
     const seenIdsRef = useRef(new Set<string>());
@@ -117,6 +118,45 @@ export default function StumblePage() {
         }
     }, [isLoaded, isSignedIn, user?.id, userDataLoaded, authFailed]);
 
+    // Update document meta tags for Open Graph sharing
+    useEffect(() => {
+        if (currentDiscovery) {
+            // Build the shareable URL
+            const shareUrl = `${window.location.origin}/stumble?id=${currentDiscovery.id}`;
+
+            // Update document title
+            document.title = `${currentDiscovery.title} | Stumbleable`;
+
+            // Helper function to update or create meta tags
+            const updateMetaTag = (property: string, content: string) => {
+                let meta = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement;
+                if (!meta) {
+                    meta = document.createElement('meta');
+                    meta.setAttribute('property', property);
+                    document.head.appendChild(meta);
+                }
+                meta.content = content;
+            };
+
+            // Update Open Graph tags
+            updateMetaTag('og:title', currentDiscovery.title);
+            updateMetaTag('og:description', currentDiscovery.description || 'Discover amazing content on Stumbleable');
+            updateMetaTag('og:image', currentDiscovery.image || `${window.location.origin}/og-image.png`);
+            updateMetaTag('og:url', shareUrl);
+            updateMetaTag('og:type', 'website');
+            updateMetaTag('og:site_name', 'Stumbleable');
+
+            // Update Twitter Card tags
+            updateMetaTag('twitter:card', 'summary_large_image');
+            updateMetaTag('twitter:title', currentDiscovery.title);
+            updateMetaTag('twitter:description', currentDiscovery.description || 'Discover amazing content on Stumbleable');
+            updateMetaTag('twitter:image', currentDiscovery.image || `${window.location.origin}/og-image.png`);
+        } else {
+            // Reset to default when no discovery
+            document.title = 'Stumble | Stumbleable';
+        }
+    }, [currentDiscovery]);
+
     // Swipe gesture support
     const swipeRef = useSwipe({
         onSwipeLeft: () => !loading && currentDiscovery && handleReaction('down'), // Skip
@@ -188,6 +228,9 @@ export default function StumblePage() {
             setDiscoveryReason(response.reason);
             seenIdsRef.current.add(response.discovery.id);
 
+            // Update URL with content ID for sharing (shallow routing - no page reload)
+            router.push(`/stumble?id=${response.discovery.id}`, { scroll: false });
+
             // Start tracking time on page for engagement metrics
             discoveryViewStartTimeRef.current = Date.now();
 
@@ -249,11 +292,69 @@ export default function StumblePage() {
         }
     }, [user?.id, wildness, showToast, initialDiscoveryLoaded]);
 
-    // Load initial discovery when user is ready and user data is loaded
+    // Load initial discovery or content from URL parameter
     useEffect(() => {
-        if (isLoaded && isSignedIn && user?.id && userDataLoaded && !initialDiscoveryLoaded) {
-            handleStumble();
+        async function loadContent() {
+            if (!isLoaded || !isSignedIn || !user?.id || !userDataLoaded || initialDiscoveryLoaded) {
+                return;
+            }
+
+            // Check if there's an ?id= parameter in the URL
+            const contentId = searchParams.get('id');
+
+            if (contentId) {
+                // Deep link - load specific content by ID
+                setLoading(true);
+                try {
+                    const token = await getToken();
+                    if (!token) {
+                        console.error('No authentication token available');
+                        setLoading(false);
+                        return;
+                    }
+
+                    const response = await DiscoveryAPI.getById({ id: contentId, token });
+                    setCurrentDiscovery(response.discovery);
+                    setDiscoveryReason(response.reason);
+                    seenIdsRef.current.add(response.discovery.id);
+
+                    // Start tracking time on page
+                    discoveryViewStartTimeRef.current = Date.now();
+
+                    // Record view interaction
+                    try {
+                        await InteractionAPI.recordFeedback(response.discovery.id, 'view', token);
+                    } catch (error) {
+                        console.error('Error recording view:', error);
+                    }
+
+                    // Track discovery for session analytics
+                    await trackDiscovery();
+
+                    // Update saved state
+                    setIsSaved(InteractionAPI.isSaved(response.discovery.id));
+
+                    setInitialDiscoveryLoaded(true);
+                    setLoading(false);
+                } catch (error) {
+                    console.error('Error loading content by ID:', error);
+                    if (error instanceof ApiError && error.status === 404) {
+                        showToast('Content not found. Loading a random discovery...', 'warning');
+                        // Clear the bad ID from URL and load random content
+                        router.replace('/stumble', { scroll: false });
+                        handleStumble();
+                    } else {
+                        showToast('Error loading content. Please try again.', 'error');
+                        setLoading(false);
+                    }
+                }
+            } else {
+                // Normal flow - get next discovery
+                handleStumble();
+            }
         }
+
+        loadContent();
 
         // Cleanup timeout on unmount
         return () => {
@@ -261,7 +362,7 @@ export default function StumblePage() {
                 clearTimeout(iframeLoadTimeoutRef.current);
             }
         };
-    }, [isLoaded, isSignedIn, user?.id, userDataLoaded, initialDiscoveryLoaded, handleStumble]);
+    }, [isLoaded, isSignedIn, user?.id, userDataLoaded, initialDiscoveryLoaded, searchParams]);
 
     const handleReaction = async (action: Interaction['action']) => {
         if (!currentDiscovery) return;
@@ -559,6 +660,7 @@ export default function StumblePage() {
                 isSaved={isSaved}
                 disabled={loading || !currentDiscovery}
                 discoveryId={currentDiscovery?.id}
+                discoveryTitle={currentDiscovery?.title}
                 onAddedToList={(listId, listTitle) => {
                     showToast(`Added to "${listTitle}"`, 'success');
                 }}

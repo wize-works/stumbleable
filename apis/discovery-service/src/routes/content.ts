@@ -1,8 +1,10 @@
-import { getAuth } from '@clerk/fastify';
 import { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify';
 import { DiscoveryRepository } from '../lib/repository';
 
 const repository = new DiscoveryRepository();
+
+// UUID v4 regex pattern for validation
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 /**
  * Content retrieval routes
@@ -10,21 +12,15 @@ const repository = new DiscoveryRepository();
 export const contentRoute: FastifyPluginAsync = async (fastify) => {
 
     // Get discovery by ID
+    // Public endpoint (no auth required) for shareable links
     fastify.get<{ Params: { id: string } }>('/content/:id', async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
         try {
-            // Check authentication
-            const auth = getAuth(request as any);
-            if (!auth.isAuthenticated) {
-                return reply.status(401).send({
-                    error: 'User not authenticated'
-                });
-            }
-
             const { id } = request.params;
 
-            if (!id) {
+            // Validate UUID format
+            if (!id || !UUID_REGEX.test(id)) {
                 return reply.status(400).send({
-                    error: 'Discovery ID is required'
+                    error: 'Invalid discovery ID format. Must be a valid UUID.'
                 });
             }
 
@@ -36,7 +32,13 @@ export const contentRoute: FastifyPluginAsync = async (fastify) => {
                 });
             }
 
-            return reply.send({ discovery });
+            // Include a reason for transparency (why this content)
+            const reason = 'Shared content';
+
+            return reply.send({
+                discovery,
+                reason
+            });
 
         } catch (error) {
             fastify.log.error(error, 'Error in /content/:id endpoint');

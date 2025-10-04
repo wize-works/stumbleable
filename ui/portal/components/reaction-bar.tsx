@@ -4,6 +4,7 @@ import { Interaction } from '../data/types';
 import { cn } from '../lib/utils';
 import { AddToListButton } from './add-to-list-button';
 import ReportContentButton from './report-content-button';
+import { ShareButton } from './share-button';
 import Logo from './ui/logo';
 import { VerticalMenu } from './vertical-menu';
 
@@ -12,6 +13,7 @@ interface ReactionBarProps {
     onStumble?: () => void;
     isSaved?: boolean;
     discoveryId?: string; // For "Add to List" and "Report" functionality
+    discoveryTitle?: string; // For share functionality
     className?: string;
     disabled?: boolean;
     floating?: boolean;
@@ -24,6 +26,7 @@ export function ReactionBar({
     onStumble,
     isSaved = false,
     discoveryId,
+    discoveryTitle,
     className = '',
     disabled = false,
     floating = true,
@@ -78,15 +81,16 @@ export function ReactionBar({
 
                     {/* More Actions Menu */}
                     <VerticalMenu disabled={disabled}>
-                        {/* Share button */}
+                        {/* Share button with dropdown */}
                         <div className='tooltip tooltip-right' data-tip='Share'>
-                            <button
-                                className='btn btn-circle btn-info hover:scale-110 active:scale-95 transition-transform'
-                                onClick={() => onReaction('share')}
+                            <ShareButton
+                                contentId={discoveryId}
+                                contentTitle={discoveryTitle}
                                 disabled={disabled}
-                            >
-                                <i className="fa-solid fa-duotone fa-share text-sm sm:text-base"></i>
-                            </button>
+                                size="md"
+                                variant="circle"
+                                className="hover:scale-110 active:scale-95 transition-transform"
+                            />
                         </div>
 
                         {/* Add to List button */}
