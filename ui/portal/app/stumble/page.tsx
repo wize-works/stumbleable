@@ -36,6 +36,9 @@ export default function StumblePage() {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const { showToast } = useToaster();
 
+    // Track time spent on each discovery for engagement metrics
+    const discoveryViewStartTimeRef = useRef<number | null>(null);
+
     // Session tracking for real-time analytics
     const { session, trackDiscovery, trackInteraction } = useSessionTracking();
 
@@ -185,6 +188,9 @@ export default function StumblePage() {
             setDiscoveryReason(response.reason);
             seenIdsRef.current.add(response.discovery.id);
 
+            // Start tracking time on page for engagement metrics
+            discoveryViewStartTimeRef.current = Date.now();
+
             // Record view interaction for metrics tracking
             try {
                 await InteractionAPI.recordFeedback(response.discovery.id, 'view', token);
@@ -267,7 +273,12 @@ export default function StumblePage() {
                 return;
             }
 
-            await InteractionAPI.recordFeedback(currentDiscovery.id, action, token);
+            // Calculate time spent on page (in seconds)
+            const timeOnPage = discoveryViewStartTimeRef.current
+                ? (Date.now() - discoveryViewStartTimeRef.current) / 1000
+                : undefined;
+
+            await InteractionAPI.recordFeedback(currentDiscovery.id, action, token, timeOnPage);
 
             // Track interaction for session analytics
             await trackInteraction();
@@ -300,8 +311,8 @@ export default function StumblePage() {
                 }
             }
 
-            // Auto-advance on like/skip
-            if (action === 'up' || action === 'down') {
+            // Auto-advance only on skip (not on like - users want to read content they like)
+            if (action === 'down') {
                 setTimeout(() => {
                     handleStumble();
                 }, 400);

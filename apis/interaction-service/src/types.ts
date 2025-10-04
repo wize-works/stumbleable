@@ -3,6 +3,7 @@ export type Interaction = {
     discoveryId: string;
     action: 'up' | 'down' | 'save' | 'unsave' | 'skip' | 'share' | 'view';
     at: number; // Date.now()
+    timeOnPage?: number; // Time spent on page in seconds
 };
 
 export type InteractionStats = {
@@ -15,6 +16,7 @@ export type InteractionStats = {
 export type FeedbackRequest = {
     discoveryId: string;
     action: Interaction['action'];
+    timeOnPage?: number; // Optional time spent on page in seconds
 };
 
 export type SavedDiscovery = {

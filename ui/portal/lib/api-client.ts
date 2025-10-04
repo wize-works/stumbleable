@@ -158,17 +158,21 @@ export class InteractionAPI {
     /**
      * Record user feedback
      */
-    static async recordFeedback(discoveryId: string, action: Interaction['action'], token: string): Promise<void> {
+    static async recordFeedback(discoveryId: string, action: Interaction['action'], token: string, timeOnPage?: number): Promise<void> {
         const response = await apiRequest<{ success: boolean; interaction: any; stats: any }>(
             `${INTERACTION_API}/feedback`,
             {
                 method: 'POST',
-                body: JSON.stringify({ discoveryId, action }),
+                body: JSON.stringify({
+                    discoveryId,
+                    action,
+                    ...(timeOnPage !== undefined && { timeOnPage })
+                }),
             },
             token
         );
 
-        console.log(`Recorded ${action} for discovery ${discoveryId}:`, response);
+        console.log(`Recorded ${action} for discovery ${discoveryId}${timeOnPage ? ` (${timeOnPage}s)` : ''}:`, response);
 
         // Update local cache for save actions
         if (action === 'save') {

@@ -30,7 +30,8 @@ class InteractionStore {
     async recordInteraction(
         discoveryId: string,
         action: Interaction['action'],
-        clerkUserId?: string
+        clerkUserId?: string,
+        timeOnPage?: number
     ): Promise<Interaction> {
         // Resolve Clerk user ID to internal UUID
         const userId = clerkUserId ? await resolveUserId(clerkUserId) : null;
@@ -98,6 +99,7 @@ class InteractionStore {
                 content_id: discoveryId,
                 type: dbType,
                 user_id: userId || null,
+                time_on_page: timeOnPage || null,
                 metadata: {}
             })
             .select()

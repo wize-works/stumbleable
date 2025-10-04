@@ -9,6 +9,7 @@ import {
     calculatePersonalizationScore,
     calculatePopularityScore,
     calculateSimilarity,
+    calculateTimeOnPageBoost,
     generateReason,
     getAgeDays,
     ScoringContext
@@ -68,6 +69,10 @@ export const nextDiscoveryRoute: FastifyPluginAsync = async (fastify) => {
                 repository.getDiscoveriesExcluding(seenIds),
                 repository.getGlobalEngagementStats() // Fetch global stats in parallel
             ]);
+
+            // Fetch time-on-page metrics for all candidate content (for engagement quality boost)
+            const contentIds = candidates.map(c => c.id);
+            const timeOnPageMetrics = await repository.getBatchTimeOnPageMetrics(contentIds);
 
             // Use default user preferences for new Clerk users
             const userPrefs = user || {
@@ -160,7 +165,13 @@ export const nextDiscoveryRoute: FastifyPluginAsync = async (fastify) => {
                     popularityScore
                 );
 
-                // Calculate final score with all factors including domain reputation
+                // H2.6: Apply time-on-page boost for engagement quality
+                const timeMetrics = timeOnPageMetrics[discovery.id];
+                const timeOnPageBoost = timeMetrics
+                    ? calculateTimeOnPageBoost(timeMetrics.avgTime, timeMetrics.sampleSize)
+                    : 1.0; // Neutral if no data
+
+                // Calculate final score with all factors including domain reputation and time-on-page
                 const reputationBoost = 0.8 + (domainReputation * 0.4); // 0.8-1.2x multiplier
                 const finalScore = calculateOverallScore(
                     baseScore,
@@ -169,7 +180,7 @@ export const nextDiscoveryRoute: FastifyPluginAsync = async (fastify) => {
                     popularityScore,
                     adjustedSimilarity,
                     scoringContext
-                ) * reputationBoost;
+                ) * reputationBoost * timeOnPageBoost;
 
                 return {
                     discovery,

@@ -990,4 +990,51 @@ export class DiscoveryRepository {
         }
     }
 
+    /**
+     * Get average time-on-page metrics for content IDs
+     * Returns map of contentId -> { avgTime, sampleSize }
+     * Used to boost content that historically keeps users engaged longer
+     */
+    async getBatchTimeOnPageMetrics(contentIds: string[]): Promise<Record<string, { avgTime: number; sampleSize: number }>> {
+        if (contentIds.length === 0) return {};
+
+        try {
+            const { data, error } = await supabase
+                .from('user_interactions')
+                .select('content_id, time_on_page')
+                .in('content_id', contentIds)
+                .not('time_on_page', 'is', null);
+
+            if (error) {
+                console.error('Error fetching time-on-page metrics:', error);
+                return {};
+            }
+
+            // Group by content_id and calculate averages
+            const metrics: Record<string, { total: number; count: number }> = {};
+
+            for (const row of data || []) {
+                if (!metrics[row.content_id]) {
+                    metrics[row.content_id] = { total: 0, count: 0 };
+                }
+                metrics[row.content_id].total += row.time_on_page;
+                metrics[row.content_id].count += 1;
+            }
+
+            // Convert to average format
+            const result: Record<string, { avgTime: number; sampleSize: number }> = {};
+            for (const [contentId, stats] of Object.entries(metrics)) {
+                result[contentId] = {
+                    avgTime: stats.total / stats.count,
+                    sampleSize: stats.count
+                };
+            }
+
+            return result;
+        } catch (error) {
+            console.error('Error in getBatchTimeOnPageMetrics:', error);
+            return {};
+        }
+    }
+
 }

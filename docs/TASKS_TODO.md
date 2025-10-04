@@ -470,8 +470,10 @@ Each task must include:
 **Note**: This task list is based on the comprehensive PRD requirements and current implementation status. Priority should be given to Critical tasks to achieve a functional MVP, then work systematically through High priority items for the full v1.0 release.
 
 
-on the stumble page, when needing to add a list, it left the page i wanted to stay on. should be a modal instead of a new page.
+(done)on the stumble page, when needing to add a list, it left the page i wanted to stay on. should be a modal instead of a new page.
 
-we need to create a unique 404 page for when a user goes to a non-existent list, e.g. /list/1234 when that list doesn't exist. or any other invalid route.
+(done)we need to create a unique 404 page for when a user goes to a non-existent list, e.g. /list/1234 when that list doesn't exist. or any other invalid route.
 
-we need to tie the user who submits content to their user account, so that when content violates TOS and is removed, we can notify the user who submitted it.
+(done)we need to tie the user who submits content to their user account, so that when content violates TOS and is removed, we can notify the user who submitted it.
+
+i think that we need to create a way for a user to share a stumble with a friend, either via social media or just copying a link. this should not just be to the site, but rather to the specific stumbleable page for that content.

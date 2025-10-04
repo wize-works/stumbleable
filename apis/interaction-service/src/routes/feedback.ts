@@ -9,6 +9,7 @@ const FeedbackRequestSchema = z.object({
     discoveryId: z.string().min(1),
     action: z.enum(['up', 'down', 'save', 'unsave', 'skip', 'share', 'view']),
     userId: z.string().optional(),
+    timeOnPage: z.number().min(0).optional(), // Time spent on page in seconds
 });
 
 /**
@@ -31,9 +32,9 @@ export async function feedbackRoutes(fastify: FastifyInstance) {
             }
             const authenticatedUserId = auth.userId;
 
-            const { discoveryId, action, userId } = FeedbackRequestSchema.parse(request.body);
+            const { discoveryId, action, userId, timeOnPage } = FeedbackRequestSchema.parse(request.body);
 
-            const interaction = await interactionStore.recordInteraction(discoveryId, action, authenticatedUserId);
+            const interaction = await interactionStore.recordInteraction(discoveryId, action, authenticatedUserId, timeOnPage);
 
             fastify.log.info({ discoveryId, action, userId, interactionId: interaction.id }, 'Recorded interaction');
 

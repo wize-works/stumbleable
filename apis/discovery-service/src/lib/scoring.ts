@@ -26,8 +26,148 @@ export interface ContentMetrics {
 
 /**
  * Calculate freshness score based on age with configurable decay
- * PRD specifies 7-14 day half-life, defaulting to 14 days
+ * PRD specifies 7-14 day half-life, defaulting to 14 d    // Combine scores
+    const engagementPrediction =
+        topicScore * 0.35 +
+        readingTimeScore * 0.20 +
+        qualityScore * 0.25 +
+        freshnessScore * 0.20;
+
+    return Math.max(0, Math.min(1, engagementPrediction));
+}
+
+/**
+ * Calculate engagement quality score based on time spent on page
+ * H2.6: Time-on-page tracking for content quality
+ * 
+ * Uses sigmoid-like curve to score engagement:
+ * - Very quick exits (<10s) = low quality signal
+ * - Short engagement (10-30s) = moderate quality
+ * - Good engagement (30s-3min) = high quality signal
+ * - Long engagement (3-10min) = very high quality
+ * - Very long (>10min) = cap at max to avoid outliers
+ * 
+ * @param timeOnPageSeconds - Time user spent on page before interaction
+ * @param readingTimeMinutes - Expected reading time for content (optional)
+ * @returns Engagement quality score 0-1
  */
+export function calculateTimeOnPageScore(
+    timeOnPageSeconds: number,
+    readingTimeMinutes?: number
+): number {
+    // Handle edge cases
+    if (timeOnPageSeconds <= 0) return 0;
+
+    // Quick exit (< 10 seconds) = low engagement
+    if (timeOnPageSeconds < 10) {
+        return timeOnPageSeconds / 10 * 0.3; // Max 0.3 for <10s
+    }
+
+    // Short engagement (10-30s) = moderate
+    if (timeOnPageSeconds < 30) {
+        return 0.3 + ((timeOnPageSeconds - 10) / 20) * 0.3; // 0.3 to 0.6
+    }
+
+    // Good engagement (30s-3min) = high quality
+    if (timeOnPageSeconds < 180) {
+        return 0.6 + ((timeOnPageSeconds - 30) / 150) * 0.3; // 0.6 to 0.9
+    }
+
+    // Long engagement (3min-10min) = very high quality
+    if (timeOnPageSeconds < 600) {
+        return 0.9 + ((timeOnPageSeconds - 180) / 420) * 0.1; // 0.9 to 1.0
+    }
+
+    // Very long engagement (>10min) = cap at max
+    return 1.0;
+}
+
+/**
+ * Calculate average time-on-page boost for content scoring
+ * Rewards content that historically keeps users engaged longer
+ * 
+ * @param avgTimeOnPage - Average time users spent on this content (seconds)
+ * @param sampleSize - Number of interactions with time data
+ * @returns Boost multiplier 0.8-1.2
+ */
+export function calculateTimeOnPageBoost(
+    avgTimeOnPage: number | null | undefined,
+    sampleSize: number = 0
+): number {
+    // No data = neutral boost
+    if (!avgTimeOnPage || sampleSize < 3) return 1.0;
+
+    // Calculate base quality score
+    const qualityScore = calculateTimeOnPageScore(avgTimeOnPage);
+
+    // Apply confidence based on sample size
+    // More samples = more confident in the metric
+    const confidence = Math.min(1.0, sampleSize / 20); // Full confidence at 20+ samples
+
+    // Convert quality score to boost multiplier
+    // 0.0 quality -> 0.8 boost (20% penalty)
+    // 0.5 quality -> 1.0 boost (neutral)
+    // 1.0 quality -> 1.2 boost (20% bonus)
+    const rawBoost = 0.8 + (qualityScore * 0.4);
+
+    // Blend with neutral (1.0) based on confidence
+    const boost = (rawBoost * confidence) + (1.0 * (1 - confidence));
+
+    return boost;
+}
+
+/**
+ * Analyze time-on-page patterns for a user
+ * Helps understand user's engagement preferences
+ * 
+ * @param interactions - User's interaction history with time data
+ * @returns User engagement profile
+ */
+export function analyzeUserTimeOnPagePatterns(
+    interactions: Array<{
+        timeOnPage: number;
+        action: 'like' | 'skip' | 'save';
+        readingTime?: number;
+    }>
+): {
+    avgEngagedTime: number;
+    avgSkippedTime: number;
+    preferredReadingRange: { min: number; max: number };
+    quickExitRate: number;
+    deepEngagementRate: number;
+} {
+    const engaged = interactions.filter(i => i.action === 'like' || i.action === 'save');
+    const skipped = interactions.filter(i => i.action === 'skip');
+    const quickExits = interactions.filter(i => i.timeOnPage < 10);
+    const deepEngagement = interactions.filter(i => i.timeOnPage > 180);
+
+    const avgEngagedTime = engaged.length > 0
+        ? engaged.reduce((sum, i) => sum + i.timeOnPage, 0) / engaged.length
+        : 0;
+
+    const avgSkippedTime = skipped.length > 0
+        ? skipped.reduce((sum, i) => sum + i.timeOnPage, 0) / skipped.length
+        : 0;
+
+    // Calculate preferred reading time range (25th-75th percentile of engaged content)
+    const engagedTimes = engaged
+        .map(i => i.timeOnPage)
+        .sort((a, b) => a - b);
+
+    const p25Index = Math.floor(engagedTimes.length * 0.25);
+    const p75Index = Math.floor(engagedTimes.length * 0.75);
+
+    return {
+        avgEngagedTime,
+        avgSkippedTime,
+        preferredReadingRange: {
+            min: engagedTimes[p25Index] || 30,
+            max: engagedTimes[p75Index] || 300
+        },
+        quickExitRate: quickExits.length / Math.max(1, interactions.length),
+        deepEngagementRate: deepEngagement.length / Math.max(1, interactions.length)
+    };
+}
 export function calculateFreshness(ageDays: number, decayHalfLife: number = 14): number {
     return Math.exp(-Math.log(2) * ageDays / decayHalfLife);
 }
