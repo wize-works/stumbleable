@@ -6,6 +6,8 @@ import { supabase } from './supabase';
 
 const DISCOVERY_SERVICE_URL = process.env.DISCOVERY_SERVICE_URL || 'http://localhost:7001';
 const MAX_CONCURRENT_CRAWLS = parseInt(process.env.MAX_CONCURRENT_CRAWLS || '5');
+const CRAWLER_SERVICE_URL = process.env.CRAWLER_SERVICE_URL || 'http://localhost:7004';
+const AUTO_ENHANCE_METADATA = process.env.AUTO_ENHANCE_METADATA !== 'false'; // Default: true
 
 /**
  * Main Crawler Engine
@@ -84,6 +86,14 @@ export class CrawlerEngine {
 
             // Submit items to discovery service
             const results = await this.submitItems(source, job.id, items);
+
+            // Trigger metadata enhancement for newly submitted content (non-blocking)
+            if (results.newContentIds.length > 0) {
+                console.log(`Triggering metadata enhancement for ${results.newContentIds.length} new items`);
+                this.enhanceMetadata(results.newContentIds).catch((error: Error) => {
+                    console.error('Background metadata enhancement failed:', error);
+                });
+            }
 
             // Update job as completed
             await supabase
@@ -207,9 +217,10 @@ export class CrawlerEngine {
         source: CrawlerSource,
         jobId: string,
         items: Array<{ url: string; title?: string; description?: string }>
-    ): Promise<{ submitted: number; failed: number }> {
+    ): Promise<{ submitted: number; failed: number; newContentIds: string[] }> {
         let submitted = 0;
         let failed = 0;
+        const newContentIds: string[] = [];
 
         const crawlDelay = await this.robotsService.getCrawlDelay(source.domain);
 
@@ -261,6 +272,11 @@ export class CrawlerEngine {
                     throw insertError;
                 }
 
+                // Track the new content ID for metadata enhancement
+                if (content?.id) {
+                    newContentIds.push(content.id);
+                }
+
                 // Record in history
                 await supabase.from('crawler_history').insert({
                     source_id: source.id,
@@ -290,7 +306,49 @@ export class CrawlerEngine {
             }
         }
 
-        return { submitted, failed };
+        return { submitted, failed, newContentIds };
+    }
+
+    /**
+     * Trigger metadata enhancement for newly crawled content
+     */
+    private async enhanceMetadata(contentIds: string[]): Promise<void> {
+        if (!AUTO_ENHANCE_METADATA) {
+            console.log('Auto-enhancement disabled, skipping metadata extraction');
+            return;
+        }
+
+        if (contentIds.length === 0) {
+            return;
+        }
+
+        try {
+            console.log(`Starting automatic metadata enhancement for ${contentIds.length} items`);
+
+            const response = await fetch(`${CRAWLER_SERVICE_URL}/api/enhance/metadata`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    contentIds,
+                    batchSize: contentIds.length, // Process all items
+                    forceRescrape: false
+                })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Enhancement API returned ${response.status}: ${errorText}`);
+            }
+
+            const result = await response.json();
+            console.log(`Metadata enhancement completed: ${result.enhanced}/${result.processed} items enhanced`);
+
+        } catch (error) {
+            console.error('Failed to trigger automatic metadata enhancement:', error);
+            // Don't throw - this is a background task and shouldn't fail the crawl
+        }
     }
 
     /**

@@ -65,6 +65,15 @@ export default function OnboardingPage() {
         );
     };
 
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const goToStep = (nextStep: number) => {
+        setStep(nextStep);
+        scrollToTop();
+    };
+
     const handleComplete = async () => {
         if (!user?.id || selectedTopics.length === 0) return;
 
@@ -195,7 +204,7 @@ export default function OnboardingPage() {
                                 </div>
 
                                 <button
-                                    onClick={() => setStep(2)}
+                                    onClick={() => goToStep(2)}
                                     disabled={selectedTopics.length === 0}
                                     className="btn btn-primary"
                                 >
@@ -275,14 +284,14 @@ export default function OnboardingPage() {
 
                             <div className="flex justify-between items-center">
                                 <button
-                                    onClick={() => setStep(1)}
+                                    onClick={() => goToStep(1)}
                                     className="btn btn-ghost"
                                 >
                                     Back
                                 </button>
 
                                 <button
-                                    onClick={() => setStep(3)}
+                                    onClick={() => goToStep(3)}
                                     disabled={!guidelinesAccepted}
                                     className="btn btn-primary"
                                 >
@@ -332,7 +341,7 @@ export default function OnboardingPage() {
 
                             <div className="flex justify-between items-center">
                                 <button
-                                    onClick={() => setStep(2)}
+                                    onClick={() => goToStep(2)}
                                     className="btn btn-ghost"
                                 >
                                     Back

@@ -148,6 +148,8 @@ jobs:
                   else
                     echo "IMAGE_TAG=${{ github.ref_name }}-${{ github.sha }}" >> $GITHUB_OUTPUT
                   fi
+                  # Generate unique deployment timestamp to force rolling update
+                  echo "DEPLOYMENT_TIMESTAMP=$(date +%s)" >> $GITHUB_OUTPUT
 
             - name: Deploy ConfigMap
               run: |
@@ -155,6 +157,7 @@ jobs:
               env:
                   ACR_NAME: ${{ env.ACR_NAME }}
                   IMAGE_TAG: ${{ steps.image-tag.outputs.IMAGE_TAG }}
+                  DEPLOYMENT_TIMESTAMP: ${{ steps.image-tag.outputs.DEPLOYMENT_TIMESTAMP }}
 
             - name: Deploy services
               run: |
@@ -166,6 +169,7 @@ jobs:
               env:
                   ACR_NAME: ${{ env.ACR_NAME }}
                   IMAGE_TAG: ${{ steps.image-tag.outputs.IMAGE_TAG }}
+                  DEPLOYMENT_TIMESTAMP: ${{ steps.image-tag.outputs.DEPLOYMENT_TIMESTAMP }}
 
             - name: Wait for deployments
               run: |

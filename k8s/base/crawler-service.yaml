@@ -9,6 +9,11 @@ metadata:
     component: api
 spec:
   replicas: 1  # Crawler only needs one replica
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: crawler-service
@@ -17,10 +22,13 @@ spec:
       labels:
         app: crawler-service
         component: api
+      annotations:
+        deployment.timestamp: "${DEPLOYMENT_TIMESTAMP}"
     spec:
       containers:
       - name: crawler-service
         image: ${ACR_NAME}.azurecr.io/stumbleable-crawler:${IMAGE_TAG}
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
           name: http

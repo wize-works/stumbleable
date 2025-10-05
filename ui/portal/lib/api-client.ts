@@ -1728,6 +1728,73 @@ export class CrawlerAPI {
             sitemaps: []
         };
     }
+
+    /**
+     * Get metadata enhancement status
+     */
+    static async getEnhancementStatus(token: string): Promise<{
+        total_content: number;
+        needs_enhancement: number;
+        already_scraped: number;
+        has_image: number;
+        has_author: number;
+        has_content: number;
+        has_word_count: number;
+    }> {
+        const response = await apiRequest<{
+            total_content: number;
+            needs_enhancement: number;
+            already_scraped: number;
+            has_image: number;
+            has_author: number;
+            has_content: number;
+            has_word_count: number;
+        }>(
+            `${CRAWLER_API}/enhance/status`,
+            {},
+            token
+        );
+        return response;
+    }
+
+    /**
+     * Enhance metadata for content records
+     */
+    static async enhanceMetadata(data: {
+        contentIds?: string[];
+        batchSize?: number;
+        forceRescrape?: boolean;
+    }, token: string): Promise<{
+        message: string;
+        processed: number;
+        enhanced: number;
+        results: Array<{
+            id: string;
+            url: string;
+            status: string;
+            fieldsAdded?: string[];
+        }>;
+    }> {
+        const response = await apiRequest<{
+            message: string;
+            processed: number;
+            enhanced: number;
+            results: Array<{
+                id: string;
+                url: string;
+                status: string;
+                fieldsAdded?: string[];
+            }>;
+        }>(
+            `${CRAWLER_API}/enhance/metadata`,
+            {
+                method: 'POST',
+                body: JSON.stringify(data),
+            },
+            token
+        );
+        return response;
+    }
 }
 
 /**

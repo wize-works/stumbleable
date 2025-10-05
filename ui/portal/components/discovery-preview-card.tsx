@@ -43,6 +43,9 @@ export function DiscoveryPreviewCard({ discovery, index = 0 }: DiscoveryPreviewC
                 <p className="text-sm text-base-content/70 line-clamp-2 mb-4">
                     {description}
                 </p>
+                <div className=''>
+                    {discovery.domain}
+                </div>
 
                 {/* CTA Button */}
                 <div className="card-actions">

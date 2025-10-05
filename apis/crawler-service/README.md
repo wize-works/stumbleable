@@ -53,6 +53,8 @@ curl http://localhost:7004/api/sources \
 - **Scheduled Crawling**: Background job scheduler with configurable intervals
 - **Rate Limiting**: Politeness policies and per-domain crawl delays
 - **Content Submission**: Automatic submission to discovery-service
+- **Metadata Enhancement**: Automatic extraction of titles, descriptions, images, and more
+- **Cascading Fallbacks**: Smart extraction with multiple fallback sources for each field
 - **Statistics Tracking**: Monitor crawler performance and success rates
 
 ## API Endpoints
@@ -70,6 +72,13 @@ curl http://localhost:7004/api/sources \
 - `POST /api/crawl/:sourceId` - Manually trigger a crawl
 - `GET /api/history/:sourceId` - Get crawl history for a source
 - `GET /api/stats` - Get statistics for all sources
+
+### Metadata Enhancement
+- `POST /api/enhance/metadata` - Enhance content with missing metadata
+  - `contentIds` (optional): Array of specific content IDs to enhance
+  - `batchSize` (default: 10): Number of items to process
+  - `forceRescrape` (default: false): Re-scrape already processed items
+- `GET /api/enhance/status` - Get enhancement statistics
 
 ### Health Check
 - `GET /health` - Service health status
@@ -94,6 +103,10 @@ DISCOVERY_SERVICE_URL=http://localhost:7001
 CRAWLER_USER_AGENT=Stumbleable-Bot/1.0 (+https://stumbleable.com/bot)
 DEFAULT_CRAWL_DELAY_MS=1000
 MAX_CONCURRENT_CRAWLS=5
+
+# Metadata Enhancement
+AUTO_ENHANCE_METADATA=true  # Automatically enhance metadata after crawling (default: true)
+CRAWLER_SERVICE_URL=http://localhost:7004  # Used for internal enhancement API calls
 ```
 
 ## Source Types
@@ -140,9 +153,18 @@ MAX_CONCURRENT_CRAWLS=5
 2. **Crawler Engine** fetches content based on source type (RSS, sitemap, or web)
 3. **Robots.txt Service** ensures compliance with site policies
 4. **Rate Limiter** respects crawl-delay directives and domain-specific delays
-5. **Content Submission** sends discovered URLs to discovery-service for moderation
-6. **History Tracking** records all discovered URLs to prevent duplicates
-7. **Statistics** track crawler performance and success rates
+5. **Content Submission** inserts discovered URLs into the content table
+6. **Automatic Enhancement** triggers metadata extraction for new content (if enabled)
+7. **Metadata Extraction** uses cascading fallbacks to extract:
+   - **Title**: h1 → og:title → twitter:title → title tag → h2 → schema.org
+   - **Description**: og:description → twitter:description → meta description → schema.org → first paragraph
+   - **Images**: og:image → twitter:image → schema.org → article img → first img
+   - **Author**: meta author → article:author → schema.org → rel=author → .author class → byline patterns
+   - **Published Date**: article:published_time → datePublished → meta date → time elements
+   - **Content Text**: article → main → semantic selectors → paragraphs
+   - **Topics**: meta keywords → article:tag → schema.org → HTML tags/categories → URL path → content analysis
+8. **History Tracking** records all discovered URLs to prevent duplicates
+9. **Statistics** track crawler performance and success rates
 
 ## Development
 
