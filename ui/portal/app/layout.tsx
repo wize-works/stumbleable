@@ -153,7 +153,19 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                     </ToasterProvider>
                     <Script src={fontAwesomeKitUrl} crossOrigin="anonymous" strategy="afterInteractive" />
                     <Script async src="https://helpninja.app/api/widget?t=hn_pk_sGLps5fACfWmzntqum9f6dmR&s=3ab35ffe-11fe-4a35-b609-8cbd826979ce&k=e2f6f6f7-0bf6-453f-b630-472d371db6b6&voice=casual" />
-
+                    <Script
+                        id="ms-clarity"
+                        strategy="afterInteractive"
+                        dangerouslySetInnerHTML={{
+                            __html: `
+                                (function(c,l,a,r,i,t,y){
+                                    c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+                                    t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+                                    y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+                                })(window, document, "clarity", "script", "tla14hd69j");
+                            `,
+                        }}
+                    />
                 </body>
             </html>
         </ClerkProvider>
