@@ -511,18 +511,6 @@ export default function StumblePage() {
                             onChange={setWildness}
                             className="hidden lg:flex bg-transparent shadow-none p-2"
                         />
-
-                        {currentDiscovery && (
-                            <a
-                                href={currentDiscovery.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="btn btn-xs sm:btn-sm btn-ghost touch-manipulation"
-                                title="Open in new tab"
-                            >
-                                <i className="fa-solid fa-duotone fa-external-link text-xs sm:text-sm"></i>
-                            </a>
-                        )}
                     </div>
                 </div>
 
@@ -668,6 +656,7 @@ export default function StumblePage() {
                 disabled={loading || !currentDiscovery}
                 discoveryId={currentDiscovery?.id}
                 discoveryTitle={currentDiscovery?.title}
+                discoveryUrl={currentDiscovery?.url}
                 onAddedToList={(listId, listTitle) => {
                     showToast(`Added to "${listTitle}"`, 'success');
                 }}

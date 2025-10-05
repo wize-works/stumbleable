@@ -14,6 +14,7 @@ interface ReactionBarProps {
     isSaved?: boolean;
     discoveryId?: string; // For "Add to List" and "Report" functionality
     discoveryTitle?: string; // For share functionality
+    discoveryUrl?: string; // For external link functionality
     className?: string;
     disabled?: boolean;
     floating?: boolean;
@@ -27,6 +28,7 @@ export function ReactionBar({
     isSaved = false,
     discoveryId,
     discoveryTitle,
+    discoveryUrl,
     className = '',
     disabled = false,
     floating = true,
@@ -105,6 +107,21 @@ export function ReactionBar({
                                     variant="circle"
                                     className="btn-accent hover:scale-110 active:scale-95 transition-transform"
                                 />
+                            </div>
+                        )}
+
+                        {/* External Link button */}
+                        {discoveryUrl && (
+                            <div className='tooltip tooltip-right' data-tip='Open in New Tab'>
+                                <a
+                                    href={discoveryUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="btn btn-circle btn-md btn-secondary hover:scale-110 active:scale-95 transition-transform touch-manipulation"
+                                    aria-label="Open in new tab"
+                                >
+                                    <i className="fa-solid fa-duotone fa-external-link text-base"></i>
+                                </a>
                             </div>
                         )}
 
