@@ -14,6 +14,7 @@ const COLUMN_MAPPINGS: Record<string, string[]> = {
     author: ['author', 'creator', 'writer', 'by', 'written by', 'posted by'],
     published_date: ['published_date', 'date', 'published', 'publish_date', 'pub_date', 'created', 'created_at', 'published_at', 'publication_date'],
     image_url: ['image_url', 'image', 'img', 'thumbnail', 'picture', 'photo', 'cover', 'cover_image'],
+    favicon_url: ['favicon_url', 'favicon', 'icon'],
     domain: ['domain', 'hostname', 'host', 'site_name', 'source'],
     read_time: ['read_time', 'reading_time', 'read_duration', 'time_to_read', 'minutes'],
     word_count: ['word_count', 'words', 'length', 'word_length'],
