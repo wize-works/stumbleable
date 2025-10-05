@@ -29,7 +29,7 @@ export function Footer() {
                                 <i className="fa-brands fa-twitter text-lg"></i>
                             </a>
                             <a
-                                href="https://facebook.com/stumbleable"
+                                href="https://www.facebook.com/people/Stumbleable/61581412786114/"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="btn btn-circle btn-ghost btn-sm hover:bg-primary hover:text-primary-content transition-colors"
@@ -47,13 +47,40 @@ export function Footer() {
                                 <i className="fa-brands fa-instagram text-lg"></i>
                             </a>
                             <a
-                                href="https://github.com/stumbleable"
+                                href="https://github.com/wize-works/stumbleable"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="btn btn-circle btn-ghost btn-sm hover:bg-primary hover:text-primary-content transition-colors"
                                 aria-label="GitHub"
                             >
                                 <i className="fa-brands fa-github text-lg"></i>
+                            </a>
+                            <a
+                                href="https://www.tiktok.com/@stumbleable"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn btn-circle btn-ghost btn-sm hover:bg-primary hover:text-primary-content transition-colors"
+                                aria-label="TikTok"
+                            >
+                                <i className="fa-brands fa-tiktok text-lg"></i>
+                            </a>
+                            <a
+                                href="https://www.linkedin.com/showcase/stumbleable"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn btn-circle btn-ghost btn-sm hover:bg-primary hover:text-primary-content transition-colors"
+                                aria-label="LinkedIn"
+                            >
+                                <i className="fa-brands fa-linkedin text-lg"></i>
+                            </a>
+                            <a
+                                href="https://www.reddit.com/user/stumbleable/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn btn-circle btn-ghost btn-sm hover:bg-primary hover:text-primary-content transition-colors"
+                                aria-label="Reddit"
+                            >
+                                <i className="fa-brands fa-reddit text-lg"></i>
                             </a>
                         </div>
                     </div>

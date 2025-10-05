@@ -103,11 +103,17 @@ export default function Home() {
                                 {/* Card */}
                                 <div className="relative bg-base-100 rounded-3xl shadow-2xl overflow-hidden border border-base-300">
                                     <div className="p-8 sm:p-12">
+                                        <div className="text-center mb-8">
+                                            <h2 className="text-2xl sm:text-3xl font-bold text-base-content mb-2">
+                                                What will you discover today?
+                                            </h2>
+                                            <p className="text-base-content/70">Click the button and let the adventure begin.</p>
+                                        </div>
                                         <div className="flex items-center justify-center mb-8">
                                             <button
                                                 type="button"
                                                 aria-label="Stumble featured discoveries"
-                                                className="btn btn-circle btn-primary btn-lg shadow-xl group-hover:scale-110 transition-transform duration-300"
+                                                className="btn btn-primary btn-lg shadow-xl group-hover:scale-110 transition-transform duration-300"
                                                 onClick={async () => {
                                                     try {
                                                         setLoadingDiscoveries(true);
@@ -126,7 +132,10 @@ export default function Home() {
                                                 {loadingDiscoveries ? (
                                                     <span className="loading loading-spinner loading-sm text-base-100" />
                                                 ) : (
-                                                    <i className="fa-solid fa-duotone fa-shuffle text-2xl"></i>
+                                                    <span className='flex items-center gap-2'>
+                                                        <i className="fa-solid fa-duotone fa-shuffle text-2xl mr-2"></i>
+                                                        Stumble
+                                                    </span>
                                                 )}
                                             </button>
                                         </div>
