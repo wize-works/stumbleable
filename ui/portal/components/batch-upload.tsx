@@ -181,7 +181,7 @@ export default function BatchUploadComponent() {
                                     </div>
                                     {result.detectedColumns.length > Object.values(result.columnMapping).filter(Boolean).length && (
                                         <p className="text-xs opacity-70 mt-2">
-                                            <i className="fa-solid fa-info-circle"></i>
+                                            <i className="fa-solid fa-duotone fa-info-circle"></i>
                                             {' '}Unmapped columns: {result.detectedColumns.filter(col =>
                                                 !Object.values(result.columnMapping || {}).includes(col)
                                             ).join(', ')}

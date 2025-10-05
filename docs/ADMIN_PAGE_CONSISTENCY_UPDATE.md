@@ -26,7 +26,7 @@ export default function BatchUploadPage() {
     return (
         <div>
             <Link href="/admin" className="btn btn-ghost btn-sm">
-                <i className="fa-solid fa-arrow-left"></i>
+                <i className="fa-solid fa-duotone fa-arrow-left"></i>
             </Link>
             <div className="text-sm breadcrumbs">
                 <ul>

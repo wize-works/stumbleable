@@ -1,6 +1,7 @@
 import { ClerkProvider } from '@clerk/nextjs';
 import Script from 'next/script';
 import { ReactNode } from 'react';
+import { CookieConsent } from '../components/cookie-consent';
 import { Footer } from '../components/footer';
 import { Header } from '../components/header';
 import { ToasterProvider } from '../components/toaster';
@@ -147,6 +148,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                                 {children}
                             </main>
                             <Footer />
+                            <CookieConsent />
                         </UserInitializationProvider>
                     </ToasterProvider>
                     <Script src={fontAwesomeKitUrl} crossOrigin="anonymous" strategy="afterInteractive" />

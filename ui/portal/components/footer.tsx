@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ManageCookiesButton } from './manage-cookies-button';
 import Logo from './ui/logo';
 
 export function Footer() {
@@ -136,6 +137,9 @@ export function Footer() {
                                 <Link href="/cookies" className="text-sm text-base-content/60 hover:text-primary transition-colors">
                                     Cookie Policy
                                 </Link>
+                            </li>
+                            <li>
+                                <ManageCookiesButton />
                             </li>
                             <li>
                                 <Link href="/guidelines" className="text-sm text-base-content/60 hover:text-primary transition-colors">

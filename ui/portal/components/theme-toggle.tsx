@@ -1,16 +1,19 @@
 'use client';
 
+import { ConsentAwareStorage } from '@/lib/consent-aware-storage';
+import { usePreferencesConsent } from '@/lib/use-analytics-consent';
 import { useEffect, useState } from 'react';
 
 export function ThemeToggle() {
     const [theme, setTheme] = useState<'light' | 'dark'>('light');
     const [mounted, setMounted] = useState(false);
+    const { hasConsent: hasPreferencesConsent } = usePreferencesConsent();
 
     // Only run on client side after mount
     useEffect(() => {
         setMounted(true);
         // Get theme from localStorage or default to light
-        const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+        const savedTheme = ConsentAwareStorage.getItem('theme') as 'light' | 'dark' | null;
         if (savedTheme) {
             setTheme(savedTheme);
             document.documentElement.setAttribute('data-theme', savedTheme);
@@ -27,7 +30,13 @@ export function ThemeToggle() {
         const newTheme = theme === 'light' ? 'dark' : 'light';
         setTheme(newTheme);
         document.documentElement.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
+
+        // Only save to localStorage if user has consented to preferences
+        if (hasPreferencesConsent) {
+            ConsentAwareStorage.setItem('theme', newTheme);
+        } else {
+            console.info('Theme preference not saved - user has not consented to preference cookies');
+        }
     };
 
     // Prevent flash of unstyled content
