@@ -10,7 +10,7 @@
 ## 📋 Overview
 
 Admin users can now bulk upload content via CSV files. The system automatically:
-1. ✅ Parses CSV file (up to 1000 rows, 10MB max)
+1. ✅ Parses CSV file (up to 2000 rows, 10MB max)
 2. ✅ Validates URLs and metadata
 3. ✅ Crawls and scrapes each URL for metadata
 4. ✅ Extracts missing metadata (title, description, image, etc.)
@@ -200,7 +200,7 @@ const finalTopics =
 ### File Validation
 - ✅ File type: Only `.csv` allowed
 - ✅ File size: Max 10MB
-- ✅ Row count: Max 1000 rows per upload
+- ✅ Row count: Max 2000 rows per upload
 - ✅ URL validation: Must be valid HTTPS URLs
 
 ### Rate Limiting
@@ -327,7 +327,7 @@ INSERT INTO content (
 ### Processing Speed
 - **Rate limit**: 500ms delay between URLs
 - **Expected**: ~2 URLs per second
-- **1000 rows**: ~8-10 minutes total
+- **2000 rows**: ~16-20 minutes total
 
 ### Optimization Opportunities
 - ⚡ Parallel processing (process 5-10 URLs concurrently)
@@ -371,7 +371,7 @@ INSERT INTO content (
    - Use the sample file as a template
    - Required: `url` column with HTTPS URLs
    - Optional: title, description, topics, author, etc.
-   - Max 1000 rows, 10MB file size
+   - Max 2000 rows, 10MB file size
 
 3. **Upload**
    - Click "Select CSV File" button
@@ -396,10 +396,10 @@ INSERT INTO content (
 
 ### "File too large" Error
 - **Cause**: CSV file > 10MB
-- **Solution**: Split into smaller files (max 1000 rows each)
+- **Solution**: Split into smaller files (max 2000 rows each)
 
 ### "Too many rows" Error
-- **Cause**: CSV has > 1000 rows
+- **Cause**: CSV has > 2000 rows
 - **Solution**: Split into multiple batches
 
 ### "Invalid CSV format" Error
@@ -412,7 +412,7 @@ INSERT INTO content (
 
 ### Slow Processing
 - **Cause**: Many URLs to scrape (500ms delay per URL)
-- **Expected**: ~2 URLs/second = ~8 minutes for 1000 rows
+- **Expected**: ~2 URLs/second = ~16 minutes for 2000 rows
 - **Solution**: Use smaller batches for faster feedback
 
 ### Scraping Failures

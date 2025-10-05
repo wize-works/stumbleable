@@ -1,7 +1,63 @@
 /**
- * Core data types for Discovery Service
+ * Core data types for Crawler Service and Discovery Service
  */
 
+// Crawler-specific types
+export interface CrawlerSource {
+    id: string;
+    name: string;
+    type: 'rss' | 'sitemap' | 'web';
+    url: string;
+    domain: string;
+    enabled: boolean;
+    crawl_frequency_hours: number;
+    last_crawled_at?: string;
+    next_crawl_at?: string;
+    topics?: string[];
+    metadata?: Record<string, any>;
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface CrawlerJob {
+    id: string;
+    source_id: string;
+    status: 'pending' | 'running' | 'completed' | 'failed';
+    items_found: number;
+    items_submitted: number;
+    items_failed: number;
+    started_at?: string;
+    completed_at?: string;
+    error_message?: string;
+    metadata?: Record<string, any>;
+    created_at?: string;
+}
+
+export interface RobotsTxtRules {
+    isAllowed: (url: string, userAgent?: string) => boolean;
+    getCrawlDelay: (userAgent?: string) => number;
+    getSitemaps: () => string[];
+}
+
+export interface RSSItem {
+    title?: string;
+    link?: string;
+    description?: string;
+    content?: string;
+    contentSnippet?: string;
+    pubDate?: string;
+    creator?: string;
+    categories?: string[];
+}
+
+export interface SitemapItem {
+    url: string;
+    lastmod?: string;
+    changefreq?: string;
+    priority?: number;
+}
+
+// Discovery Service types
 export interface Topic {
     id: string;            // slug
     name: string;

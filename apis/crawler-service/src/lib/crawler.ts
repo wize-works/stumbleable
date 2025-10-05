@@ -147,11 +147,13 @@ export class CrawlerEngine {
     private async crawlRSS(source: CrawlerSource): Promise<Array<{ url: string; title?: string; description?: string }>> {
         const items = await this.rssService.parseFeed(source.url);
 
-        return items.map(item => ({
-            url: item.link,
-            title: item.title,
-            description: item.description
-        }));
+        return items
+            .filter(item => item.link) // Filter out items without URLs
+            .map(item => ({
+                url: item.link!,
+                title: item.title,
+                description: item.description
+            }));
     }
 
     /**
@@ -182,11 +184,13 @@ export class CrawlerEngine {
             console.log(`Discovered ${feeds.length} RSS feeds for ${domain}`);
             // Use first feed
             const items = await this.rssService.parseFeed(feeds[0]);
-            return items.map(item => ({
-                url: item.link,
-                title: item.title,
-                description: item.description
-            }));
+            return items
+                .filter(item => item.link) // Filter out items without URLs
+                .map(item => ({
+                    url: item.link!,
+                    title: item.title,
+                    description: item.description
+                }));
         }
 
         // Try to discover sitemaps

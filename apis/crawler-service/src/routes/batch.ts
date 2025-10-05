@@ -121,10 +121,10 @@ export async function batchRoutes(fastify: FastifyInstance) {
                 });
             }
 
-            if (records.length > 1000) {
+            if (records.length > 2000) {
                 return reply.status(400).send({
                     error: 'Too many rows',
-                    message: 'Maximum 1000 rows per upload. Please split into smaller batches.'
+                    message: 'Maximum 2000 rows per upload. Please split into smaller batches.'
                 });
             }
 

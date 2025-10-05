@@ -140,7 +140,7 @@ export default function BatchUploadComponent() {
                 <div className="form-control">
                     <label className="label">
                         <span className="label-text font-semibold">Select CSV File</span>
-                        <span className="label-text-alt">Max 10MB, 1000 rows</span>
+                        <span className="label-text-alt">Max 10MB, 2000 rows</span>
                     </label>
                     <div className="flex gap-2">
                         <input
