@@ -1,13 +1,16 @@
 // dotenv must be imported before @clerk/fastify
 import { clerkPlugin } from '@clerk/fastify';
 import cors from '@fastify/cors';
+import multipart from '@fastify/multipart';
 import dotenv from 'dotenv';
 import Fastify from 'fastify';
 import { CrawlerScheduler } from './lib/scheduler';
 import { trendingCalculator } from './lib/trending-calculator';
+import { batchRoutes } from './routes/batch';
 import { enhanceRoute } from './routes/enhance';
 import { jobRoutes, setScheduler } from './routes/jobs';
 import { sourceRoutes } from './routes/sources';
+import { submitRoutes } from './routes/submit';
 
 // Load environment variables
 dotenv.config();
@@ -39,6 +42,14 @@ async function buildApp() {
         origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
         credentials: true
+    });
+
+    // Register multipart for file uploads
+    await fastify.register(multipart, {
+        limits: {
+            fileSize: 10 * 1024 * 1024, // 10MB max file size
+            files: 1 // Only allow 1 file at a time
+        }
     });
 
     // Allow empty JSON bodies (for PUT/DELETE without body)
@@ -83,6 +94,8 @@ async function buildApp() {
     await fastify.register(sourceRoutes, { prefix: '/api' });
     await fastify.register(jobRoutes, { prefix: '/api' });
     await fastify.register(enhanceRoute, { prefix: '/api' });
+    await fastify.register(batchRoutes, { prefix: '/api' });
+    await fastify.register(submitRoutes, { prefix: '/api' });
 
     // Set scheduler reference for routes
     setScheduler(scheduler);

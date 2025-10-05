@@ -1,0 +1,4 @@
+url,title,description,topics,author,published_date,image_url
+https://example.com/article1,Understanding Machine Learning,A comprehensive guide to machine learning basics and applications,"tech,ai,ml",Dr. Jane Smith,2025-10-01,https://example.com/images/ml.jpg
+https://example.com/article2,Climate Change Solutions,Exploring innovative approaches to combat climate change,"science,environment",John Doe,2025-10-02,https://example.com/images/climate.jpg
+https://example.com/article3,Modern Web Development,Best practices for building scalable web applications,"tech,web,javascript",Sarah Johnson,2025-10-03,https://example.com/images/webdev.jpg

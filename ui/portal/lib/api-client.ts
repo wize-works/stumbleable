@@ -1795,6 +1795,78 @@ export class CrawlerAPI {
         );
         return response;
     }
+
+    /**
+     * Batch upload CSV file with content URLs
+     */
+    static async batchUpload(file: File, token: string): Promise<{
+        success: boolean;
+        summary: {
+            totalRows: number;
+            processed: number;
+            succeeded: number;
+            failed: number;
+        };
+        results: Array<{
+            row: number;
+            url: string;
+            success: boolean;
+            contentId?: string;
+            error?: string;
+        }>;
+    }> {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch(`${CRAWLER_API}/admin/batch-upload`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new ApiError(
+                response.status,
+                errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+                errorData
+            );
+        }
+
+        return await response.json();
+    }
+
+    /**
+     * Get batch upload history
+     */
+    static async getBatchHistory(token: string): Promise<{
+        success: boolean;
+        items: Array<{
+            id: string;
+            url: string;
+            title: string;
+            created_at: string;
+            status: string;
+        }>;
+    }> {
+        const response = await apiRequest<{
+            success: boolean;
+            items: Array<{
+                id: string;
+                url: string;
+                title: string;
+                created_at: string;
+                status: string;
+            }>;
+        }>(
+            `${CRAWLER_API}/admin/batch-history`,
+            {},
+            token
+        );
+        return response;
+    }
 }
 
 /**

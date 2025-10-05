@@ -102,7 +102,7 @@ export default function SubmitPage() {
                 throw new Error('Authentication required');
             }
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_DISCOVERY_API_URL}/api/submit`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_CRAWLER_API_URL}/api/submit`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

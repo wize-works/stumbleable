@@ -1,5 +1,6 @@
 'use client';
 
+import BatchUpload from '@/components/batch-upload';
 import { useToaster } from '@/components/toaster';
 import { AdminAPI, ModerationAPI, UserAPI } from '@/lib/api-client';
 import { useAuth, useUser } from '@clerk/nextjs';
@@ -486,6 +487,11 @@ export default function AdminDashboard() {
                             </div>
                         )}
                     </div>
+                </div>
+
+                {/* Batch Upload */}
+                <div className="mb-8">
+                    <BatchUpload />
                 </div>
 
                 {/* Quick Actions */}
