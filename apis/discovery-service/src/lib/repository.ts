@@ -121,14 +121,16 @@ export class DiscoveryRepository {
     }
 
     /**
-     * Get discoveries excluding specified IDs with enhanced data
+     * Get discoveries excluding specified IDs with enhanced data and DOMAIN DIVERSITY
+     * FIX: Ensures no single domain dominates the candidate pool
      * OPTIMIZED: Reduced joins and lighter queries for faster response
      */
-    async getDiscoveriesExcluding(excludeIds: string[]): Promise<EnhancedDiscovery[]> {
+    async getDiscoveriesExcluding(excludeIds: string[], userPreferredTopics?: string[]): Promise<EnhancedDiscovery[]> {
         // Simplified randomization - just use a basic rotation to reduce database load
         const useCreatedAtOrder = Math.floor(Date.now() / (1000 * 60 * 60)) % 2 === 0; // Changes every hour
 
-        // OPTIMIZATION: Fetch only essential fields, reduce join complexity
+        // CRITICAL FIX: Fetch MORE candidates to ensure diversity after domain filtering
+        // We'll fetch 500 candidates and then apply domain diversity limits
         let query = supabase
             .from('content')
             .select(`
@@ -151,7 +153,7 @@ export class DiscoveryRepository {
                 allows_framing
             `)
             .eq('is_active', true)
-            .limit(200); // OPTIMIZATION: Limit result set
+            .limit(500); // Increased from 200 to ensure diversity
 
         if (excludeIds.length > 0 && excludeIds.length < 50) { // OPTIMIZATION: Skip if too many excludes
             query = query.not('id', 'in', `(${excludeIds.map(id => `"${id}"`).join(',')})`);
@@ -171,7 +173,50 @@ export class DiscoveryRepository {
             return [];
         }
 
-        return this.transformContentData(data || []);
+        if (!data || data.length === 0) {
+            return [];
+        }
+
+        // CRITICAL FIX: Apply domain diversity filtering
+        // Limit each domain to max 20 items in the candidate pool
+        const maxPerDomain = 20;
+        const domainCounts: Record<string, number> = {};
+        const diverseCandidates: any[] = [];
+
+        // TOPIC BOOST: If user has preferred topics, prioritize content matching those topics
+        let sortedData = [...data];
+        if (userPreferredTopics && userPreferredTopics.length > 0) {
+            sortedData = data.sort((a, b) => {
+                // Count topic matches
+                const aMatches = (a.topics || []).filter((t: string) => userPreferredTopics.includes(t)).length;
+                const bMatches = (b.topics || []).filter((t: string) => userPreferredTopics.includes(t)).length;
+
+                // Sort by topic matches first, then by original order
+                if (aMatches !== bMatches) {
+                    return bMatches - aMatches; // More matches first
+                }
+                return 0; // Keep original order for ties
+            });
+        }
+
+        for (const item of sortedData) {
+            const domain = item.domain;
+            const count = domainCounts[domain] || 0;
+
+            if (count < maxPerDomain) {
+                diverseCandidates.push(item);
+                domainCounts[domain] = count + 1;
+            }
+
+            // Stop once we have enough diverse candidates
+            if (diverseCandidates.length >= 300) {
+                break;
+            }
+        }
+
+        console.log(`Domain diversity applied: ${Object.keys(domainCounts).length} unique domains in ${diverseCandidates.length} candidates`);
+
+        return this.transformContentData(diverseCandidates);
     }
 
     /**

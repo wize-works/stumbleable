@@ -63,23 +63,23 @@ export const nextDiscoveryRoute: FastifyPluginAsync = async (fastify) => {
 
             const { wildness, seenIds } = validationResult.data;
 
-            // PERFORMANCE: Parallelize ALL initial data fetching including stats
-            const [user, candidates, globalStats] = await Promise.all([
-                repository.getUserById(userId),
-                repository.getDiscoveriesExcluding(seenIds),
+            // PERFORMANCE: First get user to access their preferred topics for better candidate filtering
+            const user = await repository.getUserById(userId);
+            const userPrefs = user || {
+                id: userId,
+                preferredTopics: ['technology', 'science'],
+                wildness: 35
+            };
+
+            // Now fetch candidates WITH topic context for better diversity
+            const [candidates, globalStats] = await Promise.all([
+                repository.getDiscoveriesExcluding(seenIds, userPrefs.preferredTopics),
                 repository.getGlobalEngagementStats() // Fetch global stats in parallel
             ]);
 
             // Fetch time-on-page metrics for all candidate content (for engagement quality boost)
             const contentIds = candidates.map(c => c.id);
             const timeOnPageMetrics = await repository.getBatchTimeOnPageMetrics(contentIds);
-
-            // Use default user preferences for new Clerk users
-            const userPrefs = user || {
-                id: userId,
-                preferredTopics: ['technology', 'science'],
-                wildness: 35
-            };
 
             // Filter out blocked domains
             let filteredCandidates = candidates;
@@ -153,6 +153,11 @@ export const nextDiscoveryRoute: FastifyPluginAsync = async (fastify) => {
                     )
                     : similarityScore;
 
+                // CRITICAL FIX: Significantly boost topic matching for user preferences
+                // Users with selected topics should see content matching those topics
+                const topicMatchCount = discovery.topics.filter(t => userPrefs.preferredTopics.includes(t)).length;
+                const topicBoost = topicMatchCount > 0 ? 1.0 + (topicMatchCount * 0.5) : 0.8;
+
                 // Popularity scoring with engagement metrics
                 const popularityScore = discovery.metrics
                     ? calculatePopularityScore(discovery.metrics, ageDays, globalStats.averageEngagement)
@@ -171,7 +176,10 @@ export const nextDiscoveryRoute: FastifyPluginAsync = async (fastify) => {
                     ? calculateTimeOnPageBoost(timeMetrics.avgTime, timeMetrics.sampleSize)
                     : 1.0; // Neutral if no data
 
-                // Calculate final score with all factors including domain reputation and time-on-page
+                // Calculate final score with all factors including:
+                // - Domain reputation
+                // - Time-on-page quality
+                // - Topic matching boost (CRITICAL FIX: significantly increases weight for matching topics)
                 const reputationBoost = 0.8 + (domainReputation * 0.4); // 0.8-1.2x multiplier
                 const finalScore = calculateOverallScore(
                     baseScore,
@@ -180,7 +188,7 @@ export const nextDiscoveryRoute: FastifyPluginAsync = async (fastify) => {
                     popularityScore,
                     adjustedSimilarity,
                     scoringContext
-                ) * reputationBoost * timeOnPageBoost;
+                ) * reputationBoost * timeOnPageBoost * topicBoost;
 
                 return {
                     discovery,

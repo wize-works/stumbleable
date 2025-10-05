@@ -342,7 +342,7 @@ export class CrawlerEngine {
                 throw new Error(`Enhancement API returned ${response.status}: ${errorText}`);
             }
 
-            const result = await response.json();
+            const result = await response.json() as { enhanced: number; processed: number };
             console.log(`Metadata enhancement completed: ${result.enhanced}/${result.processed} items enhanced`);
 
         } catch (error) {
