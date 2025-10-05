@@ -97,7 +97,7 @@ export class TrendingCalculator {
 
             // Calculate trending scores for each time window
             for (const { window, name } of timeWindows) {
-                const trendingItems = content
+                const allItems = content
                     .map(item => {
                         const metrics = Array.isArray(item.content_metrics)
                             ? item.content_metrics[0]
@@ -132,15 +132,32 @@ export class TrendingCalculator {
                             share_count: contentMetrics.shares_count,
                             save_count: contentMetrics.saves_count,
                             trending_score: trendingScore,
-                            calculated_at: now.toISOString()
+                            calculated_at: now.toISOString(),
+                            // Keep for logging but filter out before insert
+                            _age_days: ageDays,
+                            _views: contentMetrics.views_count
                         };
                     })
-                    .filter(item => item !== null && item.trending_score > 0.05) // Only keep items with meaningful scores
+                    .filter(item => item !== null);
+
+                // Lower threshold - content with any engagement and decent score
+                const qualifyingItems = allItems
+                    .filter(item => item.trending_score > 0.01 && item.interaction_count > 0)
                     .sort((a, b) => (b?.trending_score || 0) - (a?.trending_score || 0))
                     .slice(0, 100); // Keep top 100 per window
 
+                // Log statistics for debugging
+                const itemsWithEngagement = allItems.filter(i => i.interaction_count > 0).length;
+                const avgScore = allItems.reduce((sum, i) => sum + i.trending_score, 0) / Math.max(1, allItems.length);
+                const maxScore = Math.max(...allItems.map(i => i.trending_score));
+
+                // Remove debug fields before inserting to database
+                const trendingItems = qualifyingItems.map(({ _age_days, _views, ...item }) => item);
+
+                console.log(`Window ${name}: ${itemsWithEngagement} items with engagement, avg score: ${avgScore.toFixed(4)}, max score: ${maxScore.toFixed(4)}, qualifying: ${trendingItems.length}`);
+
                 if (trendingItems.length === 0) {
-                    console.log(`No trending items for window: ${name}`);
+                    console.log(`⚠️  No trending items for window: ${name} (threshold: 0.01, need interactions > 0)`);
                     continue;
                 }
 

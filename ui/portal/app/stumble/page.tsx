@@ -379,13 +379,19 @@ export default function StumblePage() {
                 ? (Date.now() - discoveryViewStartTimeRef.current) / 1000
                 : undefined;
 
-            await InteractionAPI.recordFeedback(currentDiscovery.id, action, token, timeOnPage);
+            // Handle save toggle: if already saved, send unsave instead
+            let actualAction = action;
+            if (action === 'save' && isSaved) {
+                actualAction = 'unsave';
+            }
+
+            await InteractionAPI.recordFeedback(currentDiscovery.id, actualAction, token, timeOnPage);
 
             // Track interaction for session analytics
             await trackInteraction();
 
-            // Update saved state for save actions
-            if (action === 'save') {
+            // Update saved state for save/unsave actions
+            if (action === 'save' || actualAction === 'unsave') {
                 const newSavedState = InteractionAPI.isSaved(currentDiscovery.id);
                 setIsSaved(newSavedState);
             }
@@ -394,13 +400,14 @@ export default function StumblePage() {
             const messages: Record<Interaction['action'], string> = {
                 up: 'Liked!',
                 down: 'Skipped!',
-                save: isSaved ? 'Removed from saved' : 'Saved!',
+                save: actualAction === 'unsave' ? 'Removed from saved' : 'Saved!',
+                unsave: 'Removed from saved',
                 share: 'Link copied!',
                 skip: 'Skipped!',
                 view: 'Viewed', // Not typically shown to user
             };
 
-            showToast(messages[action], action === 'up' ? 'success' : action === 'down' ? 'info' : action === 'save' ? 'warning' : 'info');
+            showToast(messages[actualAction] || messages[action], action === 'up' ? 'success' : action === 'down' ? 'info' : 'warning');
 
             // Handle share action
             if (action === 'share') {

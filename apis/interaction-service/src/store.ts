@@ -68,6 +68,38 @@ class InteractionStore {
             };
         }
 
+        // Handle duplicate save attempts (treat as toggle/unsave)
+        if (dbType === 'save' && userId) {
+            const { data: existingSave } = await supabase
+                .from('user_interactions')
+                .select('id')
+                .match({
+                    user_id: userId,
+                    content_id: discoveryId,
+                    type: 'save'
+                })
+                .single();
+
+            if (existingSave) {
+                // Save already exists, treat this as an unsave request
+                const { error: unsaveError } = await supabase
+                    .from('saved_content')
+                    .delete()
+                    .match({ user_id: userId, content_id: discoveryId });
+
+                if (unsaveError) {
+                    console.error('Error unsaving item:', unsaveError);
+                }
+
+                return {
+                    id: `unsave-${Date.now()}`,
+                    discoveryId,
+                    action: 'unsave' as Interaction['action'],
+                    at: Date.now(),
+                };
+            }
+        }
+
         // Record interaction (save actions will trigger saved_content creation via DB trigger)
         // For 'view' type, handle duplicate gracefully (user already viewed this content)
         if (dbType === 'view' && userId) {

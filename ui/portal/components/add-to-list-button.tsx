@@ -2,6 +2,7 @@
 
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ListsAPI, UserList } from '../lib/api-client';
 import { CreateListModal } from './create-list-modal';
 
@@ -222,11 +223,12 @@ export function AddToListButton({
             </div>
 
             {/* Create List Modal */}
-            {showCreateModal && (
+            {showCreateModal && createPortal(
                 <CreateListModal
                     onClose={() => setShowCreateModal(false)}
                     onCreate={handleCreateList}
-                />
+                />,
+                document.body
             )}
         </>
     );

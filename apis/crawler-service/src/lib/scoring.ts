@@ -242,21 +242,42 @@ export function calculateTrendingScore(
     // Engagement velocity (interactions per view)
     const velocity = totalInteractions / totalViews;
 
-    // Time decay based on window
+    // Time decay based on window with more lenient thresholds
     let timeDecay: number;
+    let maxAgeDays: number;
+
     switch (timeWindow) {
         case 'hour':
-            timeDecay = Math.exp(-ageDays * 24 / 2); // 2-hour half-life
+            maxAgeDays = 1; // Last 24 hours
+            timeDecay = ageDays <= maxAgeDays ? Math.exp(-ageDays * 24 / 6) : 0; // 6-hour half-life
             break;
         case 'day':
-            timeDecay = Math.exp(-ageDays / 1); // 1-day half-life
+            maxAgeDays = 7; // Last 7 days
+            timeDecay = ageDays <= maxAgeDays ? Math.exp(-ageDays / 2) : 0; // 2-day half-life
             break;
         case 'week':
-            timeDecay = Math.exp(-ageDays / 3); // 3-day half-life
+            maxAgeDays = 30; // Last 30 days
+            timeDecay = ageDays <= maxAgeDays ? Math.exp(-ageDays / 7) : 0; // 7-day half-life
             break;
     }
 
-    return velocity * timeDecay * Math.min(1.0, totalViews / 100);
+    // If content is outside time window, return 0
+    if (timeDecay === 0) return 0;
+
+    // Weighted engagement score (likes and saves are more important than raw views)
+    const engagementWeight = (
+        metrics.likes_count * 3 +
+        metrics.saves_count * 4 +
+        metrics.shares_count * 5 +
+        totalViews * 0.1
+    ) / Math.max(1, totalViews * 0.5);
+
+    // Combine velocity, engagement, and time decay
+    // Scale to 0-1 range with more achievable thresholds
+    const rawScore = velocity * engagementWeight * timeDecay;
+
+    // Normalize: content with 1+ interactions and decent views should score > 0.1
+    return Math.min(1.0, rawScore * 5);
 }
 
 /**
