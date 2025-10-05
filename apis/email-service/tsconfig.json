@@ -18,7 +18,13 @@
         "jsx": "react",
         "types": [
             "node"
-        ]
+        ],
+        "baseUrl": ".",
+        "paths": {
+            "react": [
+                "./node_modules/@types/react"
+            ]
+        }
     },
     "include": [
         "src/**/*"
