@@ -99,7 +99,7 @@ class InteractionStore {
                 content_id: discoveryId,
                 type: dbType,
                 user_id: userId || null,
-                time_on_page: timeOnPage || null,
+                time_spent_seconds: timeOnPage ? Math.round(timeOnPage) : null,
                 metadata: {}
             })
             .select()
@@ -117,8 +117,19 @@ class InteractionStore {
                 };
             }
 
-            console.error('Error recording interaction:', interactionError);
-            throw new Error('Failed to record interaction');
+            console.error('Error recording interaction:', {
+                error: interactionError,
+                code: interactionError.code,
+                message: interactionError.message,
+                details: interactionError.details,
+                hint: interactionError.hint,
+                discoveryId,
+                action,
+                dbType,
+                userId,
+                timeOnPage
+            });
+            throw new Error(`Failed to record interaction: ${interactionError.message || 'Unknown error'}`);
         }
 
         return {
