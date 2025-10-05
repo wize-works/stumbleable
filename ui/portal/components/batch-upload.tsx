@@ -7,6 +7,10 @@ import { useState } from 'react';
 
 interface BatchUploadResult {
     success: boolean;
+    columnMapping?: {
+        [key: string]: string | null;
+    };
+    detectedColumns?: string[];
     summary: {
         totalRows: number;
         processed: number;
@@ -115,16 +119,14 @@ export default function BatchUploadComponent() {
                 <div className="alert alert-info mb-4">
                     <i className="fa-solid fa-duotone fa-circle-info"></i>
                     <div>
-                        <h3 className="font-bold">CSV Format Requirements</h3>
+                        <h3 className="font-bold">CSV Format - Flexible Column Names</h3>
                         <p className="text-sm">
-                            Required column: <code className="badge badge-sm">url</code>
+                            <strong>Required:</strong> URL column (accepts: url, link, website, etc.)
                             <br />
-                            Optional columns: <code className="badge badge-sm">title</code>, {' '}
-                            <code className="badge badge-sm">description</code>, {' '}
-                            <code className="badge badge-sm">topics</code>, {' '}
-                            <code className="badge badge-sm">author</code>, {' '}
-                            <code className="badge badge-sm">published_date</code>, {' '}
-                            <code className="badge badge-sm">image_url</code>
+                            <strong>Optional:</strong> title, description, topics, author, published_date, image_url
+                            <br />
+                            <span className="badge badge-success badge-sm mt-1">Smart Detection</span>
+                            {' '}Column names are auto-detected - use whatever names make sense!
                         </p>
                     </div>
                 </div>
@@ -182,6 +184,35 @@ export default function BatchUploadComponent() {
                 {result && (
                     <div className="mt-6">
                         <div className="divider">Upload Results</div>
+
+                        {/* Column Mapping */}
+                        {result.columnMapping && result.detectedColumns && (
+                            <div className="alert alert-success mb-4">
+                                <i className="fa-solid fa-duotone fa-table-columns"></i>
+                                <div className="flex-1">
+                                    <h3 className="font-bold">Detected Columns</h3>
+                                    <div className="text-xs mt-1 space-y-1">
+                                        {Object.entries(result.columnMapping).map(([ourField, csvColumn]) => (
+                                            csvColumn && (
+                                                <div key={ourField} className="badge badge-sm badge-outline gap-1">
+                                                    <span className="text-primary font-semibold">{ourField}</span>
+                                                    <i className="fa-solid fa-arrow-left text-xs opacity-50"></i>
+                                                    <span>{csvColumn}</span>
+                                                </div>
+                                            )
+                                        ))}
+                                    </div>
+                                    {result.detectedColumns.length > Object.values(result.columnMapping).filter(Boolean).length && (
+                                        <p className="text-xs opacity-70 mt-2">
+                                            <i className="fa-solid fa-info-circle"></i>
+                                            {' '}Unmapped columns: {result.detectedColumns.filter(col =>
+                                                !Object.values(result.columnMapping || {}).includes(col)
+                                            ).join(', ')}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Summary */}
                         <div className="stats stats-vertical lg:stats-horizontal shadow w-full mb-4">

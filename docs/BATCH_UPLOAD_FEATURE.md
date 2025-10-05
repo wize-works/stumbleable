@@ -11,11 +11,12 @@
 
 Admin users can now bulk upload content via CSV files. The system automatically:
 1. ✅ Parses CSV file (up to 2000 rows, 10MB max)
-2. ✅ Validates URLs and metadata
-3. ✅ Crawls and scrapes each URL for metadata
-4. ✅ Extracts missing metadata (title, description, image, etc.)
-5. ✅ Inserts content into database (status: 'pending' for moderation)
-6. ✅ Returns detailed success/failure report
+2. ✅ **Smart column detection** - automatically maps column names (e.g., "link" → "url")
+3. ✅ Validates URLs and metadata
+4. ✅ Crawls and scrapes each URL for metadata
+5. ✅ Extracts missing metadata (title, description, image, etc.)
+6. ✅ Inserts content into database (status: 'pending' for moderation)
+7. ✅ Returns detailed success/failure report with column mapping info
 
 ---
 
@@ -72,6 +73,16 @@ Content-Type: text/csv
 ```json
 {
   "success": true,
+  "columnMapping": {
+    "url": "Link",
+    "title": "Name",
+    "description": "Summary",
+    "topics": "Tags",
+    "author": "Creator",
+    "published_date": "Date",
+    "image_url": "Image"
+  },
+  "detectedColumns": ["Link", "Name", "Summary", "Tags", "Creator", "Date", "Image"],
   "summary": {
     "totalRows": 100,
     "processed": 100,
@@ -120,26 +131,131 @@ Content-Type: text/csv
 
 ## 📄 CSV Format
 
-### Required Columns
-- `url` - Full HTTPS URL (required)
+### 🎯 Flexible Column Names (Smart Detection)
 
-### Optional Columns
-- `title` - Content title
-- `description` - Content description
-- `topics` - Comma or semicolon-separated topics (e.g., "tech,ai,ml")
-- `author` - Author name
-- `published_date` - ISO date or human-readable date
-- `image_url` - Full HTTPS URL to featured image
+The system automatically detects and maps column names, so you don't have to rename your columns!
 
-### Example CSV
+**URL Column (Required)** - Any of these work:
+- `url`, `link`, `website`, `webpage`, `site`, `address`, `href`, `web address`
 
+**Optional Columns** - Common variations are auto-detected:
+- **Title**: `title`, `name`, `heading`, `header`, `headline`
+- **Description**: `description`, `desc`, `summary`, `excerpt`, `content`, `body`, `text`
+- **Topics**: `topics`, `tags`, `categories`, `category`, `keywords`, `subject`, `subjects`
+- **Author**: `author`, `creator`, `writer`, `by`, `written by`, `posted by`
+- **Published Date**: `published_date`, `date`, `published`, `publish_date`, `pub_date`, `created`, `created_at`, `published_at`, `publication_date`
+- **Image**: `image_url`, `image`, `img`, `thumbnail`, `picture`, `photo`, `cover`, `cover_image`
+- **Domain**: `domain`, `hostname`, `host`, `site_name`, `source`
+- **Read Time**: `read_time`, `reading_time`, `read_duration`, `time_to_read`, `minutes`
+- **Word Count**: `word_count`, `words`, `length`, `word_length`
+- **Status**: `status`, `state`, `approval`, `moderation` (values: pending, approved, rejected, active)
+- **Content Type**: `content_type`, `type`, `format`, `media_type`
+
+**Case Insensitive**: Column names are matched regardless of case (e.g., `URL`, `Url`, `url` all work)
+
+**Empty Values**: Empty strings in optional fields are treated as null/undefined and don't cause validation errors
+
+### Example CSVs
+
+**Standard Format:**
 ```csv
-url,title,description,topics,author,published_date,image_url
+url,title,description,topics,author,published_date,image_url,domain,read_time,word_count,status
+https://example.com/article1,Understanding ML,A guide to ML,"tech,ai",Dr. Jane,2025-10-01,https://example.com/img1.jpg,example.com,5,1200,approved
+https://example.com/article2,Climate Solutions,Combat climate change,"science",John Doe,2025-10-02,,example.com,8,2000,pending
+```
+
+**Note**: Empty values (like the missing image_url in row 2) are handled gracefully.
+
+**Alternative Format (auto-detected):**
+```csv
+Link,Name,Summary,Tags,Creator,Date,Image
 https://example.com/article1,Understanding ML,A guide to ML,"tech,ai",Dr. Jane,2025-10-01,https://example.com/img1.jpg
 https://example.com/article2,Climate Solutions,Combat climate change,"science",John Doe,2025-10-02,https://example.com/img2.jpg
 ```
 
-**Sample File**: `stumbleable/sample-batch-upload.csv`
+**Minimal Format (URL only):**
+```csv
+website
+https://example.com/article1
+https://example.com/article2
+```
+
+**Sample Files**:
+- Standard: `stumbleable/sample-batch-upload.csv`
+- Alternative: `stumbleable/sample-batch-upload-alternative.csv`
+- Minimal: `stumbleable/sample-batch-minimal.csv`
+
+---
+
+## 🎯 Column Mapping Examples
+
+### Example 1: Standard Format
+**Your CSV:**
+```csv
+url,title,description
+https://example.com,My Article,Great content
+```
+
+**Detected Mapping:**
+```json
+{
+  "url": "url",
+  "title": "title",
+  "description": "description"
+}
+```
+
+### Example 2: Alternative Names
+**Your CSV:**
+```csv
+Link,Name,Summary,Tags
+https://example.com,My Article,Great content,"tech,ai"
+```
+
+**Detected Mapping:**
+```json
+{
+  "url": "Link",        // ← Mapped from "link"
+  "title": "Name",      // ← Mapped from "name"
+  "description": "Summary",  // ← Mapped from "summary"
+  "topics": "Tags"      // ← Mapped from "tags"
+}
+```
+
+### Example 3: Mixed Case
+**Your CSV:**
+```csv
+Website,TITLE,desc,Author
+https://example.com,My Article,Great content,John Doe
+```
+
+**Detected Mapping:**
+```json
+{
+  "url": "Website",     // ← Case-insensitive match
+  "title": "TITLE",     // ← Works with any case
+  "description": "desc", // ← Alias support
+  "author": "Author"
+}
+```
+
+### Example 4: Unmapped Columns
+**Your CSV:**
+```csv
+url,title,internal_id,notes
+https://example.com,My Article,12345,Some internal notes
+```
+
+**Detected Mapping:**
+```json
+{
+  "url": "url",
+  "title": "title"
+  // internal_id and notes are ignored (not mapped)
+}
+```
+
+**Note**: Unmapped columns are shown in the response but don't cause errors.
 
 ---
 
@@ -197,11 +313,27 @@ const finalTopics =
 - ✅ Verifies Clerk JWT authentication
 - ✅ Queries database for user role = 'admin'
 
+### Column Mapping (Smart Detection)
+- ✅ **Automatic detection** of CSV column names
+- ✅ **Case-insensitive** matching (URL = Url = url)
+- ✅ **Alias support** for common variations:
+  - URL: `url`, `link`, `website`, `webpage`, `site`, `address`, `href`
+  - Title: `title`, `name`, `heading`, `header`, `headline`
+  - Description: `description`, `desc`, `summary`, `excerpt`, `content`, `body`
+  - Topics: `topics`, `tags`, `categories`, `category`, `keywords`
+  - Author: `author`, `creator`, `writer`, `by`
+  - Date: `published_date`, `date`, `published`, `pub_date`, `created`
+  - Image: `image_url`, `image`, `img`, `thumbnail`, `picture`, `photo`
+- ✅ **Flexible format** - no need to rename columns in your CSV
+- ✅ **Mapping feedback** - shows detected columns in response
+- ✅ **Unmapped column detection** - identifies unused columns
+
 ### File Validation
 - ✅ File type: Only `.csv` allowed
 - ✅ File size: Max 10MB
 - ✅ Row count: Max 2000 rows per upload
 - ✅ URL validation: Must be valid HTTPS URLs
+- ✅ **URL column required** - returns clear error if missing
 
 ### Rate Limiting
 - ✅ 500ms delay between URL processing
@@ -310,15 +442,24 @@ INSERT INTO content (
 
 ### Test Cases
 
-- ✅ Valid CSV with all columns
-- ✅ CSV with only required column (URL)
+**Standard Tests:**
+- ✅ Valid CSV with all columns (`sample-batch-upload.csv`)
+- ✅ Alternative column names (`sample-batch-upload-alternative.csv`)
+- ✅ Minimal format - URL only (`sample-batch-minimal.csv`)
 - ✅ Duplicate URLs (should fail gracefully)
 - ✅ Invalid URLs (should fail with error message)
 - ✅ Large file (test 10MB limit)
-- ✅ Many rows (test 1000 row limit)
+- ✅ Many rows (test 2000 row limit)
 - ✅ Non-CSV file (should reject)
 - ✅ Empty CSV (should show error)
 - ✅ Malformed CSV (should show parse error)
+
+**Column Mapping Tests:**
+- ✅ Mixed case column names (`URL`, `Url`, `url`)
+- ✅ Common aliases (`link` instead of `url`)
+- ✅ Multiple valid aliases (should use first match)
+- ✅ Unmapped columns (should be ignored)
+- ✅ Missing URL column (should show clear error)
 
 ---
 
