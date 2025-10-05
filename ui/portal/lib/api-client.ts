@@ -203,6 +203,8 @@ export class DiscoveryAPI {
  */
 export class InteractionAPI {
     private static savedCache = new Set<string>(); // Client-side cache for saved items
+    private static likedCache = new Set<string>(); // Client-side cache for liked items
+    private static skippedCache = new Set<string>(); // Client-side cache for skipped items
 
     /**
      * Record user feedback
@@ -223,13 +225,33 @@ export class InteractionAPI {
 
         console.log(`Recorded ${action} for discovery ${discoveryId}${timeOnPage ? ` (${timeOnPage}s)` : ''}:`, response);
 
-        // Update local cache for save actions
+        // Update local caches based on action
         if (action === 'save') {
             if (this.savedCache.has(discoveryId)) {
                 this.savedCache.delete(discoveryId);
             } else {
                 this.savedCache.add(discoveryId);
             }
+        } else if (action === 'up') {
+            if (this.likedCache.has(discoveryId)) {
+                this.likedCache.delete(discoveryId);
+            } else {
+                this.likedCache.add(discoveryId);
+                // Liking removes skip
+                this.skippedCache.delete(discoveryId);
+            }
+        } else if (action === 'unlike') {
+            this.likedCache.delete(discoveryId);
+        } else if (action === 'down' || action === 'skip') {
+            if (this.skippedCache.has(discoveryId)) {
+                this.skippedCache.delete(discoveryId);
+            } else {
+                this.skippedCache.add(discoveryId);
+                // Skipping removes like
+                this.likedCache.delete(discoveryId);
+            }
+        } else if (action === 'unskip') {
+            this.skippedCache.delete(discoveryId);
         }
     }
 
@@ -285,6 +307,64 @@ export class InteractionAPI {
         } catch (error) {
             console.error('Error initializing saved cache:', error);
             // Continue with empty cache if there's an error
+        }
+    }
+
+    /**
+     * Check if a discovery is liked (synchronous for immediate UI response)
+     */
+    static isLiked(discoveryId: string): boolean {
+        return this.likedCache.has(discoveryId);
+    }
+
+    /**
+     * Check if a discovery is skipped (synchronous for immediate UI response)
+     */
+    static isSkipped(discoveryId: string): boolean {
+        return this.skippedCache.has(discoveryId);
+    }
+
+    /**
+     * Get user's interaction states (liked and skipped content)
+     */
+    static async getInteractionStates(token: string): Promise<{
+        likedIds: string[];
+        skippedIds: string[];
+    }> {
+        const response = await apiRequest<{
+            success: boolean;
+            likedIds: string[];
+            skippedIds: string[];
+        }>(
+            `${INTERACTION_API}/interactions/states`,
+            {},
+            token
+        );
+
+        return {
+            likedIds: response.likedIds,
+            skippedIds: response.skippedIds,
+        };
+    }
+
+    /**
+     * Initialize interaction caches by fetching user's liked and skipped content
+     */
+    static async initializeInteractionCaches(token: string): Promise<void> {
+        try {
+            const states = await this.getInteractionStates(token);
+
+            // Update caches
+            this.likedCache.clear();
+            states.likedIds.forEach(id => this.likedCache.add(id));
+
+            this.skippedCache.clear();
+            states.skippedIds.forEach(id => this.skippedCache.add(id));
+
+            console.log(`Initialized interaction caches: ${states.likedIds.length} liked, ${states.skippedIds.length} skipped`);
+        } catch (error) {
+            console.error('Error initializing interaction caches:', error);
+            // Continue with empty caches if there's an error
         }
     }
 

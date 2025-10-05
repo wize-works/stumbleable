@@ -28,6 +28,8 @@ export default function StumblePage() {
     const [userDataLoaded, setUserDataLoaded] = useState(false);
     const [initialDiscoveryLoaded, setInitialDiscoveryLoaded] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
+    const [isLiked, setIsLiked] = useState(false);
+    const [isSkipped, setIsSkipped] = useState(false);
     const [authFailed, setAuthFailed] = useState(false);
     const [discoveryReason, setDiscoveryReason] = useState<string>('');
     const [iframeError, setIframeError] = useState(false);
@@ -80,8 +82,9 @@ export default function StumblePage() {
                 const userData = await UserAPI.getUser(user.id, token);
                 setWildness(userData.wildness);
 
-                // Initialize saved cache for better UX
+                // Initialize caches for better UX (saves, likes, skips)
                 await InteractionAPI.initializeSavedCache(token);
+                await InteractionAPI.initializeInteractionCaches(token);
 
                 setUserDataLoaded(true);
             } catch (error) {
@@ -273,8 +276,10 @@ export default function StumblePage() {
             }            // Track discovery for session analytics
             await trackDiscovery();
 
-            // Update saved state for the new discovery
+            // Update saved/liked/skipped state for the new discovery
             setIsSaved(InteractionAPI.isSaved(response.discovery.id));
+            setIsLiked(InteractionAPI.isLiked(response.discovery.id));
+            setIsSkipped(InteractionAPI.isSkipped(response.discovery.id));
 
             // Mark initial discovery as loaded if this is the first one
             if (!initialDiscoveryLoaded) {
@@ -331,8 +336,10 @@ export default function StumblePage() {
                     // Track discovery for session analytics
                     await trackDiscovery();
 
-                    // Update saved state
+                    // Update saved/liked/skipped state
                     setIsSaved(InteractionAPI.isSaved(response.discovery.id));
+                    setIsLiked(InteractionAPI.isLiked(response.discovery.id));
+                    setIsSkipped(InteractionAPI.isSkipped(response.discovery.id));
 
                     setInitialDiscoveryLoaded(true);
                     setLoading(false);
@@ -379,10 +386,14 @@ export default function StumblePage() {
                 ? (Date.now() - discoveryViewStartTimeRef.current) / 1000
                 : undefined;
 
-            // Handle save toggle: if already saved, send unsave instead
+            // Handle toggles: if already liked/saved/skipped, send unlike/unsave/unskip instead
             let actualAction = action;
             if (action === 'save' && isSaved) {
                 actualAction = 'unsave';
+            } else if (action === 'up' && isLiked) {
+                actualAction = 'unlike';
+            } else if ((action === 'down' || action === 'skip') && isSkipped) {
+                actualAction = 'unskip';
             }
 
             await InteractionAPI.recordFeedback(currentDiscovery.id, actualAction, token, timeOnPage);
@@ -390,20 +401,32 @@ export default function StumblePage() {
             // Track interaction for session analytics
             await trackInteraction();
 
-            // Update saved state for save/unsave actions
+            // Update local state for toggle actions (InteractionAPI.recordFeedback already updates caches)
             if (action === 'save' || actualAction === 'unsave') {
                 const newSavedState = InteractionAPI.isSaved(currentDiscovery.id);
                 setIsSaved(newSavedState);
+            } else if (action === 'up' || actualAction === 'unlike') {
+                const newLikedState = InteractionAPI.isLiked(currentDiscovery.id);
+                const newSkippedState = InteractionAPI.isSkipped(currentDiscovery.id);
+                setIsLiked(newLikedState);
+                setIsSkipped(newSkippedState);
+            } else if (action === 'down' || action === 'skip' || actualAction === 'unskip') {
+                const newLikedState = InteractionAPI.isLiked(currentDiscovery.id);
+                const newSkippedState = InteractionAPI.isSkipped(currentDiscovery.id);
+                setIsLiked(newLikedState);
+                setIsSkipped(newSkippedState);
             }
 
             // Show toast feedback
             const messages: Record<Interaction['action'], string> = {
-                up: 'Liked!',
-                down: 'Skipped!',
+                up: actualAction === 'unlike' ? 'Like removed' : 'Liked!',
+                down: actualAction === 'unskip' ? 'Skip removed' : 'Skipped!',
                 save: actualAction === 'unsave' ? 'Removed from saved' : 'Saved!',
                 unsave: 'Removed from saved',
+                unlike: 'Like removed',
+                unskip: 'Skip removed',
                 share: 'Link copied!',
-                skip: 'Skipped!',
+                skip: actualAction === 'unskip' ? 'Skip removed' : 'Skipped!',
                 view: 'Viewed', // Not typically shown to user
             };
 
@@ -419,8 +442,8 @@ export default function StumblePage() {
                 }
             }
 
-            // Auto-advance only on skip (not on like - users want to read content they like)
-            if (action === 'down') {
+            // Auto-advance only on skip (not on unskip, and not on like)
+            if ((action === 'down' || action === 'skip') && actualAction !== 'unskip') {
                 setTimeout(() => {
                     handleStumble();
                 }, 400);
@@ -653,6 +676,8 @@ export default function StumblePage() {
                 onReaction={handleReaction}
                 onStumble={handleStumble}
                 isSaved={isSaved}
+                isLiked={isLiked}
+                isSkipped={isSkipped}
                 disabled={loading || !currentDiscovery}
                 discoveryId={currentDiscovery?.id}
                 discoveryTitle={currentDiscovery?.title}

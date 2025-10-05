@@ -115,9 +115,13 @@ export default function ContactPage() {
                             </div>
 
                             <div className="card-actions justify-end">
-                                <button type="submit" className="btn btn-primary">
+                                {/* <button type="submit" className="btn btn-primary">
                                     <i className="fa-solid fa-duotone fa-paper-plane mr-2"></i>
                                     Send Message
+                                </button> */}
+                                <button type="button" className="btn btn-primary disabled" disabled>
+                                    <i className="fa-solid fa-duotone fa-paper-plane mr-2"></i>
+                                    Coming Soon
                                 </button>
                             </div>
                         </form>

@@ -12,6 +12,8 @@ interface ReactionBarProps {
     onReaction: (action: Interaction['action']) => void;
     onStumble?: () => void;
     isSaved?: boolean;
+    isLiked?: boolean;
+    isSkipped?: boolean;
     discoveryId?: string; // For "Add to List" and "Report" functionality
     discoveryTitle?: string; // For share functionality
     discoveryUrl?: string; // For external link functionality
@@ -26,6 +28,8 @@ export function ReactionBar({
     onReaction,
     onStumble,
     isSaved = false,
+    isLiked = false,
+    isSkipped = false,
     discoveryId,
     discoveryTitle,
     discoveryUrl,
@@ -53,7 +57,10 @@ export function ReactionBar({
                     </button>
                     <button
                         onClick={() => onReaction('up')}
-                        className="btn btn-circle btn-sm sm:btn-md btn-success btn-outline hover:scale-110 active:scale-95 transition-transform touch-manipulation"
+                        className={cn(
+                            "btn btn-circle btn-sm sm:btn-md hover:scale-110 active:scale-95 transition-transform touch-manipulation",
+                            isLiked ? 'btn-success' : 'btn-success btn-outline'
+                        )}
                         title="Like (↑)"
                         disabled={disabled}
                     >
@@ -74,7 +81,10 @@ export function ReactionBar({
 
                     <button
                         onClick={() => onReaction('down')}
-                        className="btn btn-circle btn-sm sm:btn-md btn-error btn-outline hover:scale-110 active:scale-95 transition-transform touch-manipulation"
+                        className={cn(
+                            "btn btn-circle btn-sm sm:btn-md hover:scale-110 active:scale-95 transition-transform touch-manipulation",
+                            isSkipped ? 'btn-error' : 'btn-error btn-outline'
+                        )}
                         title="Skip (↓)"
                         disabled={disabled}
                     >

@@ -7,7 +7,7 @@ import { FeedbackRequest } from '../types';
 // Validation schemas
 const FeedbackRequestSchema = z.object({
     discoveryId: z.string().min(1),
-    action: z.enum(['up', 'down', 'save', 'unsave', 'skip', 'share', 'view']),
+    action: z.enum(['up', 'down', 'save', 'unsave', 'skip', 'unskip', 'unlike', 'share', 'view']),
     userId: z.string().optional(),
     timeOnPage: z.number().min(0).optional(), // Time spent on page in seconds
 });
@@ -81,6 +81,38 @@ export async function feedbackRoutes(fastify: FastifyInstance) {
             };
         } catch (error) {
             fastify.log.error(error, 'Error getting stats');
+            reply.status(500);
+            return {
+                success: false,
+                error: 'Internal server error',
+            };
+        }
+    });
+
+    /**
+     * Get user's interaction states (liked and skipped content)
+     * GET /interactions/states
+     */
+    fastify.get('/interactions/states', async (request, reply) => {
+        try {
+            // Check authentication
+            const auth = getAuth(request as any);
+            if (!auth.isAuthenticated) {
+                return reply.status(401).send({
+                    error: 'User not authenticated'
+                });
+            }
+            const userId = auth.userId;
+
+            const states = await interactionStore.getUserInteractionStates(userId);
+
+            return {
+                success: true,
+                likedIds: states.likedIds,
+                skippedIds: states.skippedIds,
+            };
+        } catch (error) {
+            fastify.log.error(error, 'Error getting user interaction states');
             reply.status(500);
             return {
                 success: false,

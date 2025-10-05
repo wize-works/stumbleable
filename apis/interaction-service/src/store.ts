@@ -41,6 +41,8 @@ class InteractionStore {
             'down': 'skip',
             'save': 'save',
             'unsave': 'save', // We'll handle unsave separately
+            'unlike': 'like', // We'll handle unlike separately
+            'unskip': 'skip', // We'll handle unskip separately
             'share': 'share',
             'skip': 'skip',
             'view': 'view'
@@ -66,6 +68,78 @@ class InteractionStore {
                 action: 'unsave' as Interaction['action'],
                 at: Date.now(),
             };
+        }
+
+        // Handle duplicate like attempts (treat as toggle/unlike)
+        if (dbType === 'like' && userId) {
+            const { data: existingLike } = await supabase
+                .from('user_interactions')
+                .select('id')
+                .match({
+                    user_id: userId,
+                    content_id: discoveryId,
+                    type: 'like'
+                })
+                .single();
+
+            if (existingLike) {
+                // Like already exists, treat this as an unlike request
+                const { error: unlikeError } = await supabase
+                    .from('user_interactions')
+                    .delete()
+                    .match({
+                        user_id: userId,
+                        content_id: discoveryId,
+                        type: 'like'
+                    });
+
+                if (unlikeError) {
+                    console.error('Error unliking item:', unlikeError);
+                }
+
+                return {
+                    id: `unlike-${Date.now()}`,
+                    discoveryId,
+                    action: 'unlike' as Interaction['action'],
+                    at: Date.now(),
+                };
+            }
+        }
+
+        // Handle duplicate skip attempts (treat as toggle/unskip)
+        if (dbType === 'skip' && userId) {
+            const { data: existingSkip } = await supabase
+                .from('user_interactions')
+                .select('id')
+                .match({
+                    user_id: userId,
+                    content_id: discoveryId,
+                    type: 'skip'
+                })
+                .single();
+
+            if (existingSkip) {
+                // Skip already exists, treat this as an unskip request
+                const { error: unskipError } = await supabase
+                    .from('user_interactions')
+                    .delete()
+                    .match({
+                        user_id: userId,
+                        content_id: discoveryId,
+                        type: 'skip'
+                    });
+
+                if (unskipError) {
+                    console.error('Error unskipping item:', unskipError);
+                }
+
+                return {
+                    id: `unskip-${Date.now()}`,
+                    discoveryId,
+                    action: 'unskip' as Interaction['action'],
+                    at: Date.now(),
+                };
+            }
         }
 
         // Handle duplicate save attempts (treat as toggle/unsave)
@@ -292,6 +366,49 @@ class InteractionStore {
             action: item.type as Interaction['action'],
             at: new Date(item.created_at).getTime()
         })) || [];
+    }
+
+    /**
+     * Get user's interaction states (liked and skipped content IDs)
+     * Used for initializing frontend state
+     */
+    async getUserInteractionStates(clerkUserId: string): Promise<{
+        likedIds: string[];
+        skippedIds: string[];
+    }> {
+        // Resolve Clerk user ID to internal UUID
+        const userId = await resolveUserId(clerkUserId);
+        if (!userId) {
+            console.error('Failed to resolve user ID for interactions:', clerkUserId);
+            return { likedIds: [], skippedIds: [] };
+        }
+
+        // Fetch likes
+        const { data: likes, error: likesError } = await supabase
+            .from('user_interactions')
+            .select('content_id')
+            .eq('user_id', userId)
+            .eq('type', 'like');
+
+        if (likesError) {
+            console.error('Error fetching likes:', likesError);
+        }
+
+        // Fetch skips
+        const { data: skips, error: skipsError } = await supabase
+            .from('user_interactions')
+            .select('content_id')
+            .eq('user_id', userId)
+            .eq('type', 'skip');
+
+        if (skipsError) {
+            console.error('Error fetching skips:', skipsError);
+        }
+
+        return {
+            likedIds: likes?.map(item => item.content_id) || [],
+            skippedIds: skips?.map(item => item.content_id) || []
+        };
     }
 }
 
