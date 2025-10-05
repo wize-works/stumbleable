@@ -167,11 +167,11 @@ export default function Home() {
                 </section>
 
                 {/* Explore by Topic CTA */}
-                <section className="relative py-16 px-4 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
+                <section className="relative py-16 px-4 bg-secondary/50">
                     <div className="container mx-auto max-w-4xl">
                         <div className="card bg-base-100 shadow-2xl">
                             <div className="card-body items-center text-center p-8 sm:p-12">
-                                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mb-6">
+                                <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mb-6">
                                     <i className="fa-solid fa-duotone fa-compass text-3xl text-base-100"></i>
                                 </div>
                                 <h2 className="card-title text-3xl sm:text-4xl mb-4">
@@ -227,14 +227,14 @@ export default function Home() {
                                 }
                             ].map((step, i) => (
                                 <div key={i} className="relative">
-                                    <div className="flex flex-col items-center text-center space-y-4">
+                                    <div className="flex flex-col items-center text-center space-y-4 card p-6 bg-base-100 rounded-3xl shadow-lg border border-base-300 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                                         {/* Number Badge */}
-                                        <div className="absolute -top-4 -left-4 w-12 h-12 bg-primary text-primary-content rounded-full flex items-center justify-center font-bold text-xl shadow-lg">
+                                        <div className="absolute -top-4 -left-4 w-12 h-12 bg-accent text-accent-content rounded-full flex items-center justify-center font-bold text-xl shadow-lg">
                                             {step.number}
                                         </div>
 
                                         {/* Icon */}
-                                        <div className="w-24 h-24 bg-gradient-to-br from-primary to-secondary rounded-3xl flex items-center justify-center text-4xl text-primary-content shadow-xl transform hover:scale-110 hover:rotate-6 transition-all duration-300">
+                                        <div className="w-24 h-24 bg-primary rounded-3xl flex items-center justify-center text-4xl text-primary-content shadow-xl transform hover:scale-110 hover:rotate-6 transition-all duration-300">
                                             <i className={`fa-solid fa-duotone ${step.icon}`}></i>
                                         </div>
 
@@ -353,7 +353,7 @@ export default function Home() {
                             <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-base-content">
                                 Ready to Start Your
                                 <br />
-                                <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+                                <span className="text-accent">
                                     Discovery Journey?
                                 </span>
                             </h2>
