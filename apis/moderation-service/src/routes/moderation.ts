@@ -62,7 +62,16 @@ const reportContentSchema = z.object({
 });
 
 const updateDomainReputationSchema = z.object({
-    score: z.number().min(0).max(1),
+    score: z.preprocess(
+        (val) => {
+            // Convert percentage (0-100) to decimal (0-1)
+            if (typeof val === 'number' && val > 1 && val <= 100) {
+                return val / 100;
+            }
+            return val;
+        },
+        z.number().min(0).max(1)
+    ),
     notes: z.string().optional(),
 });
 

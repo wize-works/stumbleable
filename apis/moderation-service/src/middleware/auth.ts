@@ -15,7 +15,25 @@ export async function requireModeratorRole(
     // Use Clerk's getAuth to extract user ID from JWT
     const auth = getAuth(request);
 
+    // Log auth details for debugging
+    request.log.debug({
+        hasAuth: !!auth,
+        hasUserId: !!auth?.userId,
+        hasAuthHeader: !!request.headers.authorization,
+        authHeader: request.headers.authorization ? 'Bearer ...' : 'Missing'
+    }, 'Auth check');
+
     if (!auth || !auth.userId) {
+        request.log.warn({
+            headers: {
+                authorization: request.headers.authorization ? 'Present (Bearer ...)' : 'Missing',
+                host: request.headers.host,
+                origin: request.headers.origin
+            },
+            path: request.url,
+            method: request.method
+        }, 'Authentication failed - no auth or userId');
+
         return reply.code(401).send({
             error: 'Unauthorized',
             message: 'Authentication required',

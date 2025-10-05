@@ -232,7 +232,7 @@ export default function SubmitPage() {
             <div className="container mx-auto px-4 py-8">
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <h1 className="text-4xl font-bold mb-2">Submit Content 📤</h1>
+                    <h1 className="text-4xl font-bold mb-2">Submit Content <i className='fa-solid fa-duotone fa-arrow-up-from-bracket' /></h1>
                     <p className="text-lg text-base-content/70">
                         Share something amazing for others to discover
                     </p>

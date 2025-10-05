@@ -115,29 +115,6 @@ export default function BatchUploadComponent() {
                     Batch Content Upload
                 </h2>
 
-                {/* Instructions */}
-                <div className="alert alert-info mb-4">
-                    <i className="fa-solid fa-duotone fa-circle-info"></i>
-                    <div>
-                        <h3 className="font-bold">CSV Format - Flexible Column Names</h3>
-                        <p className="text-sm">
-                            <strong>Required:</strong> URL column (accepts: url, link, website, etc.)
-                            <br />
-                            <strong>Optional:</strong> title, description, topics, author, published_date, image_url
-                            <br />
-                            <span className="badge badge-success badge-sm mt-1">Smart Detection</span>
-                            {' '}Column names are auto-detected - use whatever names make sense!
-                        </p>
-                    </div>
-                </div>
-
-                {/* Example CSV */}
-                <div className="mockup-code text-xs mb-4">
-                    <pre data-prefix="1"><code>url,title,description,topics,author</code></pre>
-                    <pre data-prefix="2"><code>https://example.com/article1,Great Article,A wonderful read,"tech,ai",John Doe</code></pre>
-                    <pre data-prefix="3"><code>https://example.com/article2,Another Post,More content,"science",Jane Smith</code></pre>
-                </div>
-
                 {/* File Upload */}
                 <div className="form-control">
                     <label className="label">

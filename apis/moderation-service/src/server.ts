@@ -113,18 +113,32 @@ async function buildApp() {
     });
 
     // Clerk authentication (registered AFTER health check)
-    console.log('🔑 Clerk keys:', {
-        publishableKey: process.env.CLERK_PUBLISHABLE_KEY ? '✅ Set' : '❌ Missing',
-        secretKey: process.env.CLERK_SECRET_KEY ? '✅ Set' : '❌ Missing'
+    const clerkPublishableKey = process.env.CLERK_PUBLISHABLE_KEY;
+    const clerkSecretKey = process.env.CLERK_SECRET_KEY;
+
+    console.log('🔑 Clerk configuration:', {
+        publishableKey: clerkPublishableKey ? `✅ Set (${clerkPublishableKey.substring(0, 20)}...)` : '❌ Missing',
+        secretKey: clerkSecretKey ? `✅ Set (${clerkSecretKey.substring(0, 20)}...)` : '❌ Missing',
+        envFile: process.env.NODE_ENV === 'production' ? 'Production' : 'Development (.env)'
     });
 
-    if (process.env.CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY) {
+    if (!clerkPublishableKey || !clerkSecretKey) {
+        console.error('❌ CRITICAL: Clerk keys not found!');
+        console.error('   Please ensure .env file has:');
+        console.error('   - CLERK_PUBLISHABLE_KEY=pk_test_...');
+        console.error('   - CLERK_SECRET_KEY=sk_test_...');
+        throw new Error('Clerk authentication keys are required');
+    }
+
+    try {
         await fastify.register(clerkPlugin as any, {
-            publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
-            secretKey: process.env.CLERK_SECRET_KEY,
+            publishableKey: clerkPublishableKey,
+            secretKey: clerkSecretKey,
         });
-    } else {
-        console.warn('⚠️  Clerk not configured - authentication will not be available');
+        console.log('✅ Clerk plugin registered successfully');
+    } catch (error) {
+        console.error('❌ Failed to register Clerk plugin:', error);
+        throw error;
     }
 
     // Security headers
