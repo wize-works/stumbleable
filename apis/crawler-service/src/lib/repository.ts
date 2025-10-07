@@ -737,13 +737,15 @@ export class DiscoveryRepository {
 
     /**
      * Find similar content based on a reference content ID
+     * OPTIMIZED: Uses database-level similarity calculation with PostgreSQL array operators
+     * EFFICIENT: No need to fetch 3x candidates - database handles filtering and sorting
      */
     async findSimilarContent(contentId: string, limit: number = 10): Promise<EnhancedDiscovery[]> {
         try {
-            // First, get the reference content
+            // First, get the reference content topics
             const { data: refContent, error: refError } = await supabase
                 .from('content')
-                .select('topics, domain')
+                .select('topics')
                 .eq('id', contentId)
                 .single();
 
@@ -751,63 +753,27 @@ export class DiscoveryRepository {
                 return [];
             }
 
-            // Find content with overlapping topics
-            const { data, error } = await supabase
-                .from('content')
-                .select(`
-                    id,
-                    url,
-                    title,
-                    description,
-                    image_url,
-                    domain,
-                    topics,
-                    reading_time_minutes,
-                    created_at,
-                    quality_score,
-                    base_score,
-                    popularity_score,
-                    is_active,
-                    content_topics(
-                        topics(name),
-                        confidence_score
-                    ),
-                    content_metrics(
-                        views_count,
-                        likes_count,
-                        saves_count,
-                        shares_count,
-                        skip_count,
-                        engagement_rate
-                    )
-                `)
-                .eq('is_active', true)
-                .neq('id', contentId)
-                .order('quality_score', { ascending: false })
-                .limit(limit * 3); // Get more candidates for filtering
+            // Use database function for efficient similarity calculation
+            // PostgreSQL calculates Jaccard similarity using array operators (&&, &, |)
+            // Pre-filters with && (overlap) operator before calculating exact similarity
+            const { data, error } = await supabase.rpc('find_similar_content', {
+                p_reference_content_id: contentId,
+                p_reference_topics: refContent.topics || [],
+                p_min_similarity: 0.1, // At least 10% topic overlap
+                p_limit: limit
+            });
 
-            if (error || !data) {
+            if (error) {
+                console.error('Error finding similar content via RPC:', error);
                 return [];
             }
 
-            // Calculate similarity scores and filter
-            const refTopics = refContent.topics || [];
-            const similarContent = data
-                .map(item => {
-                    const itemTopics = item.topics || [];
-                    const overlap = itemTopics.filter((t: string) => refTopics.includes(t)).length;
-                    const similarity = overlap / Math.max(refTopics.length, itemTopics.length);
+            if (!data || data.length === 0) {
+                return [];
+            }
 
-                    return {
-                        content: item,
-                        similarity
-                    };
-                })
-                .filter(item => item.similarity > 0) // At least one common topic
-                .sort((a, b) => b.similarity - a.similarity)
-                .slice(0, limit);
-
-            return this.transformContentData(similarContent.map(item => item.content));
+            // Transform to EnhancedDiscovery format
+            return this.transformContentData(data);
         } catch (error) {
             console.error('Error finding similar content:', error);
             return [];

@@ -128,8 +128,9 @@ export class DiscoveryRepository {
      * @param userId - User's internal UUID (not Clerk ID)
      * @param sessionSeenIds - Additional IDs seen in current session (for immediate exclusion)
      * @param userPreferredTopics - Optional array of user's preferred topics for better diversity
+     * @param blockedDomains - Optional array of domains to exclude from results
      */
-    async getDiscoveriesExcluding(userId: string, sessionSeenIds: string[] = [], userPreferredTopics?: string[]): Promise<EnhancedDiscovery[]> {
+    async getDiscoveriesExcluding(userId: string, sessionSeenIds: string[] = [], userPreferredTopics?: string[], blockedDomains?: string[]): Promise<EnhancedDiscovery[]> {
         // ENDLESS POOL FIX: Rotate candidate pool more frequently for better variety
         // Changes every 15 minutes instead of hourly
         const rotationSeed = Math.floor(Date.now() / (1000 * 60 * 15));
@@ -145,9 +146,11 @@ export class DiscoveryRepository {
         // CRITICAL OPTIMIZATION: Let PostgreSQL handle exclusions via stored procedure
         // Uses NOT EXISTS which is MUCH faster than IN clause or application-level filtering
         // Scales to millions of user interactions without performance degradation
+        // Also filters blocked domains at database level for optimal performance
         const { data: contentData, error: rpcError } = await supabase.rpc('get_unseen_content', {
             p_user_id: userId,
             p_session_seen_ids: sessionSeenIds,
+            p_blocked_domains: blockedDomains || [],
             p_order_column: selectedOrderColumn,
             p_limit: dynamicPoolSize
         });

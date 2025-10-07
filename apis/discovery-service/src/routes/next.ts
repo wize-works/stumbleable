@@ -85,8 +85,9 @@ export const nextDiscoveryRoute: FastifyPluginAsync = async (fastify) => {
             // The stored procedure automatically excludes:
             // - All content user has interacted with (skip, view, like, save)
             // - Session-seen content (seenIds)
+            // - Blocked domains (if any)
             const [candidates, globalStats] = await Promise.all([
-                repository.getDiscoveriesExcluding(userPrefs.id || userId, seenIds, userPrefs.preferredTopics),
+                repository.getDiscoveriesExcluding(userPrefs.id || userId, seenIds, userPrefs.preferredTopics, userPrefs.blockedDomains),
                 repository.getGlobalEngagementStats() // Fetch global stats in parallel
             ]);
 
@@ -112,15 +113,10 @@ export const nextDiscoveryRoute: FastifyPluginAsync = async (fastify) => {
             const contentIds = candidates.map(c => c.id);
             const timeOnPageMetrics = await repository.getBatchTimeOnPageMetrics(contentIds);
 
-            // Filter out blocked domains
-            let filteredCandidates = candidates;
-            if (userPrefs.blockedDomains && userPrefs.blockedDomains.length > 0) {
-                filteredCandidates = candidates.filter(discovery =>
-                    !userPrefs.blockedDomains!.includes(discovery.domain)
-                );
-            }
+            // NOTE: Blocked domains are now filtered at database level via get_unseen_content procedure
+            // No post-query filtering needed - improves performance significantly
 
-            if (filteredCandidates.length === 0) {
+            if (candidates.length === 0) {
                 // If all discoveries have been seen, reset and pick from all
                 const allDiscoveries = await repository.getAllDiscoveries();
                 if (allDiscoveries.length === 0) {
@@ -153,11 +149,11 @@ export const nextDiscoveryRoute: FastifyPluginAsync = async (fastify) => {
             };
 
             // OPTIMIZATION: Batch fetch domain reputations in single query
-            const uniqueDomains = [...new Set(filteredCandidates.map(c => c.domain))];
+            const uniqueDomains = [...new Set(candidates.map(c => c.domain))];
             const domainReputations = await repository.getBatchDomainReputations(uniqueDomains);
 
             // Calculate scores for all candidates with enhanced features
-            const scoredCandidates: EnhancedScoredCandidate[] = filteredCandidates.map(discovery => {
+            const scoredCandidates: EnhancedScoredCandidate[] = candidates.map(discovery => {
                 const ageDays = getAgeDays(discovery.createdAt || new Date().toISOString());
 
                 // Core scoring components
@@ -383,7 +379,7 @@ export const nextDiscoveryRoute: FastifyPluginAsync = async (fastify) => {
                 debug: selectedCandidate.debug,
                 reason,
                 wildness,
-                candidateCount: filteredCandidates.length,
+                candidateCount: candidates.length,
                 randomnessApplied: totalRandomness,
                 selectionPoolSize: selectionPool.length
             }, 'Discovery selected with true randomization');
