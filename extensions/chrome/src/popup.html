@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stumbleable</title>
+  <link rel="stylesheet" href="popup.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <img src="icons/icon48.png" alt="Stumbleable" class="logo">
+      <h1 class="title">Stumbleable</h1>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loading" class="loading hidden">
+      <div class="spinner"></div>
+      <p>Loading discovery...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="error" class="error hidden">
+      <p class="error-message"></p>
+      <button id="retry-btn" class="btn btn-secondary">Retry</button>
+    </div>
+
+    <!-- Login Prompt -->
+    <div id="login-prompt" class="login-prompt hidden">
+      <p>Sign in to start stumbling!</p>
+      <button id="login-btn" class="btn btn-primary">Sign In</button>
+    </div>
+
+    <!-- Discovery Card -->
+    <div id="discovery-card" class="discovery-card hidden">
+      <div class="card-image">
+        <img id="card-img" src="" alt="">
+      </div>
+      <div class="card-content">
+        <div class="card-domain" id="card-domain"></div>
+        <h2 class="card-title" id="card-title"></h2>
+        <p class="card-description" id="card-description"></p>
+        <div class="card-topics" id="card-topics"></div>
+      </div>
+      <div class="card-actions">
+        <button id="skip-btn" class="btn btn-circle" title="Skip (↓)">
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <button id="like-btn" class="btn btn-circle" title="Like (↑)">
+          <i class="fa-solid fa-chevron-up"></i>
+        </button>
+        <button id="save-btn" class="btn btn-circle" title="Save (S)">
+          <i class="fa-solid fa-bookmark"></i>
+        </button>
+        <button id="visit-btn" class="btn btn-primary">Visit</button>
+      </div>
+    </div>
+
+    <!-- Wildness Control -->
+    <div class="wildness-control">
+      <label for="wildness-slider" class="wildness-label">
+        <span>Wildness</span>
+        <span id="wildness-value" class="wildness-value">50</span>
+      </label>
+      <input
+        type="range"
+        id="wildness-slider"
+        min="0"
+        max="100"
+        value="50"
+        class="wildness-slider"
+      >
+      <div class="wildness-labels">
+        <span>Familiar</span>
+        <span>Adventurous</span>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <button id="stumble-btn" class="btn btn-stumble">
+        <img src="icons/icon48.png" alt="" class="stumble-icon">
+        Stumble
+      </button>
+      <div class="footer-links">
+        <a href="#" id="submit-current" class="link">Submit This Page</a>
+        <a href="#" id="save-current" class="link">Save This Page</a>
+        <a href="http://localhost:3000/stumble" target="_blank" class="link">Open App</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

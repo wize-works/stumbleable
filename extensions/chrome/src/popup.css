@@ -1,0 +1,368 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 400px;
+  min-height: 500px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: #FFFDF7;
+  color: #1C1A1A;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #FFFDF7;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: #FF4D6D;
+  color: white;
+  border-bottom: 2px solid #FFD600;
+}
+
+.logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+/* Loading State */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  gap: 16px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #EDE3D9;
+  border-top-color: #FF4D6D;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Error State */
+.error {
+  padding: 24px;
+  text-align: center;
+}
+
+.error-message {
+  color: #FF3355;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+/* Login Prompt */
+.login-prompt {
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.login-prompt p {
+  margin-bottom: 16px;
+  font-size: 16px;
+  color: #1C1A1A;
+  font-weight: 600;
+}
+
+/* Discovery Card */
+.discovery-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #FFFDF7;
+}
+
+.card-image {
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  background: #F6F0E9;
+  border-bottom: 2px solid #FFD600;
+}
+
+.card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-content {
+  padding: 16px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.card-domain {
+  font-size: 11px;
+  color: #FF4D6D;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: #1C1A1A;
+}
+
+.card-description {
+  font-size: 14px;
+  color: #1C1A1A;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 12px;
+  opacity: 0.8;
+}
+
+.card-topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.topic-chip {
+  padding: 4px 12px;
+  background: #FFD600;
+  border-radius: 0.75rem;
+  font-size: 11px;
+  color: #0B0D10;
+  font-weight: 600;
+}
+
+.card-actions {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 2px solid #EDE3D9;
+  background: #FFFDF7;
+}
+
+/* Wildness Control */
+.wildness-control {
+  padding: 16px;
+  background: #F6F0E9;
+  border-top: 2px solid #EDE3D9;
+}
+
+.wildness-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1C1A1A;
+}
+
+.wildness-value {
+  color: #FF4D6D;
+  font-weight: 700;
+}
+
+.wildness-slider {
+  width: 100%;
+  height: 8px;
+  border-radius: 1rem;
+  background: #EDE3D9;
+  outline: none;
+  appearance: none;
+  margin-bottom: 8px;
+}
+
+.wildness-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #FF4D6D;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(255, 77, 109, 0.3);
+  transition: transform 0.18s;
+}
+
+.wildness-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+.wildness-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #FF4D6D;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 6px rgba(255, 77, 109, 0.3);
+  transition: transform 0.18s;
+}
+
+.wildness-slider::-moz-range-thumb:hover {
+  transform: scale(1.1);
+}
+
+.wildness-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #1C1A1A;
+  opacity: 0.7;
+  font-weight: 600;
+}
+
+/* Footer */
+.footer {
+  padding: 16px;
+  border-top: 2px solid #EDE3D9;
+  background: #FFFDF7;
+}
+
+.footer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* Buttons */
+.btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 1rem;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-transform: none;
+}
+
+.btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(255, 77, 109, 0.2);
+}
+
+.btn:active {
+  transform: scale(0.95);
+}
+
+.btn-primary {
+  background: #FF4D6D;
+  color: white;
+  flex: 1;
+}
+
+.btn-primary:hover {
+  background: #FF3355;
+}
+
+.btn-secondary {
+  background: #00C49A;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #00B38A;
+}
+
+.btn-circle {
+  background: #FFFDF7;
+  border: 2px solid #EDE3D9;
+  padding: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #1C1A1A;
+  flex-shrink: 0;
+}
+
+.btn-circle:hover {
+  background: #F6F0E9;
+  border-color: #FF4D6D;
+  color: #FF4D6D;
+  transform: scale(1.1);
+}
+
+.btn-stumble {
+  width: 100%;
+  background: #FF4D6D;
+  color: white;
+  font-size: 16px;
+  padding: 14px;
+  box-shadow: 0 6px 20px rgba(255, 77, 109, 0.3);
+}
+
+.btn-stumble:hover {
+  background: #FF3355;
+  transform: scale(1.02);
+}
+
+.stumble-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+}
+
+/* Links */
+.link {
+  color: #FF4D6D;
+  text-decoration: none;
+  font-size: 13px;
+  text-align: center;
+  padding: 8px;
+  transition: color 0.18s;
+  font-weight: 600;
+}
+
+.link:hover {
+  color: #FF3355;
+  text-decoration: underline;
+}
+
+/* Utility Classes */
+.hidden {
+  display: none !important;
+}
