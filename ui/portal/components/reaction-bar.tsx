@@ -137,11 +137,13 @@ export function ReactionBar({
 
                         {/* Report button */}
                         {discoveryId && (
-                            <ReportContentButton
-                                discoveryId={discoveryId}
-                                className="btn-circle btn-error hover:scale-110 active:scale-95 transition-transform"
-                                onReportSuccess={onReportSuccess}
-                            />
+                            <div className='tooltip tooltip-right' data-tip='Report Content'>
+                                <ReportContentButton
+                                    discoveryId={discoveryId}
+                                    className="btn-circle btn-error hover:scale-110 active:scale-95 transition-transform"
+                                    onReportSuccess={onReportSuccess}
+                                />
+                            </div>
                         )}
                     </VerticalMenu>
                 </div>
