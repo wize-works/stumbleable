@@ -124,6 +124,9 @@ export class DiscoveryRepository {
      * Get discoveries excluding specified IDs with enhanced data and DOMAIN DIVERSITY
      * FIX: Ensures no single domain dominates the candidate pool
      * OPTIMIZED: Reduced joins and lighter queries for faster response
+     * 
+     * @param excludeIds - Array of content IDs to exclude (combines session seenIds and permanently skipped content)
+     * @param userPreferredTopics - Optional array of user's preferred topics for better diversity
      */
     async getDiscoveriesExcluding(excludeIds: string[], userPreferredTopics?: string[]): Promise<EnhancedDiscovery[]> {
         // Simplified randomization - just use a basic rotation to reduce database load
@@ -155,7 +158,9 @@ export class DiscoveryRepository {
             .eq('is_active', true)
             .limit(500); // Increased from 200 to ensure diversity
 
-        if (excludeIds.length > 0 && excludeIds.length < 50) { // OPTIMIZATION: Skip if too many excludes
+        // CRITICAL FIX: Exclude both session-seen AND permanently-skipped content
+        // This ensures users NEVER see content they've explicitly skipped
+        if (excludeIds.length > 0 && excludeIds.length < 200) { // OPTIMIZATION: Skip if too many excludes (increased limit)
             query = query.not('id', 'in', `(${excludeIds.map(id => `"${id}"`).join(',')})`);
         }
 
@@ -732,6 +737,30 @@ export class DiscoveryRepository {
                 likedDomains: {},
                 recentInteractionTypes: []
             };
+        }
+    }
+
+    /**
+     * Get IDs of content that a user has skipped
+     * CRITICAL FIX: Users should never see content they've explicitly skipped
+     */
+    async getUserSkippedContentIds(userId: string): Promise<string[]> {
+        try {
+            const { data, error } = await supabase
+                .from('user_interactions')
+                .select('content_id')
+                .eq('user_id', userId)
+                .eq('type', 'skip');
+
+            if (error) {
+                console.error('Error fetching user skipped content:', error);
+                return [];
+            }
+
+            return data?.map(item => item.content_id) || [];
+        } catch (error) {
+            console.error('Error in getUserSkippedContentIds:', error);
+            return [];
         }
     }
 

@@ -71,9 +71,24 @@ export const nextDiscoveryRoute: FastifyPluginAsync = async (fastify) => {
                 wildness: 35
             };
 
+            // CRITICAL FIX: Fetch user's permanently skipped content
+            // Users should NEVER see content they've explicitly skipped, even across sessions
+            const skippedContentIds = await repository.getUserSkippedContentIds(userPrefs.id || userId);
+
+            // Combine session seenIds with permanently skipped content
+            const allExcludedIds = [...new Set([...seenIds, ...skippedContentIds])];
+
+            fastify.log.info({
+                userId: userPrefs.id || userId,
+                sessionSeenCount: seenIds.length,
+                permanentlySkippedCount: skippedContentIds.length,
+                totalExcludedCount: allExcludedIds.length
+            }, 'Excluding content from discovery');
+
             // Now fetch candidates WITH topic context for better diversity
+            // IMPORTANT: Using allExcludedIds instead of just seenIds to exclude skipped content
             const [candidates, globalStats] = await Promise.all([
-                repository.getDiscoveriesExcluding(seenIds, userPrefs.preferredTopics),
+                repository.getDiscoveriesExcluding(allExcludedIds, userPrefs.preferredTopics),
                 repository.getGlobalEngagementStats() // Fetch global stats in parallel
             ]);
 
