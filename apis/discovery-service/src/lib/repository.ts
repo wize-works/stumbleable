@@ -121,66 +121,50 @@ export class DiscoveryRepository {
     }
 
     /**
-     * Get discoveries excluding specified IDs with enhanced data and DOMAIN DIVERSITY
-     * FIX: Ensures no single domain dominates the candidate pool
-     * OPTIMIZED: Reduced joins and lighter queries for faster response
+     * Get discoveries excluding content the user has already interacted with
+     * OPTIMIZED: Uses database-level filtering via stored procedure
+     * SCALABLE: No limits on exclusion count - handles millions of interactions efficiently
      * 
-     * @param excludeIds - Array of content IDs to exclude (combines session seenIds and permanently skipped content)
+     * @param userId - User's internal UUID (not Clerk ID)
+     * @param sessionSeenIds - Additional IDs seen in current session (for immediate exclusion)
      * @param userPreferredTopics - Optional array of user's preferred topics for better diversity
      */
-    async getDiscoveriesExcluding(excludeIds: string[], userPreferredTopics?: string[]): Promise<EnhancedDiscovery[]> {
-        // Simplified randomization - just use a basic rotation to reduce database load
-        const useCreatedAtOrder = Math.floor(Date.now() / (1000 * 60 * 60)) % 2 === 0; // Changes every hour
+    async getDiscoveriesExcluding(userId: string, sessionSeenIds: string[] = [], userPreferredTopics?: string[]): Promise<EnhancedDiscovery[]> {
+        // ENDLESS POOL FIX: Rotate candidate pool more frequently for better variety
+        // Changes every 15 minutes instead of hourly
+        const rotationSeed = Math.floor(Date.now() / (1000 * 60 * 15));
+        const orderTypes = ['created_at', 'quality_score', 'popularity_score', 'freshness_score'];
+        const selectedOrderColumn = orderTypes[rotationSeed % orderTypes.length];
 
-        // CRITICAL FIX: Fetch MORE candidates to ensure diversity after domain filtering
-        // We'll fetch 500 candidates and then apply domain diversity limits
-        let query = supabase
-            .from('content')
-            .select(`
-                id,
-                url,
-                title,
-                description,
-                image_url,
-                image_storage_path,
-                favicon_url,
-                domain,
-                topics,
-                reading_time_minutes,
-                created_at,
-                quality_score,
-                freshness_score,
-                base_score,
-                popularity_score,
-                is_active,
-                allows_framing
-            `)
-            .eq('is_active', true)
-            .limit(500); // Increased from 200 to ensure diversity
+        // ENDLESS POOL FIX: Dynamic pool sizing
+        // Larger pool for more variety since DB filtering is efficient
+        const dynamicPoolSize = 1000;
 
-        // CRITICAL FIX: Exclude both session-seen AND permanently-skipped content
-        // This ensures users NEVER see content they've explicitly skipped
-        if (excludeIds.length > 0 && excludeIds.length < 200) { // OPTIMIZATION: Skip if too many excludes (increased limit)
-            query = query.not('id', 'in', `(${excludeIds.map(id => `"${id}"`).join(',')})`);
+        console.log(`[Discovery Pool] Fetching ${dynamicPoolSize} candidates for user ${userId} (session seen: ${sessionSeenIds.length})`);
+
+        // CRITICAL OPTIMIZATION: Let PostgreSQL handle exclusions via stored procedure
+        // Uses NOT EXISTS which is MUCH faster than IN clause or application-level filtering
+        // Scales to millions of user interactions without performance degradation
+        const { data: contentData, error: rpcError } = await supabase.rpc('get_unseen_content', {
+            p_user_id: userId,
+            p_session_seen_ids: sessionSeenIds,
+            p_order_column: selectedOrderColumn,
+            p_limit: dynamicPoolSize
+        });
+
+        if (rpcError) {
+            console.error('Error fetching discoveries with DB-level exclusion:', rpcError);
+            // Fallback to simpler query without exclusions if stored procedure fails
+            console.warn('Falling back to basic content query without exclusions');
+            return this.getAllDiscoveries();
         }
 
-        // Apply simplified ordering to reduce database load
-        if (useCreatedAtOrder) {
-            query = query.order('created_at', { ascending: false });
-        } else {
-            query = query.order('quality_score', { ascending: false });
-        }
-
-        const { data, error } = await query;
-
-        if (error) {
-            console.error('Error fetching discoveries excluding IDs:', error);
+        if (!contentData || contentData.length === 0) {
+            console.warn(`[Discovery Pool] No unseen content found for user ${userId}`);
             return [];
         }
 
-        if (!data || data.length === 0) {
-            return [];
-        }
+        console.log(`[Discovery Pool] Retrieved ${contentData.length} unseen candidates from database`);
 
         // CRITICAL FIX: Apply domain diversity filtering
         // Limit each domain to max 20 items in the candidate pool
@@ -189,9 +173,9 @@ export class DiscoveryRepository {
         const diverseCandidates: any[] = [];
 
         // TOPIC BOOST: If user has preferred topics, prioritize content matching those topics
-        let sortedData = [...data];
+        let sortedData = [...contentData];
         if (userPreferredTopics && userPreferredTopics.length > 0) {
-            sortedData = data.sort((a, b) => {
+            sortedData = contentData.sort((a: any, b: any) => {
                 // Count topic matches
                 const aMatches = (a.topics || []).filter((t: string) => userPreferredTopics.includes(t)).length;
                 const bMatches = (b.topics || []).filter((t: string) => userPreferredTopics.includes(t)).length;
@@ -219,7 +203,7 @@ export class DiscoveryRepository {
             }
         }
 
-        console.log(`Domain diversity applied: ${Object.keys(domainCounts).length} unique domains in ${diverseCandidates.length} candidates`);
+        console.log(`[Discovery Pool] Domain diversity applied: ${Object.keys(domainCounts).length} unique domains in ${diverseCandidates.length} candidates`);
 
         return this.transformContentData(diverseCandidates);
     }

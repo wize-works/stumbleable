@@ -71,26 +71,42 @@ export const nextDiscoveryRoute: FastifyPluginAsync = async (fastify) => {
                 wildness: 35
             };
 
-            // CRITICAL FIX: Fetch user's permanently skipped content
-            // Users should NEVER see content they've explicitly skipped, even across sessions
-            const skippedContentIds = await repository.getUserSkippedContentIds(userPrefs.id || userId);
-
-            // Combine session seenIds with permanently skipped content
-            const allExcludedIds = [...new Set([...seenIds, ...skippedContentIds])];
-
+            // CRITICAL OPTIMIZATION: Use database-level filtering instead of application-level
+            // The database stored procedure handles all exclusions efficiently via NOT EXISTS
+            // This eliminates the need to fetch and combine skip lists
             fastify.log.info({
                 userId: userPrefs.id || userId,
                 sessionSeenCount: seenIds.length,
-                permanentlySkippedCount: skippedContentIds.length,
-                totalExcludedCount: allExcludedIds.length
-            }, 'Excluding content from discovery');
+                userTopics: userPrefs.preferredTopics,
+                wildness
+            }, 'Fetching discoveries with DB-level exclusion');
 
-            // Now fetch candidates WITH topic context for better diversity
-            // IMPORTANT: Using allExcludedIds instead of just seenIds to exclude skipped content
+            // Now fetch candidates WITH database-level exclusion for optimal performance
+            // The stored procedure automatically excludes:
+            // - All content user has interacted with (skip, view, like, save)
+            // - Session-seen content (seenIds)
             const [candidates, globalStats] = await Promise.all([
-                repository.getDiscoveriesExcluding(allExcludedIds, userPrefs.preferredTopics),
+                repository.getDiscoveriesExcluding(userPrefs.id || userId, seenIds, userPrefs.preferredTopics),
                 repository.getGlobalEngagementStats() // Fetch global stats in parallel
             ]);
+
+            // ENDLESS POOL MONITORING: Track content pool health
+            fastify.log.info({
+                userId: userPrefs.id || userId,
+                candidatesReturned: candidates.length,
+                sessionSeenCount: seenIds.length,
+                userTopics: userPrefs.preferredTopics,
+                wildness
+            }, 'Discovery pool health check');
+
+            // WARNING: Alert if pool is getting exhausted
+            if (candidates.length < 100) {
+                fastify.log.warn({
+                    userId: userPrefs.id || userId,
+                    candidatesRemaining: candidates.length,
+                    message: 'User nearing content exhaustion - consider expanding topics or enabling resurfacing'
+                }, 'LOW CONTENT POOL WARNING');
+            }
 
             // Fetch time-on-page metrics for all candidate content (for engagement quality boost)
             const contentIds = candidates.map(c => c.id);
