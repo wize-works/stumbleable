@@ -161,3 +161,12 @@ spec:
             name: moderation-service
             port:
               number: 8080
+      
+      # Email Service
+      - path: /email(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: email-service
+            port:
+              number: 8080

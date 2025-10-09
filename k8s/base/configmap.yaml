@@ -15,6 +15,7 @@ data:
   USER_PORT: "7003"
   CRAWLER_PORT: "7004"
   MODERATION_PORT: "7005"
+  EMAIL_PORT: "7006"
   
   # Internal service URLs (for server-side calls)
   DISCOVERY_API_URL: "http://discovery-service:8080"
@@ -22,6 +23,7 @@ data:
   USER_API_URL: "http://user-service:8080"
   CRAWLER_API_URL: "http://crawler-service:8080"
   MODERATION_API_URL: "http://moderation-service:8080"
+  EMAIL_API_URL: "http://email-service:8080"
   
   # Public API URLs (for client-side calls - will be overridden with actual domain)
   NEXT_PUBLIC_DISCOVERY_API_URL: "https://api.stumbleable.com/discovery"
@@ -29,6 +31,10 @@ data:
   NEXT_PUBLIC_USER_API_URL: "https://api.stumbleable.com/user"
   NEXT_PUBLIC_CRAWLER_API_URL: "https://api.stumbleable.com/crawler"
   NEXT_PUBLIC_MODERATION_API_URL: "https://api.stumbleable.com/moderation"
+  NEXT_PUBLIC_EMAIL_API_URL: "https://api.stumbleable.com/email"
+  
+  # Frontend URL (for CORS and email links)
+  FRONTEND_URL: "https://stumbleable.com"
   
   # CORS - Allow both www and non-www domains
   ALLOWED_ORIGINS: "https://stumbleable.com,https://www.stumbleable.com"
