@@ -1,5 +1,6 @@
 'use client';
 
+import Breadcrumbs from '@/components/breadcrumbs';
 import { useToaster } from '@/components/toaster';
 import { ApiError, UserAPI } from '@/lib/api-client';
 import { useAuth, useUser } from '@clerk/nextjs';
@@ -149,6 +150,12 @@ export default function PreferencesPage() {
 
     return (
         <div className="container mx-auto px-4 py-8 max-w-6xl">
+            <Breadcrumbs items={[
+                { label: 'Home', href: '/' },
+                { label: 'Dashboard', href: '/dashboard' },
+                { label: 'Preferences', href: '/dashboard/preferences' }
+            ]} />
+
             {/* Header */}
             <div className="mb-8">
                 <div className="flex items-center justify-between mb-4">

@@ -1,3 +1,4 @@
+import Breadcrumbs from '@/components/breadcrumbs';
 import { currentUser } from '@clerk/nextjs/server';
 
 export default async function Dashboard() {
@@ -5,6 +6,11 @@ export default async function Dashboard() {
     return (
         <div className="min-h-screen bg-base-100 py-20 px-4">
             <div className="container mx-auto max-w-6xl">
+                <Breadcrumbs items={[
+                    { label: 'Home', href: '/' },
+                    { label: 'Dashboard', href: '/dashboard' }
+                ]} />
+
                 <div className="mb-8">
                     <h1 className="text-4xl sm:text-5xl font-bold text-base-content mb-4">
                         Dashboard

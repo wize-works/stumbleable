@@ -1,10 +1,11 @@
 'use client';
 
+import Breadcrumbs from '@/components/breadcrumbs';
+import { Interaction } from '@/data/types';
+import { InteractionAPI } from '@/lib/api-client';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Interaction } from '../../data/types';
-import { InteractionAPI } from '../../lib/api-client';
 
 interface AnalyticsSummary {
     totalInteractions: number;
@@ -92,6 +93,11 @@ export default function AnalyticsPage() {
         return (
             <div className="min-h-screen bg-base-100">
                 <div className="container mx-auto px-4 py-8">
+                    <Breadcrumbs items={[
+                        { label: 'Home', href: '/' },
+                        { label: 'Dashboard', href: '/dashboard' },
+                        { label: 'Analytics', href: '/dashboard/analytics' }
+                    ]} />
                     <h1 className="text-3xl font-bold text-center mb-8">Analytics</h1>
                     <div className="flex items-center justify-center">
                         <div className="flex flex-col items-center gap-4">
@@ -109,6 +115,11 @@ export default function AnalyticsPage() {
         return (
             <div className="min-h-screen bg-base-100">
                 <div className="container mx-auto px-4 py-8">
+                    <Breadcrumbs items={[
+                        { label: 'Home', href: '/' },
+                        { label: 'Dashboard', href: '/dashboard' },
+                        { label: 'Analytics', href: '/dashboard/analytics' }
+                    ]} />
                     <h1 className="text-3xl font-bold text-center mb-8">Analytics</h1>
                     <div className="text-center">
                         <div className="text-xl text-error mb-4">{error}</div>
@@ -153,6 +164,12 @@ export default function AnalyticsPage() {
     return (
         <div className="min-h-screen bg-base-100">
             <div className="container mx-auto px-4 py-8">
+                <Breadcrumbs items={[
+                    { label: 'Home', href: '/' },
+                    { label: 'Dashboard', href: '/dashboard' },
+                    { label: 'Analytics', href: '/dashboard/analytics' }
+                ]} />
+
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-bold mb-2">Analytics</h1>
                     <p className="text-base-content/60">Your interaction statistics and history</p>

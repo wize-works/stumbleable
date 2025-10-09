@@ -1,5 +1,6 @@
 'use client';
 
+import Breadcrumbs from '@/components/breadcrumbs';
 import { useToaster } from '@/components/toaster';
 import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
@@ -174,6 +175,12 @@ export default function EmailQueuePage() {
     return (
         <div className="min-h-screen bg-base-100">
             <div className="container mx-auto px-4 py-8">
+                <Breadcrumbs items={[
+                    { label: 'Home', href: '/' },
+                    { label: 'Admin Dashboard', href: '/admin' },
+                    { label: 'Email Queue', href: '/admin/email-queue' }
+                ]} />
+
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-base-content mb-2">Email Queue Management</h1>
@@ -324,8 +331,8 @@ export default function EmailQueuePage() {
                                                 <td className="font-mono text-sm">{item.recipient_email}</td>
                                                 <td>
                                                     <span className={`badge ${item.status === 'sent' ? 'badge-success' :
-                                                            item.status === 'pending' ? 'badge-warning' :
-                                                                'badge-error'
+                                                        item.status === 'pending' ? 'badge-warning' :
+                                                            'badge-error'
                                                         }`}>
                                                         {item.status}
                                                     </span>

@@ -1,12 +1,13 @@
 'use client';
 
+import Breadcrumbs from '@/components/breadcrumbs';
+import { DiscoveryCard } from '@/components/discovery-card';
+import { EmptyState } from '@/components/empty-state';
+import { Discovery } from '@/data/types';
+import { InteractionAPI } from '@/lib/api-client';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { DiscoveryCard } from '../../components/discovery-card';
-import { EmptyState } from '../../components/empty-state';
-import { Discovery } from '../../data/types';
-import { InteractionAPI } from '../../lib/api-client';
 
 export default function SavedPage() {
     const { user, isLoaded, isSignedIn } = useUser();
@@ -83,6 +84,11 @@ export default function SavedPage() {
         return (
             <div className="min-h-screen bg-base-100">
                 <div className="container mx-auto px-4 py-8">
+                    <Breadcrumbs items={[
+                        { label: 'Home', href: '/' },
+                        { label: 'Dashboard', href: '/dashboard' },
+                        { label: 'Saved Items', href: '/dashboard/saved' }
+                    ]} />
                     <h1 className="text-3xl font-bold text-center mb-8">Saved Discoveries</h1>
                     <div className="flex items-center justify-center">
                         <div className="flex flex-col items-center gap-4">
@@ -100,6 +106,11 @@ export default function SavedPage() {
         return (
             <div className="min-h-screen bg-base-100">
                 <div className="container mx-auto px-4 py-8">
+                    <Breadcrumbs items={[
+                        { label: 'Home', href: '/' },
+                        { label: 'Dashboard', href: '/dashboard' },
+                        { label: 'Saved Items', href: '/dashboard/saved' }
+                    ]} />
                     <h1 className="text-3xl font-bold text-center mb-8">Saved Discoveries</h1>
                     <EmptyState
                         illustration="search"
@@ -120,6 +131,11 @@ export default function SavedPage() {
         return (
             <div className="min-h-screen bg-base-100">
                 <div className="container mx-auto px-4 py-8">
+                    <Breadcrumbs items={[
+                        { label: 'Home', href: '/' },
+                        { label: 'Dashboard', href: '/dashboard' },
+                        { label: 'Saved Items', href: '/dashboard/saved' }
+                    ]} />
                     <h1 className="text-3xl font-bold text-center mb-8">Saved Discoveries</h1>
 
                     <EmptyState
@@ -139,6 +155,12 @@ export default function SavedPage() {
     return (
         <div className="min-h-screen bg-base-100">
             <div className="container mx-auto px-4 py-8">
+                <Breadcrumbs items={[
+                    { label: 'Home', href: '/' },
+                    { label: 'Dashboard', href: '/dashboard' },
+                    { label: 'Saved Items', href: '/dashboard/saved' }
+                ]} />
+
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-bold mb-2">Saved Discoveries</h1>
                     <p className="text-base-content/60">

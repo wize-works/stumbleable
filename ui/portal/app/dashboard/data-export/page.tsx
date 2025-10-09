@@ -1,5 +1,6 @@
 'use client';
 
+import Breadcrumbs from '@/components/breadcrumbs';
 import { useToaster } from '@/components/toaster';
 import { InteractionAPI, UserAPI } from '@/lib/api-client';
 import { useAuth, useUser } from '@clerk/nextjs';
@@ -153,6 +154,12 @@ export default function DataExportPage() {
     return (
         <div className="min-h-screen bg-base-100 py-20 px-4">
             <div className="container mx-auto max-w-4xl">
+                <Breadcrumbs items={[
+                    { label: 'Home', href: '/' },
+                    { label: 'Dashboard', href: '/dashboard' },
+                    { label: 'Data Export', href: '/dashboard/data-export' }
+                ]} />
+
                 <div className="mb-8">
                     <h1 className="text-4xl sm:text-5xl font-bold text-base-content mb-4">
                         Export Your Data

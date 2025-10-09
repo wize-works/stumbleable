@@ -1,11 +1,11 @@
 'use client';
 
 import { useToaster } from '@/components/toaster';
+import Logo from '@/components/ui/logo';
 import { ApiError, UserAPI } from '@/lib/api-client';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import Logo from '../../components/ui/logo';
 
 interface Topic {
     id: string;

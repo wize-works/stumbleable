@@ -1,5 +1,6 @@
 'use client';
 
+import Breadcrumbs from '@/components/breadcrumbs';
 import { useToaster } from '@/components/toaster';
 import { EmailAPI, EmailPreferences } from '@/lib/api-client';
 import { useAuth, useUser } from '@clerk/nextjs';
@@ -232,6 +233,12 @@ export default function EmailPreferencesPage() {
     return (
         <div className="min-h-screen bg-base-100">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <Breadcrumbs items={[
+                    { label: 'Home', href: '/' },
+                    { label: 'Dashboard', href: '/dashboard' },
+                    { label: 'Email Preferences', href: '/dashboard/email/preferences' }
+                ]} />
+
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-base-content mb-2">Email Preferences</h1>

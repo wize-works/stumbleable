@@ -1,6 +1,9 @@
 'use client';
 
+import { DiscoveryCard } from '@/components/discovery-card';
+import { DiscoveryDetailsBar } from '@/components/discovery-details-bar';
 import { KeyboardShortcuts } from '@/components/keyboard-shortcuts';
+import { ReactionBar } from '@/components/reaction-bar';
 import { useToaster } from '@/components/toaster';
 import { WildnessControl } from '@/components/wildness-control';
 import { Discovery, Interaction } from '@/data/types';
@@ -12,9 +15,6 @@ import { useUserInitialization } from '@/lib/use-user-initialization';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { DiscoveryCard } from '../../components/discovery-card';
-import { DiscoveryDetailsBar } from '../../components/discovery-details-bar';
-import { ReactionBar } from '../../components/reaction-bar';
 
 export default function StumblePage() {
     const { user, isLoaded, isSignedIn } = useUser();

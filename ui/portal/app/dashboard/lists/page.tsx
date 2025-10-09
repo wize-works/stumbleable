@@ -1,12 +1,13 @@
 'use client';
 
+import Breadcrumbs from '@/components/breadcrumbs';
+import { CreateListModal } from '@/components/create-list-modal';
+import { EmptyState } from '@/components/empty-state';
 import { useToaster } from '@/components/toaster';
+import { ListsAPI, UserAPI, UserList } from '@/lib/api-client';
 import { useAuth, useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { CreateListModal } from '../../components/create-list-modal';
-import { EmptyState } from '../../components/empty-state';
-import { ListsAPI, UserAPI, UserList } from '../../lib/api-client';
 
 export default function ListsPage() {
     const { getToken, isSignedIn } = useAuth();
@@ -178,6 +179,12 @@ export default function ListsPage() {
     return (
         <div className="min-h-screen bg-base-100">
             <div className="container mx-auto px-4 py-8 max-w-7xl">
+                <Breadcrumbs items={[
+                    { label: 'Home', href: '/' },
+                    { label: 'Dashboard', href: '/dashboard' },
+                    { label: 'Lists', href: '/dashboard/lists' }
+                ]} />
+
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
                     <div>

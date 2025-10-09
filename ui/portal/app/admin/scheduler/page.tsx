@@ -1,5 +1,6 @@
 'use client';
 
+import Breadcrumbs from '@/components/breadcrumbs';
 import { useToaster } from '@/components/toaster';
 import { JobExecution, JobStats, ScheduledJob, SchedulerAPI } from '@/lib/api-client';
 import { useAuth, useUser } from '@clerk/nextjs';
@@ -239,6 +240,12 @@ export default function SchedulerManagementPage() {
 
     return (
         <div className="container mx-auto p-6 space-y-6">
+            <Breadcrumbs items={[
+                { label: 'Home', href: '/' },
+                { label: 'Admin Dashboard', href: '/admin' },
+                { label: 'Email Scheduler', href: '/admin/scheduler' }
+            ]} />
+
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
