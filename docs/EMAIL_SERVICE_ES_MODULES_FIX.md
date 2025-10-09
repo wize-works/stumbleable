@@ -274,13 +274,48 @@ Most other API services use CommonJS because:
 
 **Both are valid** - just need different configurations!
 
+## Additional Fix: Pino-Pretty in Production
+
+After deploying the ES modules fix, a second issue was discovered:
+
+```
+Error: unable to determine transport target for "pino-pretty"
+```
+
+**Problem:** The logger was configured to always use `pino-pretty`, but:
+- `pino-pretty` is a devDependency (not in production node_modules)
+- Production builds don't install devDependencies
+- Production should use structured JSON logging anyway
+
+**Solution:** Conditionally use `pino-pretty` only in development:
+
+```typescript
+const app = Fastify({
+    logger: {
+        level: process.env.LOG_LEVEL || 'info',
+        transport: process.env.NODE_ENV === 'production' ? undefined : {
+            target: 'pino-pretty',
+            options: {
+                translateTime: 'HH:MM:ss Z',
+                ignore: 'pid,hostname',
+            },
+        },
+    },
+});
+```
+
+**Result:** 
+- Development: Pretty-printed colorful logs (human-readable)
+- Production: Structured JSON logs (machine-parseable for log aggregation)
+
 ## Summary
 
 ✅ **Fixed:** Added `.js` extensions to all imports in email templates  
 ✅ **Updated:** TypeScript config to use `"moduleResolution": "bundler"`  
+✅ **Fixed:** Logger transport to skip pino-pretty in production  
 ✅ **Result:** Email service now starts successfully in production
 
-The issue was specific to ES modules requiring explicit file extensions. Development worked fine because `tsx` auto-resolves, but production Node.js needs the extensions explicitly stated.
+The issues were specific to ES modules requiring explicit file extensions, and production-only dependencies being incorrectly referenced.
 
 ## Related Documentation
 

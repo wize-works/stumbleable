@@ -15,7 +15,7 @@ const host = process.env.HOST || '0.0.0.0';
 const app = Fastify({
     logger: {
         level: process.env.LOG_LEVEL || 'info',
-        transport: {
+        transport: process.env.NODE_ENV === 'production' ? undefined : {
             target: 'pino-pretty',
             options: {
                 translateTime: 'HH:MM:ss Z',
