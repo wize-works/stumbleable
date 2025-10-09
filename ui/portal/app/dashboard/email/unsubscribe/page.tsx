@@ -77,7 +77,7 @@ export default function UnsubscribePage() {
                             <div className="space-y-3">
                                 {isLoaded && user ? (
                                     <>
-                                        <Link href="/email/preferences" className="btn btn-primary btn-block">
+                                        <Link href="/dashboard/email/preferences" className="btn btn-primary btn-block">
                                             <i className="fa-solid fa-duotone fa-sliders" />
                                             Manage Email Preferences
                                         </Link>
@@ -134,7 +134,7 @@ export default function UnsubscribePage() {
 
                             <div className="space-y-3">
                                 {isLoaded && user ? (
-                                    <Link href="/email/preferences" className="btn btn-primary btn-block">
+                                    <Link href="/dashboard/email/preferences" className="btn btn-primary btn-block">
                                         <i className="fa-solid fa-duotone fa-sliders" />
                                         Manage Email Preferences
                                     </Link>
@@ -183,7 +183,7 @@ export default function UnsubscribePage() {
                             </button>
 
                             {isLoaded && user && (
-                                <Link href="/email/preferences" className="btn btn-ghost btn-block">
+                                <Link href="/dashboard/email/preferences" className="btn btn-ghost btn-block">
                                     <i className="fa-solid fa-duotone fa-sliders" />
                                     Go to Email Preferences
                                 </Link>

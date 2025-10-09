@@ -179,7 +179,7 @@ export function Footer() {
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/data-export" className="text-sm text-base-content/60 hover:text-primary transition-colors">
+                                <Link href="/dashboard/data-export" className="text-sm text-base-content/60 hover:text-primary transition-colors">
                                     Export Your Data
                                 </Link>
                             </li>

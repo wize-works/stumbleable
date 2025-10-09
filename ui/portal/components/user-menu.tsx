@@ -154,7 +154,7 @@ export function UserMenu() {
                         <div className="border-t border-base-300 my-1"></div>
 
                         <Link
-                            href="/saved"
+                            href="/dashboard/saved"
                             className="flex items-center px-4 py-2 text-sm text-base-content hover:bg-base-200 transition-colors"
                             onClick={() => setIsOpen(false)}
                         >
@@ -163,7 +163,7 @@ export function UserMenu() {
                         </Link>
 
                         <Link
-                            href="/lists"
+                            href="/dashboard/lists"
                             className="flex items-center px-4 py-2 text-sm text-base-content hover:bg-base-200 transition-colors"
                             onClick={() => setIsOpen(false)}
                         >
@@ -172,7 +172,7 @@ export function UserMenu() {
                         </Link>
 
                         <Link
-                            href="/analytics"
+                            href="/dashboard/analytics"
                             className="flex items-center px-4 py-2 text-sm text-base-content hover:bg-base-200 transition-colors"
                             onClick={() => setIsOpen(false)}
                         >
@@ -183,11 +183,11 @@ export function UserMenu() {
                         <div className="border-t border-base-300 my-1"></div>
 
                         <Link
-                            href="/onboarding"
+                            href="/dashboard/preferences"
                             className="flex items-center px-4 py-2 text-sm text-base-content hover:bg-base-200 transition-colors"
                             onClick={() => setIsOpen(false)}
                         >
-                            <i className="fa-solid fa-duotone fa-user-cog w-4 h-4 mr-3 text-base-content/60"></i>
+                            <i className="fa-solid fa-duotone fa-sliders w-4 h-4 mr-3 text-base-content/60"></i>
                             Preferences
                         </Link>
 

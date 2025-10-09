@@ -26,6 +26,13 @@ export default function OnboardingPage() {
     const [wildness, setWildness] = useState(35);
     const [loading, setLoading] = useState(false);
     const [topicsLoading, setTopicsLoading] = useState(true);
+    const [topicsPage, setTopicsPage] = useState(0);
+
+    // Pagination settings: 3 rows per page
+    const TOPICS_PER_ROW_LG = 4; // Large screens (lg:grid-cols-4)
+    const TOPICS_PER_ROW_MD = 3; // Medium screens (md:grid-cols-3)
+    const ROWS_PER_PAGE = 3;
+    const TOPICS_PER_PAGE = TOPICS_PER_ROW_LG * ROWS_PER_PAGE; // 12 topics per page on large screens
 
     // Redirect to sign-in if not authenticated
     useEffect(() => {
@@ -198,22 +205,63 @@ export default function OnboardingPage() {
                                 Select topics that interest you. We'll use these to find amazing content you'll love.
                             </p>
 
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
-                                {topics.map((topic) => (
-                                    <button
-                                        key={topic.id}
-                                        onClick={() => handleTopicToggle(topic.id)}
-                                        className={`p-4 rounded-lg border-2 transition-all duration-200 ${selectedTopics.includes(topic.id)
-                                            ? 'border-primary bg-primary/10 text-primary'
-                                            : 'border-base-300 hover:border-primary/50'
-                                            }`}
-                                    >
-                                        <div className="font-medium capitalize">{topic.name}</div>
-                                        <div className="text-sm text-base-content/60 mt-1">
-                                            {topic.category}
+                            {/* Paginated Topics Grid */}
+                            <div className="mb-6">
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6 min-h-[280px]">
+                                    {topics
+                                        .slice(topicsPage * TOPICS_PER_PAGE, (topicsPage + 1) * TOPICS_PER_PAGE)
+                                        .map((topic) => (
+                                            <button
+                                                key={topic.id}
+                                                onClick={() => handleTopicToggle(topic.id)}
+                                                className={`p-4 rounded-lg border-2 transition-all duration-200 ${selectedTopics.includes(topic.id)
+                                                    ? 'border-primary bg-primary/10 text-primary'
+                                                    : 'border-base-300 hover:border-primary/50'
+                                                    }`}
+                                            >
+                                                <div className="font-medium capitalize">{topic.name}</div>
+                                                <div className="text-sm text-base-content/60 mt-1">
+                                                    {topic.category}
+                                                </div>
+                                            </button>
+                                        ))}
+                                </div>
+
+                                {/* Pagination Controls */}
+                                {topics.length > TOPICS_PER_PAGE && (
+                                    <div className="flex items-center justify-center gap-4">
+                                        <button
+                                            onClick={() => setTopicsPage(prev => Math.max(0, prev - 1))}
+                                            disabled={topicsPage === 0}
+                                            className="btn btn-circle btn-ghost"
+                                            aria-label="Previous page"
+                                        >
+                                            <i className="fa-solid fa-duotone fa-chevron-left"></i>
+                                        </button>
+
+                                        <div className="flex items-center gap-2">
+                                            {Array.from({ length: Math.ceil(topics.length / TOPICS_PER_PAGE) }).map((_, index) => (
+                                                <button
+                                                    key={index}
+                                                    onClick={() => setTopicsPage(index)}
+                                                    className={`btn btn-circle ${topicsPage === index ? 'btn-primary' : 'btn-ghost'}`}
+                                                    aria-label={`Go to page ${index + 1}`}
+                                                >
+                                                    {index + 1}
+                                                </button>
+                                            ))}
                                         </div>
-                                    </button>
-                                ))}
+
+                                        <button
+                                            onClick={() => setTopicsPage(prev => Math.min(Math.ceil(topics.length / TOPICS_PER_PAGE) - 1, prev + 1))}
+                                            disabled={topicsPage >= Math.ceil(topics.length / TOPICS_PER_PAGE) - 1}
+                                            className="btn btn-circle btn-ghost"
+                                            aria-label="Next page"
+                                        >
+                                            <i className="fa-solid fa-duotone fa-chevron-right"></i>
+                                        </button>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="flex justify-between items-center">

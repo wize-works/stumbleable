@@ -62,11 +62,11 @@ export default async function Dashboard() {
                                     <i className="fa-solid fa-duotone fa-shuffle"></i>
                                     Start Stumbling
                                 </a>
-                                <a href="/saved" className="btn btn-ghost btn-block justify-start">
+                                <a href="/dashboard/saved" className="btn btn-ghost btn-block justify-start">
                                     <i className="fa-solid fa-duotone fa-bookmark"></i>
                                     View Saved Content
                                 </a>
-                                <a href="/onboarding" className="btn btn-ghost btn-block justify-start">
+                                <a href="/dashboard/preferences" className="btn btn-ghost btn-block justify-start">
                                     <i className="fa-solid fa-duotone fa-sliders"></i>
                                     Update Preferences
                                 </a>
@@ -85,7 +85,7 @@ export default async function Dashboard() {
                                 Manage your personal data and privacy settings. You have full control over your information.
                             </p>
                             <div className="grid md:grid-cols-4 gap-4">
-                                <a href="/email/preferences" className="card bg-base-100 hover:bg-base-300 transition-colors">
+                                <a href="/dashboard/email/preferences" className="card bg-base-100 hover:bg-base-300 transition-colors">
                                     <div className="card-body">
                                         <div className="flex items-center gap-3 mb-2">
                                             <div className="w-12 h-12 rounded-full bg-warning/20 flex items-center justify-center">
@@ -105,7 +105,7 @@ export default async function Dashboard() {
                                     </div>
                                 </a>
 
-                                <a href="/data-export" className="card bg-base-100 hover:bg-base-300 transition-colors">
+                                <a href="/dashboard/data-export" className="card bg-base-100 hover:bg-base-300 transition-colors">
                                     <div className="card-body">
                                         <div className="flex items-center gap-3 mb-2">
                                             <div className="w-12 h-12 rounded-full bg-info/20 flex items-center justify-center">

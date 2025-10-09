@@ -139,7 +139,7 @@ export default function ListDetailPage() {
             <div className="container mx-auto px-4 py-8 max-w-6xl">
                 {/* Header */}
                 <div className="mb-8">
-                    <Link href="/lists" className="btn btn-ghost btn-sm mb-4">
+                    <Link href="/dashboard/lists" className="btn btn-ghost btn-sm mb-4">
                         <i className="fa-solid fa-duotone fa-arrow-left"></i>
                         Back to Lists
                     </Link>

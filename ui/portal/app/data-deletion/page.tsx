@@ -178,7 +178,7 @@ export default function DataDeletionPage() {
                                         </p>
                                     </div>
                                 </div>
-                                <a href="/data-export" className="card bg-base-100 hover:bg-base-200 transition-colors">
+                                <a href="/dashboard/data-export" className="card bg-base-100 hover:bg-base-200 transition-colors">
                                     <div className="card-body">
                                         <h3 className="card-title text-lg">
                                             <i className="fa-solid fa-duotone fa-download text-info"></i>
