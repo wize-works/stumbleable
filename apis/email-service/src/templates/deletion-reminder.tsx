@@ -1,8 +1,8 @@
 import { Button, Heading, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import type { DeletionReminderEmailProps } from '../types';
-import { EmailLayout } from './components/EmailLayout';
-import { ClockIcon, HeartIcon, LightbulbIcon, SaveIcon, SettingsIcon, UserIcon, WarningIcon } from './components/Icons';
+import type { DeletionReminderEmailProps } from '../types.js';
+import { EmailLayout } from './components/EmailLayout.js';
+import { ClockIcon, HeartIcon, LightbulbIcon, SaveIcon, SettingsIcon, UserIcon, WarningIcon } from './components/Icons.js';
 
 export function DeletionReminderEmail({
     daysRemaining,

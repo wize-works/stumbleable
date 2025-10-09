@@ -1,8 +1,8 @@
 import { Button, Heading, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import type { DeletionCancelledEmailProps } from '../types';
-import { EmailLayout } from './components/EmailLayout';
-import { BookmarkIcon, CheckIcon, CommentIcon, FireIcon, LightbulbIcon, PartyIcon, RocketIcon, TargetIcon } from './components/Icons';
+import type { DeletionCancelledEmailProps } from '../types.js';
+import { EmailLayout } from './components/EmailLayout.js';
+import { BookmarkIcon, CheckIcon, CommentIcon, FireIcon, LightbulbIcon, PartyIcon, RocketIcon, TargetIcon } from './components/Icons.js';
 
 export function DeletionCancelledEmail({
     cancelledDate,

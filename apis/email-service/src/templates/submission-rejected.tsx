@@ -1,8 +1,8 @@
 import { Button, Heading, Hr, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import type { SubmissionEmailProps } from '../types';
-import { EmailLayout } from './components/EmailLayout';
-import { BanIcon, BookIcon, ClipboardIcon, LinkIcon, RotateIcon, SparklesIcon, TrendingIcon } from './components/Icons';
+import type { SubmissionEmailProps } from '../types.js';
+import { EmailLayout } from './components/EmailLayout.js';
+import { BanIcon, BookIcon, ClipboardIcon, LinkIcon, RotateIcon, SparklesIcon, TrendingIcon } from './components/Icons.js';
 
 export function SubmissionRejectedEmail({
     submissionUrl,

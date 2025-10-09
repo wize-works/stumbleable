@@ -1,8 +1,8 @@
 import { Button, Heading, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import type { WelcomeEmailProps } from '../types';
-import { EmailLayout } from './components/EmailLayout';
-import { LightbulbIcon, PartyIcon } from './components/Icons';
+import type { WelcomeEmailProps } from '../types.js';
+import { EmailLayout } from './components/EmailLayout.js';
+import { LightbulbIcon, PartyIcon } from './components/Icons.js';
 
 export function WelcomeEmail({
     firstName = 'there',

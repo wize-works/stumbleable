@@ -1,7 +1,7 @@
 import { Button, Heading, Hr, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import type { WeeklyNewEmailProps } from '../types';
-import { EmailLayout } from './components/EmailLayout';
+import type { WeeklyNewEmailProps } from '../types.js';
+import { EmailLayout } from './components/EmailLayout.js';
 
 export function WeeklyNewEmail({
     discoveries,

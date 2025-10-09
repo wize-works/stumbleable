@@ -1,7 +1,7 @@
 import { Heading, Hr, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import type { DeletionCompleteEmailProps } from '../types';
-import { EmailLayout } from './components/EmailLayout';
+import type { DeletionCompleteEmailProps } from '../types.js';
+import { EmailLayout } from './components/EmailLayout.js';
 
 export function DeletionCompleteEmail({
     deletionDate,

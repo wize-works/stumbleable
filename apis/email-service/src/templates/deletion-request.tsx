@@ -1,8 +1,8 @@
 import { Button, Heading, Hr, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import type { DeletionRequestEmailProps } from '../types';
-import { EmailLayout } from './components/EmailLayout';
-import { CalendarIcon, InboxIcon, LockIcon, TrashIcon, WarningIcon } from './components/Icons';
+import type { DeletionRequestEmailProps } from '../types.js';
+import { EmailLayout } from './components/EmailLayout.js';
+import { CalendarIcon, InboxIcon, LockIcon, TrashIcon, WarningIcon } from './components/Icons.js';
 
 export function DeletionRequestEmail({
     scheduledDeletionDate,

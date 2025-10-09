@@ -1,7 +1,7 @@
 import { Button, Heading, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import type { SubmissionEmailProps } from '../types';
-import { EmailLayout } from './components/EmailLayout';
+import type { SubmissionEmailProps } from '../types.js';
+import { EmailLayout } from './components/EmailLayout.js';
 
 export function SubmissionReceivedEmail({
     submissionUrl,

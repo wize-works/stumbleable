@@ -1,8 +1,8 @@
 import { Button, Heading, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import type { SubmissionEmailProps } from '../types';
-import { EmailLayout } from './components/EmailLayout';
-import { ChartIcon, CommentIcon, GlobeIcon, LightbulbIcon, PartyIcon, RocketIcon, TargetIcon, TrendingIcon } from './components/Icons';
+import type { SubmissionEmailProps } from '../types.js';
+import { EmailLayout } from './components/EmailLayout.js';
+import { ChartIcon, CommentIcon, GlobeIcon, LightbulbIcon, PartyIcon, RocketIcon, TargetIcon, TrendingIcon } from './components/Icons.js';
 
 export function SubmissionApprovedEmail({
     submissionUrl,
