@@ -245,6 +245,161 @@ export const enhanceRoute: FastifyPluginAsync = async (fastify) => {
     });
 
     /**
+     * POST /enhance/auto
+     * Automatically enhance a batch of unscraped content (for scheduled jobs)
+     * This endpoint is designed to be called by the scheduler service
+     */
+    fastify.post('/enhance/auto', async (request: FastifyRequest, reply: FastifyReply) => {
+        try {
+            const { jobName, config, executionId } = request.body as any;
+            const batchSize = config?.batchSize || 20; // Default to 20 items per run
+
+            fastify.log.info(`🔄 Auto-enhance job started (execution: ${executionId})`);
+
+            // Get content that has never been scraped
+            const { data: contentRecords, error: fetchError } = await supabase
+                .from('content')
+                .select('id, url')
+                .is('metadata_scraped_at', null)
+                .order('created_at', { ascending: false }) // Process newest first
+                .limit(batchSize);
+
+            if (fetchError) throw fetchError;
+
+            if (!contentRecords || contentRecords.length === 0) {
+                fastify.log.info('✅ All content has been enhanced');
+                return reply.send({
+                    success: true,
+                    itemsProcessed: 0,
+                    itemsSucceeded: 0,
+                    itemsFailed: 0,
+                    metadata: {
+                        message: 'All content already enhanced'
+                    }
+                });
+            }
+
+            fastify.log.info(`📊 Processing ${contentRecords.length} unscraped items`);
+
+            let succeeded = 0;
+            let failed = 0;
+            const errors: string[] = [];
+
+            for (const record of contentRecords) {
+                try {
+                    // Get current record to check which fields are missing
+                    const { data: currentRecord, error: currentError } = await supabase
+                        .from('content')
+                        .select('image_url, author, content_text, word_count, title, description, topics')
+                        .eq('id', record.id)
+                        .single();
+
+                    if (currentError) throw currentError;
+
+                    const metadata = await extractMetadata(record.url);
+
+                    if (Object.keys(metadata).length > 0) {
+                        // Build update object with only missing fields
+                        const fieldsToUpdate: Record<string, any> = {};
+
+                        if (!currentRecord.image_url && metadata.image_url) {
+                            fieldsToUpdate.image_url = metadata.image_url;
+                        }
+                        if (!currentRecord.author && metadata.author) {
+                            fieldsToUpdate.author = metadata.author;
+                        }
+                        if (!currentRecord.content_text && metadata.content_text) {
+                            fieldsToUpdate.content_text = metadata.content_text;
+                        }
+                        if (!currentRecord.word_count && metadata.word_count) {
+                            fieldsToUpdate.word_count = metadata.word_count;
+                        }
+                        if ((!currentRecord.title || currentRecord.title.length < 10) && metadata.title) {
+                            fieldsToUpdate.title = metadata.title;
+                        }
+                        if ((!currentRecord.description || currentRecord.description.length < 20) && metadata.description) {
+                            fieldsToUpdate.description = metadata.description;
+                        }
+                        if (metadata.topics && metadata.topics.length > 0) {
+                            const existingTopics = currentRecord.topics || [];
+                            const uniqueTopics = [...new Set([...existingTopics, ...metadata.topics])];
+                            fieldsToUpdate.topics = uniqueTopics;
+                        }
+
+                        // Always mark as scraped
+                        fieldsToUpdate.metadata_scraped_at = new Date().toISOString();
+
+                        if (Object.keys(fieldsToUpdate).length > 1) { // More than just scraped_at
+                            const { error: updateError } = await supabase
+                                .from('content')
+                                .update(fieldsToUpdate)
+                                .eq('id', record.id);
+
+                            if (updateError) throw updateError;
+                            succeeded++;
+                        } else {
+                            // Just mark as scraped
+                            const { error: markError } = await supabase
+                                .from('content')
+                                .update({ metadata_scraped_at: new Date().toISOString() })
+                                .eq('id', record.id);
+
+                            if (markError) throw markError;
+                            succeeded++;
+                        }
+                    } else {
+                        // No metadata found, but still mark as scraped
+                        const { error: markError } = await supabase
+                            .from('content')
+                            .update({ metadata_scraped_at: new Date().toISOString() })
+                            .eq('id', record.id);
+
+                        if (markError) throw markError;
+                        succeeded++;
+                    }
+
+                    fastify.log.info(`✓ Enhanced ${record.url}`);
+
+                } catch (error: any) {
+                    failed++;
+                    const errorMsg = `${record.url}: ${error.message}`;
+                    errors.push(errorMsg);
+                    fastify.log.error(`✗ Failed to enhance ${record.url}:`, error);
+                }
+            }
+
+            // Get remaining count
+            const { count: remainingCount } = await supabase
+                .from('content')
+                .select('*', { count: 'exact', head: true })
+                .is('metadata_scraped_at', null);
+
+            fastify.log.info(`✅ Auto-enhance complete: ${succeeded} succeeded, ${failed} failed, ${remainingCount || 0} remaining`);
+
+            return reply.send({
+                success: true,
+                itemsProcessed: contentRecords.length,
+                itemsSucceeded: succeeded,
+                itemsFailed: failed,
+                metadata: {
+                    remainingCount: remainingCount || 0,
+                    errors: errors.slice(0, 10), // Only include first 10 errors
+                }
+            });
+
+        } catch (error: any) {
+            fastify.log.error('Error in auto-enhance endpoint:', error);
+            return reply.status(500).send({
+                success: false,
+                itemsProcessed: 0,
+                itemsSucceeded: 0,
+                itemsFailed: 0,
+                error: error.message
+            });
+        }
+    });
+
+    /**
      * GET /enhance/status
      * Get statistics about content that needs enhancement
      */

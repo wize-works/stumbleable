@@ -445,46 +445,87 @@ export default function CrawlerManagement() {
                 <div className="card bg-base-100 shadow-xl">
                     <div className="card-body">
                         <div className="flex justify-between items-center mb-4">
-                            <div>
-                                <h2 className="card-title">Content Metadata Enhancement</h2>
-                                <p className="text-base-content/60 text-sm mt-1">
-                                    Enrich crawled content with missing metadata (images, authors, descriptions)
-                                </p>
+                            <div className="flex-1">
+                                <div className='flex flex-col md:flex-row md:items-center md:gap-4 justify-between'>
+                                    <div>
+                                        <h2 className="card-title">Content Metadata Enhancement</h2>
+                                        <p className="text-base-content/60 text-sm mt-1">
+                                            Enrich crawled content with missing metadata (images, authors, descriptions)
+                                        </p>
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        <div className="text-xs text-base-content/60 text-center md:text-right mb-1">Manual Enhancement</div>
+                                        <div className='flex flex-row gap-2'>
+                                            <button
+                                                onClick={() => handleEnhanceMetadata(10)}
+                                                disabled={enhancementRunning || enhancementStatus.needs_enhancement === 0}
+                                                className="btn btn-primary btn-sm"
+                                            >
+                                                {enhancementRunning ? (
+                                                    <>
+                                                        <span className="loading loading-spinner loading-xs"></span>
+                                                        Processing...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <i className="fa-solid fa-duotone fa-wand-magic-sparkles mr-1" />
+                                                        Enhance 10
+                                                    </>
+                                                )}
+                                            </button>
+                                            <button
+                                                onClick={() => handleEnhanceMetadata(50)}
+                                                disabled={enhancementRunning || enhancementStatus.needs_enhancement === 0}
+                                                className="btn btn-primary btn-sm"
+                                            >
+                                                <i className="fa-solid fa-duotone fa-wand-magic-sparkles mr-1" />
+                                                Enhance 50
+                                            </button>
+                                            <button
+                                                onClick={() => handleEnhanceMetadata(100)}
+                                                disabled={enhancementRunning || enhancementStatus.needs_enhancement === 0}
+                                                className="btn btn-primary btn-sm"
+                                            >
+                                                <i className="fa-solid fa-duotone fa-wand-magic-sparkles mr-1" />
+                                                Enhance 100
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="alert alert-info mt-3">
+                                    <i className="fa-solid fa-duotone fa-robot text-info" />
+                                    <div className="flex-1">
+                                        <p className="font-semibold">🤖 Automatic Enhancement Active</p>
+                                        <p className="text-sm">
+                                            The scheduler processes 20 items every 30 minutes automatically.
+                                            At {enhancementStatus.needs_enhancement} items remaining, completion in approximately{' '}
+                                            <span className="font-semibold">
+                                                {Math.ceil((enhancementStatus.needs_enhancement / 20) * 0.5)} hours
+                                            </span>.
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => handleEnhanceMetadata(10)}
-                                    disabled={enhancementRunning || enhancementStatus.needs_enhancement === 0}
-                                    className="btn btn-primary btn-sm"
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="mb-6">
+                            <div className="flex justify-between text-sm mb-2">
+                                <span className="font-semibold">Enhancement Progress</span>
+                                <span className="text-base-content/60">
+                                    {((enhancementStatus.already_scraped / enhancementStatus.total_content || 0) * 100).toFixed(1)}% Complete
+                                </span>
+                            </div>
+                            <div className="w-full bg-base-300 rounded-full h-4 overflow-hidden">
+                                <div
+                                    className="bg-gradient-to-r from-success to-primary h-full transition-all duration-500 flex items-center justify-center text-xs text-white font-semibold"
+                                    style={{
+                                        width: `${((enhancementStatus.already_scraped / enhancementStatus.total_content || 0) * 100).toFixed(1)}%`,
+                                        minWidth: '30px'
+                                    }}
                                 >
-                                    {enhancementRunning ? (
-                                        <>
-                                            <span className="loading loading-spinner loading-xs"></span>
-                                            Processing...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <i className="fa-solid fa-duotone fa-wand-magic-sparkles mr-1" />
-                                            Enhance 10
-                                        </>
-                                    )}
-                                </button>
-                                <button
-                                    onClick={() => handleEnhanceMetadata(50)}
-                                    disabled={enhancementRunning || enhancementStatus.needs_enhancement === 0}
-                                    className="btn btn-primary btn-sm"
-                                >
-                                    <i className="fa-solid fa-duotone fa-wand-magic-sparkles mr-1" />
-                                    Enhance 50
-                                </button>
-                                <button
-                                    onClick={() => handleEnhanceMetadata(100)}
-                                    disabled={enhancementRunning || enhancementStatus.needs_enhancement === 0}
-                                    className="btn btn-primary btn-sm"
-                                >
-                                    <i className="fa-solid fa-duotone fa-wand-magic-sparkles mr-1" />
-                                    Enhance 100
-                                </button>
+                                    {enhancementStatus.already_scraped}/{enhancementStatus.total_content}
+                                </div>
                             </div>
                         </div>
 
