@@ -19,6 +19,7 @@ interface ExtractedMetadata {
     word_count?: number;
     content_text?: string;
     topics?: string[];
+    allows_framing?: boolean;
 }
 
 interface ContentRecord {
@@ -136,6 +137,10 @@ export const enhanceRoute: FastifyPluginAsync = async (fastify) => {
                             if (newTopics.length > 0) {
                                 fieldsToUpdate.topics = [...existingTopics, ...newTopics];
                             }
+                        }
+                        // Update allows_framing if detected (important for iframe compatibility)
+                        if (metadata.allows_framing !== undefined) {
+                            fieldsToUpdate.allows_framing = metadata.allows_framing;
                         }
 
                         // Always mark as scraped, even if no new fields were found
@@ -338,11 +343,46 @@ async function extractMetadata(url: string): Promise<ExtractedMetadata> {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
+        // Check headers for iframe blocking policies
+        const xFrameOptions = response.headers.get('x-frame-options')?.toLowerCase();
+        const csp = response.headers.get('content-security-policy')?.toLowerCase();
+
+        // Determine if framing is allowed
+        let allowsFraming = true; // Assume allowed unless restricted
+
+        // Check X-Frame-Options header
+        if (xFrameOptions) {
+            if (xFrameOptions === 'deny' || xFrameOptions === 'sameorigin') {
+                allowsFraming = false;
+                console.log(`[${url}] X-Frame-Options: ${xFrameOptions} - blocks framing`);
+            }
+        }
+
+        // Check Content-Security-Policy frame-ancestors directive
+        if (csp && csp.includes('frame-ancestors')) {
+            // Extract frame-ancestors value
+            const frameAncestorsMatch = csp.match(/frame-ancestors\s+([^;]+)/);
+            if (frameAncestorsMatch) {
+                const value = frameAncestorsMatch[1].trim();
+                // 'none' or 'self' blocks framing from external sites
+                if (value === "'none'" || value === "'self'") {
+                    allowsFraming = false;
+                    console.log(`[${url}] CSP frame-ancestors: ${value} - blocks framing`);
+                }
+            }
+        }
+
         const html = await response.text();
         const $ = cheerio.load(html);
 
-        const metadata: ExtractedMetadata = {};
+        const metadata: ExtractedMetadata = {
+            allows_framing: allowsFraming
+        };
         const extractionLog: string[] = [];
+
+        if (!allowsFraming) {
+            extractionLog.push('iframe:blocked');
+        }
 
         // ========================================
         // TITLE EXTRACTION (Cascading Fallbacks)

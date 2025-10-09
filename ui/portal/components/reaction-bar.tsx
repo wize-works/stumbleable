@@ -41,7 +41,7 @@ export function ReactionBar({
 }: ReactionBarProps) {
     if (floating) {
         return (
-            <div className={cn("fixed bottom-4 sm:bottom-6 left-1/2 transform -translate-x-1/2 z-40", className)}>
+            <div className={cn("fixed bottom-4 sm:bottom-6 left-1/2 transform -translate-x-1/2 z-60", className)}>
                 <div className="flex items-center gap-2 sm:gap-3 bg-base-100/95 backdrop-blur-lg rounded-full px-4 sm:px-6 py-2 sm:py-3 shadow-2xl border border-base-300">
 
                     <button

@@ -34,6 +34,7 @@ export default function StumblePage() {
     const [discoveryReason, setDiscoveryReason] = useState<string>('');
     const [iframeError, setIframeError] = useState(false);
     const [showDiscoveryModal, setShowDiscoveryModal] = useState(false);
+    const [modalDismissedForDiscovery, setModalDismissedForDiscovery] = useState<string | null>(null);
     const iframeLoadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const iframeLoadedRef = useRef(false);
     const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -160,6 +161,24 @@ export default function StumblePage() {
         }
     }, [currentDiscovery]);
 
+    // Auto-open discovery card modal when iframe error is detected
+    // But respect user's choice if they manually closed it for this discovery
+    useEffect(() => {
+        if (iframeError && currentDiscovery && !showDiscoveryModal) {
+            // Check if user has dismissed modal for this specific discovery
+            if (modalDismissedForDiscovery === currentDiscovery.id) {
+                return; // User closed it, don't reopen
+            }
+
+            // Small delay to let the flash animation be visible first
+            const timeoutId = setTimeout(() => {
+                setShowDiscoveryModal(true);
+            }, 800); // Show modal after flash is visible
+
+            return () => clearTimeout(timeoutId);
+        }
+    }, [iframeError, currentDiscovery, showDiscoveryModal, modalDismissedForDiscovery]);
+
     // Swipe gesture support
     const swipeRef = useSwipe({
         onSwipeLeft: () => !loading && currentDiscovery && handleReaction('down'), // Skip
@@ -230,6 +249,9 @@ export default function StumblePage() {
             setCurrentDiscovery(response.discovery);
             setDiscoveryReason(response.reason);
             seenIdsRef.current.add(response.discovery.id);
+
+            // Reset modal dismissal state for new discovery
+            setModalDismissedForDiscovery(null);
 
             // Update URL with content ID for sharing (shallow routing - no page reload)
             router.push(`/stumble?id=${response.discovery.id}`, { scroll: false });
@@ -323,6 +345,9 @@ export default function StumblePage() {
                     setDiscoveryReason(response.reason);
                     seenIdsRef.current.add(response.discovery.id);
 
+                    // Reset modal dismissal state for new discovery
+                    setModalDismissedForDiscovery(null);
+
                     // Start tracking time on page
                     discoveryViewStartTimeRef.current = Date.now();
 
@@ -331,6 +356,17 @@ export default function StumblePage() {
                         await InteractionAPI.recordFeedback(response.discovery.id, 'view', token);
                     } catch (error) {
                         console.error('Error recording view:', error);
+                    }
+
+                    // Check if we know this content blocks iframe embedding from database
+                    if (response.discovery.allowsFraming === false) {
+                        console.log('[Stumble] Content known to block iframes - showing warning:', response.discovery.domain);
+                        setIframeError(true);
+                        iframeLoadedRef.current = false;
+                    } else {
+                        // Reset iframe error state for new discovery ONLY if not known to block
+                        setIframeError(false);
+                        iframeLoadedRef.current = false;
                     }
 
                     // Track discovery for session analytics
@@ -370,6 +406,14 @@ export default function StumblePage() {
             }
         };
     }, [isLoaded, isSignedIn, user?.id, userDataLoaded, initialDiscoveryLoaded, searchParams]);
+
+    const handleCloseModal = useCallback(() => {
+        if (currentDiscovery) {
+            // Track that user dismissed the modal for this discovery
+            setModalDismissedForDiscovery(currentDiscovery.id);
+        }
+        setShowDiscoveryModal(false);
+    }, [currentDiscovery]);
 
     const handleReaction = async (action: Interaction['action']) => {
         if (!currentDiscovery) return;
@@ -603,34 +647,40 @@ export default function StumblePage() {
                 )}
             </div>
 
-            {/* Discovery Card Modal */}
+            {/* Discovery Card Modal - Enhanced styling */}
             {showDiscoveryModal && currentDiscovery && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => setShowDiscoveryModal(false)}>
-                    <div className="bg-base-100 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
-                        <div className="sticky top-0 bg-base-100 border-b border-base-300 p-4 flex items-center justify-between z-10">
-                            <h3 className="text-xl font-bold">Discovery Details</h3>
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in"
+                    onClick={handleCloseModal}
+                >
+                    <div
+                        className="bg-base-100 rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-auto border-4 border-primary/10 animate-slide-up"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="sticky top-0 bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 backdrop-blur-xl border-b-2 border-primary/10 p-5 flex items-center justify-between z-10 rounded-t-3xl">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center shadow-lg">
+                                    <i className="fa-solid fa-duotone fa-sparkles text-white text-lg"></i>
+                                </div>
+                                <h3 className="text-2xl font-bold">
+                                    Discovery Details
+                                </h3>
+                            </div>
                             <button
-                                onClick={() => setShowDiscoveryModal(false)}
-                                className="btn btn-ghost btn-circle btn-sm"
+                                onClick={handleCloseModal}
+                                className="btn btn-ghost btn-circle hover:bg-error/10 hover:text-error transition-all duration-200"
+                                aria-label="Close modal"
                             >
-                                <i className="fa-solid fa-duotone fa-times text-xl"></i>
+                                <i className="fa-solid fa-duotone fa-times text-2xl"></i>
                             </button>
                         </div>
-                        <div className="p-6">
-                            {iframeError && (
-                                <div className="mb-4 p-4 bg-warning/10 border border-warning/30 rounded-lg">
-                                    <div className="flex items-center gap-2 text-warning">
-                                        <i className="fa-solid fa-duotone fa-triangle-exclamation text-xl"></i>
-                                        <p className="text-sm font-medium">
-                                            This site may not be displaying correctly in the frame. Use the details below or open directly.
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
+                        <div className="p-4 sm:p-6">
                             <DiscoveryCard
                                 discovery={currentDiscovery}
                                 reason={discoveryReason}
                                 showTrending={false}
+                                hasIframeError={iframeError}
+                                isInModal={true}
                             />
                         </div>
                     </div>
