@@ -37,12 +37,46 @@ export function DeletionCompleteEmail({
 
             <Section style={confirmBox}>
                 <Text style={confirmTitle}>What Was Deleted:</Text>
-                <Section style={confirmList}>
-                    <ConfirmItem text="Your profile and account information" />
-                    <ConfirmItem text="All saved discoveries and collections" />
-                    <ConfirmItem text="Your likes, preferences, and interaction history" />
-                    <ConfirmItem text="Settings and customizations" />
-                </Section>
+                <table width="100%" cellPadding="0" cellSpacing="0" style={confirmItem}>
+                    <tr>
+                        <td width="24" style={confirmIconCell}>
+                            <Text style={checkmark}>✓</Text>
+                        </td>
+                        <td>
+                            <Text style={confirmItemText}>Your profile and account information</Text>
+                        </td>
+                    </tr>
+                </table>
+                <table width="100%" cellPadding="0" cellSpacing="0" style={confirmItem}>
+                    <tr>
+                        <td width="24" style={confirmIconCell}>
+                            <Text style={checkmark}>✓</Text>
+                        </td>
+                        <td>
+                            <Text style={confirmItemText}>All saved discoveries and collections</Text>
+                        </td>
+                    </tr>
+                </table>
+                <table width="100%" cellPadding="0" cellSpacing="0" style={confirmItem}>
+                    <tr>
+                        <td width="24" style={confirmIconCell}>
+                            <Text style={checkmark}>✓</Text>
+                        </td>
+                        <td>
+                            <Text style={confirmItemText}>Your likes, preferences, and interaction history</Text>
+                        </td>
+                    </tr>
+                </table>
+                <table width="100%" cellPadding="0" cellSpacing="0" style={confirmItem}>
+                    <tr>
+                        <td width="24" style={confirmIconCell}>
+                            <Text style={checkmark}>✓</Text>
+                        </td>
+                        <td>
+                            <Text style={confirmItemText}>Settings and customizations</Text>
+                        </td>
+                    </tr>
+                </table>
             </Section>
 
             <Heading style={h2}>Your Data Privacy</Heading>
@@ -109,25 +143,6 @@ export function DeletionCompleteEmail({
     );
 }
 
-interface ConfirmItemProps {
-    text: string;
-}
-
-function ConfirmItem({ text }: ConfirmItemProps) {
-    return (
-        <table width="100%" cellPadding="0" cellSpacing="0" style={{ marginBottom: '8px' }}>
-            <tr>
-                <td width="24" style={{ verticalAlign: 'top' as const }}>
-                    <Text style={checkmark}>✓</Text>
-                </td>
-                <td>
-                    <Text style={confirmItemText}>{text}</Text>
-                </td>
-            </tr>
-        </table>
-    );
-}
-
 // Styles
 const header = {
     textAlign: 'center' as const,
@@ -178,10 +193,6 @@ const confirmTitle = {
     margin: '0 0 12px 0',
 };
 
-const confirmList = {
-    margin: 0,
-};
-
 const checkmark = {
     color: '#10b981',
     fontSize: '16px',
@@ -195,6 +206,9 @@ const confirmItemText = {
     margin: 0,
     lineHeight: '1.5',
 };
+
+const confirmItem = { marginBottom: '8px' };
+const confirmIconCell = { verticalAlign: 'top' as const };
 
 const retentionBox = {
     backgroundColor: '#fffbeb',

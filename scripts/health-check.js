@@ -14,6 +14,7 @@ const services = [
     { name: 'Interaction Service', url: 'http://127.0.0.1:7002/health', type: 'api' },
     { name: 'User Service', url: 'http://127.0.0.1:7003/health', type: 'api' },
     { name: 'Crawler Service', url: 'http://127.0.0.1:7004/health', type: 'api' },
+    { name: 'Email Service', url: 'http://127.0.0.1:7006/health', type: 'api' },
 ];
 
 function checkService(service) {

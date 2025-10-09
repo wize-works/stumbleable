@@ -2,6 +2,7 @@ import { Button, Heading, Section, Text } from '@react-email/components';
 import * as React from 'react';
 import type { WelcomeEmailProps } from '../types';
 import { EmailLayout } from './components/EmailLayout';
+import { LightbulbIcon, PartyIcon } from './components/Icons';
 
 export function WelcomeEmail({
     firstName = 'there',
@@ -15,7 +16,9 @@ export function WelcomeEmail({
             previewText={`Welcome to Stumbleable, ${firstName}! Start discovering amazing content.`}
             unsubscribeUrl={unsubscribeUrl}
         >
-            <Heading style={h1}>Welcome to Stumbleable! 🎉</Heading>
+            <Heading style={h1}>
+                Welcome to Stumbleable! <PartyIcon size={32} style={{ marginLeft: '8px' }} />
+            </Heading>
 
             <Text style={text}>Hi {firstName},</Text>
 
@@ -47,24 +50,26 @@ export function WelcomeEmail({
 
             <Text style={text}>
                 <strong>1. Hit the Stumble Button</strong> - We'll show you something interesting
-                <br />
+            </Text>
+            <Text style={text}>
                 <strong>2. React</strong> - Like it? Save it? Share it? Let us know!
-                <br />
-                <strong>3. Adjust Your Wildness</strong> - Control how far you wander from your
-                interests
-                <br />
+            </Text>
+            <Text style={text}>
+                <strong>3. Adjust Your Wildness</strong> - Control how far you wander from your interests
+            </Text>
+            <Text style={text}>
                 <strong>4. Discover More</strong> - Keep stumbling to find your next favorite site
             </Text>
 
             <Section style={box}>
                 <Text style={boxText}>
-                    💡 <strong>Pro Tip:</strong> Use the keyboard shortcuts for faster stumbling:
+                    <LightbulbIcon size={18} style={{ marginRight: '8px' }} /> <strong>Pro Tip:</strong> Use the keyboard shortcuts for faster stumbling:
                     <br />
-                    <code>Space</code> = Next discovery
+                    <strong style={codeStyle}>Space</strong> = Next discovery
                     <br />
-                    <code>↑</code> = Like • <code>↓</code> = Skip
+                    <strong style={codeStyle}>↑</strong> = Like • <strong style={codeStyle}>↓</strong> = Skip
                     <br />
-                    <code>S</code> = Save • <code>Shift+S</code> = Share
+                    <strong style={codeStyle}>S</strong> = Save • <strong style={codeStyle}>Shift+S</strong> = Share
                 </Text>
             </Section>
 
@@ -82,7 +87,8 @@ export function WelcomeEmail({
 
             <Text style={text}>
                 Happy stumbling!
-                <br />
+            </Text>
+            <Text style={text}>
                 The Stumbleable Team
             </Text>
         </EmailLayout>
@@ -118,7 +124,7 @@ const buttonContainer = {
 };
 
 const button = {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#FF4D6D', // Brand primary color (Punchy Pink-Red)
     borderRadius: '8px',
     color: '#fff',
     fontSize: '16px',
@@ -130,7 +136,7 @@ const button = {
 };
 
 const box = {
-    backgroundColor: '#f3f4f6',
+    backgroundColor: '#F6F0E9', // Brand base-200 (cream tone)
     borderRadius: '8px',
     padding: '20px',
     margin: '24px 0',
@@ -144,8 +150,17 @@ const boxText = {
 };
 
 const link = {
-    color: '#6366f1',
+    color: '#FF4D6D', // Brand primary color (Punchy Pink-Red)
     textDecoration: 'underline',
+};
+
+const codeStyle = {
+    backgroundColor: '#e5e7eb',
+    padding: '2px 6px',
+    borderRadius: '4px',
+    fontFamily: 'monospace',
+    fontSize: '13px',
+    fontWeight: 'bold',
 };
 
 export default WelcomeEmail;

@@ -11,7 +11,7 @@ if (!resendApiKey) {
 
 export const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
-export const EMAIL_FROM_ADDRESS = process.env.EMAIL_FROM_ADDRESS || 'noreply@stumbleable.com';
+export const EMAIL_FROM_ADDRESS = process.env.EMAIL_FROM_ADDRESS || 'noreply@updates.stumbleable.com';
 export const EMAIL_FROM_NAME = process.env.EMAIL_FROM_NAME || 'Stumbleable';
 export const EMAIL_FROM = `${EMAIL_FROM_NAME} <${EMAIL_FROM_ADDRESS}>`;
 

@@ -2,6 +2,7 @@ import { Button, Heading, Section, Text } from '@react-email/components';
 import * as React from 'react';
 import type { DeletionReminderEmailProps } from '../types';
 import { EmailLayout } from './components/EmailLayout';
+import { ClockIcon, HeartIcon, LightbulbIcon, SaveIcon, SettingsIcon, UserIcon, WarningIcon } from './components/Icons';
 
 export function DeletionReminderEmail({
     daysRemaining,
@@ -21,16 +22,16 @@ export function DeletionReminderEmail({
     });
 
     const isUrgent = daysRemaining === 1;
-    const emoji = isUrgent ? '⚠️' : '⏰';
     const urgencyLevel = isUrgent ? 'Tomorrow' : `${daysRemaining} Days`;
+    const IconComponent = isUrgent ? WarningIcon : ClockIcon;
 
     return (
         <EmailLayout
-            previewText={`${emoji} Your account will be deleted in ${daysRemaining} ${daysRemaining === 1 ? 'day' : 'days'}`}
+            previewText={`Your account will be deleted in ${daysRemaining} ${daysRemaining === 1 ? 'day' : 'days'}`}
             unsubscribeUrl={unsubscribeUrl}
         >
             <Section style={isUrgent ? urgentBanner : reminderBanner}>
-                <Text style={bannerIcon}>{emoji}</Text>
+                <IconComponent size={48} />
                 <Heading style={bannerTitle}>
                     {isUrgent ? 'Final Reminder' : 'Deletion Reminder'}
                 </Heading>
@@ -54,10 +55,46 @@ export function DeletionReminderEmail({
             <Heading style={h2}>What Will Be Deleted?</Heading>
 
             <Section style={deleteList}>
-                <DeleteItem icon="👤" text="Your profile and account information" />
-                <DeleteItem icon="💾" text="All saved discoveries and collections" />
-                <DeleteItem icon="❤️" text="Your likes, preferences, and interaction history" />
-                <DeleteItem icon="⚙️" text="Settings and customizations" />
+                <table width="100%" cellPadding="0" cellSpacing="0" style={deleteItem}>
+                    <tr>
+                        <td width="30" style={deleteIconCell}>
+                            <UserIcon size={18} />
+                        </td>
+                        <td>
+                            <Text style={deleteText}>Your profile and account information</Text>
+                        </td>
+                    </tr>
+                </table>
+                <table width="100%" cellPadding="0" cellSpacing="0" style={deleteItem}>
+                    <tr>
+                        <td width="30" style={deleteIconCell}>
+                            <SaveIcon size={18} />
+                        </td>
+                        <td>
+                            <Text style={deleteText}>All saved discoveries and collections</Text>
+                        </td>
+                    </tr>
+                </table>
+                <table width="100%" cellPadding="0" cellSpacing="0" style={deleteItem}>
+                    <tr>
+                        <td width="30" style={deleteIconCell}>
+                            <HeartIcon size={18} />
+                        </td>
+                        <td>
+                            <Text style={deleteText}>Your likes, preferences, and interaction history</Text>
+                        </td>
+                    </tr>
+                </table>
+                <table width="100%" cellPadding="0" cellSpacing="0" style={deleteItem}>
+                    <tr>
+                        <td width="30" style={deleteIconCell}>
+                            <SettingsIcon size={18} />
+                        </td>
+                        <td>
+                            <Text style={deleteText}>Settings and customizations</Text>
+                        </td>
+                    </tr>
+                </table>
             </Section>
 
             <Text style={text}>
@@ -80,7 +117,7 @@ export function DeletionReminderEmail({
 
             <Section style={infoBox}>
                 <Text style={infoText}>
-                    💡 <strong>Last chance to save your data:</strong>{' '}
+                    <LightbulbIcon size={18} style={{ marginRight: '8px' }} /> <strong>Last chance to save your data:</strong>{' '}
                     <a href={`${frontendUrl}/data-export`} style={link}>
                         Download your data
                     </a>{' '}
@@ -96,29 +133,9 @@ export function DeletionReminderEmail({
     );
 }
 
-interface DeleteItemProps {
-    icon: string;
-    text: string;
-}
-
-function DeleteItem({ icon, text }: DeleteItemProps) {
-    return (
-        <table width="100%" cellPadding="0" cellSpacing="0" style={{ marginBottom: '8px' }}>
-            <tr>
-                <td width="30" style={{ verticalAlign: 'top' as const }}>
-                    <Text style={deleteIcon}>{icon}</Text>
-                </td>
-                <td>
-                    <Text style={deleteText}>{text}</Text>
-                </td>
-            </tr>
-        </table>
-    );
-}
-
 // Styles
 const reminderBanner = {
-    backgroundColor: '#fef3c7',
+    backgroundColor: '#FFF9E6', // Light warning yellow tint
     borderRadius: '12px',
     padding: '32px 24px',
     textAlign: 'center' as const,
@@ -126,17 +143,11 @@ const reminderBanner = {
 };
 
 const urgentBanner = {
-    backgroundColor: '#fee2e2',
+    backgroundColor: '#FFF5F5', // Light error tint
     borderRadius: '12px',
     padding: '32px 24px',
     textAlign: 'center' as const,
     margin: '24px 0',
-};
-
-const bannerIcon = {
-    fontSize: '48px',
-    margin: '0 0 16px 0',
-    lineHeight: '1',
 };
 
 const bannerTitle = {
@@ -167,7 +178,7 @@ const h2 = {
 };
 
 const countdownBox = {
-    backgroundColor: '#f3f4f6',
+    backgroundColor: '#F6F0E9', // Brand base-200 (cream tone)
     borderRadius: '12px',
     padding: '24px',
     textAlign: 'center' as const,
@@ -175,7 +186,7 @@ const countdownBox = {
 };
 
 const countdownNumber = {
-    color: '#dc2626',
+    color: '#FF3355', // Brand error color
     fontSize: '64px',
     fontWeight: 'bold' as const,
     margin: '0 0 8px 0',
@@ -193,11 +204,6 @@ const deleteList = {
     margin: '16px 0',
 };
 
-const deleteIcon = {
-    fontSize: '18px',
-    margin: 0,
-};
-
 const deleteText = {
     color: '#374151',
     fontSize: '15px',
@@ -205,13 +211,16 @@ const deleteText = {
     lineHeight: '1.5',
 };
 
+const deleteItem = { marginBottom: '8px' };
+const deleteIconCell = { verticalAlign: 'top' as const };
+
 const buttonContainer = {
     margin: '32px 0',
     textAlign: 'center' as const,
 };
 
 const buttonPrimary = {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#FF4D6D', // Brand primary color (Punchy Pink-Red)
     borderRadius: '8px',
     color: '#fff',
     fontSize: '16px',
@@ -223,14 +232,14 @@ const buttonPrimary = {
 };
 
 const infoBox = {
-    backgroundColor: '#f0f9ff',
+    backgroundColor: '#F6F0E9', // Brand base-200 (cream tone)
     borderRadius: '8px',
     padding: '16px',
     margin: '24px 0',
 };
 
 const infoText = {
-    color: '#1e3a8a',
+    color: '#374151', // Standard text gray
     fontSize: '14px',
     lineHeight: '20px',
     margin: 0,
@@ -245,7 +254,7 @@ const footerNote = {
 };
 
 const link = {
-    color: '#6366f1',
+    color: '#FF4D6D', // Brand primary color (Punchy Pink-Red)
     textDecoration: 'underline',
 };
 

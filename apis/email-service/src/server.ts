@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import Fastify from 'fastify';
 import { EmailQueue } from './lib/queue.js';
 import preferencesRoutes from './routes/preferences.js';
+import queueRoutes from './routes/queue.js';
 import scheduledRoutes from './routes/scheduled.js';
 import sendRoutes from './routes/send.js';
 
@@ -43,14 +44,27 @@ app.get('/health', async () => {
 // Register API routes with /api prefix
 await app.register(sendRoutes, { prefix: '/api' });
 await app.register(preferencesRoutes, { prefix: '/api' });
+await app.register(queueRoutes, { prefix: '/api' });
 await app.register(scheduledRoutes, { prefix: '/api' });
 
-// Start background queue processor
+// Start background queue processor with retry logic
+let queueProcessorRetries = 0;
+const MAX_RETRIES = 3;
+
 setInterval(async () => {
     try {
         await EmailQueue.processPendingEmails(10);
-    } catch (error) {
-        app.log.error(error, 'Queue processing error');
+        queueProcessorRetries = 0; // Reset on success
+    } catch (error: any) {
+        queueProcessorRetries++;
+        app.log.error({ error, retries: queueProcessorRetries }, 'Queue processing error');
+
+        if (error.message?.includes('fetch failed')) {
+            app.log.warn('Supabase connection issue - will retry on next interval');
+            if (queueProcessorRetries >= MAX_RETRIES) {
+                app.log.error('Max retries reached - check Supabase connectivity');
+            }
+        }
     }
 }, 60000); // Process every minute
 

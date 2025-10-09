@@ -37,22 +37,68 @@ export function SubmissionReceivedEmail({
             <Heading style={h2}>What Happens Next?</Heading>
 
             <Section style={timeline}>
-                <TimelineItem
-                    number="1"
-                    title="Review Queue"
-                    description="Your submission is now in the moderation queue waiting for review."
-                    active
-                />
-                <TimelineItem
-                    number="2"
-                    title="Quality Check"
-                    description="Our team reviews content for quality, relevance, and compliance with our guidelines."
-                />
-                <TimelineItem
-                    number="3"
-                    title="Decision"
-                    description="You'll receive an email within 24-48 hours letting you know if it's been approved."
-                />
+                {/* Timeline Item 1 - Active */}
+                <table width="100%" cellPadding="0" cellSpacing="0" style={timelineItem}>
+                    <tr>
+                        <td width="40" style={timelineIconCell}>
+                            <table width="32" cellPadding="6" cellSpacing="0" style={badgeActive}>
+                                <tr>
+                                    <td style={badgeTextCell}>
+                                        <Text style={badgeNumberActive}>1</Text>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <Text style={timelineTitle}>Review Queue</Text>
+                            <Text style={timelineDescription}>
+                                Your submission is now in the moderation queue waiting for review.
+                            </Text>
+                        </td>
+                    </tr>
+                </table>
+
+                {/* Timeline Item 2 */}
+                <table width="100%" cellPadding="0" cellSpacing="0" style={timelineItem}>
+                    <tr>
+                        <td width="40" style={timelineIconCell}>
+                            <table width="32" cellPadding="6" cellSpacing="0" style={badgeInactive}>
+                                <tr>
+                                    <td style={badgeTextCell}>
+                                        <Text style={badgeNumberInactive}>2</Text>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <Text style={timelineTitle}>Quality Check</Text>
+                            <Text style={timelineDescription}>
+                                Our team reviews content for quality, relevance, and compliance with our guidelines.
+                            </Text>
+                        </td>
+                    </tr>
+                </table>
+
+                {/* Timeline Item 3 */}
+                <table width="100%" cellPadding="0" cellSpacing="0" style={timelineItem}>
+                    <tr>
+                        <td width="40" style={timelineIconCell}>
+                            <table width="32" cellPadding="6" cellSpacing="0" style={badgeInactive}>
+                                <tr>
+                                    <td style={badgeTextCell}>
+                                        <Text style={badgeNumberInactive}>3</Text>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <Text style={timelineTitle}>Decision</Text>
+                            <Text style={timelineDescription}>
+                                You'll receive an email within 24-48 hours letting you know if it's been approved.
+                            </Text>
+                        </td>
+                    </tr>
+                </table>
             </Section>
 
             <Section style={infoBox}>
@@ -70,10 +116,53 @@ export function SubmissionReceivedEmail({
             </Text>
 
             <Section style={guidelinesList}>
-                <GuidelineItem emoji="✓" text="High-quality, interesting content" />
-                <GuidelineItem emoji="✓" text="Working links (no broken pages)" />
-                <GuidelineItem emoji="✓" text="Appropriate for general audiences" />
-                <GuidelineItem emoji="✓" text="Not spam or clickbait" />
+                {/* Guideline 1 */}
+                <table width="100%" cellPadding="0" cellSpacing="0" style={guidelineItem}>
+                    <tr>
+                        <td width="30" style={guidelineIconCell}>
+                            <Text style={guidelineEmoji}>✓</Text>
+                        </td>
+                        <td>
+                            <Text style={guidelineText}>High-quality, interesting content</Text>
+                        </td>
+                    </tr>
+                </table>
+
+                {/* Guideline 2 */}
+                <table width="100%" cellPadding="0" cellSpacing="0" style={guidelineItem}>
+                    <tr>
+                        <td width="30" style={guidelineIconCell}>
+                            <Text style={guidelineEmoji}>✓</Text>
+                        </td>
+                        <td>
+                            <Text style={guidelineText}>Working links (no broken pages)</Text>
+                        </td>
+                    </tr>
+                </table>
+
+                {/* Guideline 3 */}
+                <table width="100%" cellPadding="0" cellSpacing="0" style={guidelineItem}>
+                    <tr>
+                        <td width="30" style={guidelineIconCell}>
+                            <Text style={guidelineEmoji}>✓</Text>
+                        </td>
+                        <td>
+                            <Text style={guidelineText}>Appropriate for general audiences</Text>
+                        </td>
+                    </tr>
+                </table>
+
+                {/* Guideline 4 */}
+                <table width="100%" cellPadding="0" cellSpacing="0" style={guidelineItem}>
+                    <tr>
+                        <td width="30" style={guidelineIconCell}>
+                            <Text style={guidelineEmoji}>✓</Text>
+                        </td>
+                        <td>
+                            <Text style={guidelineText}>Not spam or clickbait</Text>
+                        </td>
+                    </tr>
+                </table>
             </Section>
 
             <Text style={text}>
@@ -105,56 +194,6 @@ export function SubmissionReceivedEmail({
                 — The Stumbleable Team
             </Text>
         </EmailLayout>
-    );
-}
-
-interface TimelineItemProps {
-    number: string;
-    title: string;
-    description: string;
-    active?: boolean;
-}
-
-function TimelineItem({ number, title, description, active }: TimelineItemProps) {
-    return (
-        <table width="100%" cellPadding="0" cellSpacing="0" style={{ marginBottom: '16px' }}>
-            <tr>
-                <td width="40" style={{ verticalAlign: 'top' as const }}>
-                    <div
-                        style={{
-                            ...numberBadge,
-                            ...(active ? numberBadgeActive : {}),
-                        }}
-                    >
-                        {number}
-                    </div>
-                </td>
-                <td>
-                    <Text style={timelineTitle}>{title}</Text>
-                    <Text style={timelineDescription}>{description}</Text>
-                </td>
-            </tr>
-        </table>
-    );
-}
-
-interface GuidelineItemProps {
-    emoji: string;
-    text: string;
-}
-
-function GuidelineItem({ emoji, text }: GuidelineItemProps) {
-    return (
-        <table width="100%" cellPadding="0" cellSpacing="0" style={{ marginBottom: '8px' }}>
-            <tr>
-                <td width="30" style={{ verticalAlign: 'middle' as const }}>
-                    <Text style={guidelineEmoji}>{emoji}</Text>
-                </td>
-                <td>
-                    <Text style={guidelineText}>{text}</Text>
-                </td>
-            </tr>
-        </table>
     );
 }
 
@@ -299,6 +338,17 @@ const guidelineText = {
     margin: 0,
     lineHeight: '1.5',
 };
+
+// Inline styles extracted to consts
+const timelineItem = { marginBottom: '16px' };
+const timelineIconCell = { verticalAlign: 'top' as const };
+const badgeActive = { borderRadius: '50%', backgroundColor: '#6366f1' };
+const badgeInactive = { borderRadius: '50%', backgroundColor: '#e5e7eb' };
+const badgeTextCell = { textAlign: 'center' as const, verticalAlign: 'middle' as const, padding: '8px' };
+const badgeNumberActive = { color: '#fff', fontSize: '14px', fontWeight: 'bold' as const, margin: 0, lineHeight: '1' };
+const badgeNumberInactive = { color: '#6b7280', fontSize: '14px', fontWeight: 'bold' as const, margin: 0, lineHeight: '1' };
+const guidelineItem = { marginBottom: '8px' };
+const guidelineIconCell = { verticalAlign: 'middle' as const };
 
 const actionBox = {
     margin: '32px 0',

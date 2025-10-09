@@ -3,23 +3,31 @@
  * Tests sending various email types through the email service
  */
 
-const BASE_URL = 'http://localhost:7006/api';
+const http = require('http');
+const BASE_URL = 'http://localhost:7006';
 
 // Test data
+const TEST_USER_ID = 'f6e7bbc5-ea0f-4a10-88d8-fa08db6374e5'; // Brandon Korous user ID from database
+const TEST_EMAIL = 'bkorous@gmail.com';
+
 const testData = {
     welcome: {
-        to: 'your-email@example.com', // CHANGE THIS to your actual email
-        type: 'welcome',
-        data: {
-            userName: 'Test User',
-            userId: 'test-user-123'
+        userId: TEST_USER_ID,
+        emailType: 'welcome',
+        recipientEmail: TEST_EMAIL,
+        templateData: {
+            firstName: 'Bryan',
+            email: TEST_EMAIL,
+            preferredTopics: ['Technology', 'Science', 'Design']
         }
     },
     weeklyTrending: {
-        to: 'your-email@example.com', // CHANGE THIS to your actual email
-        type: 'weekly-trending',
-        data: {
-            userName: 'Test User',
+        userId: TEST_USER_ID,
+        emailType: 'weekly-trending',
+        recipientEmail: TEST_EMAIL,
+        templateData: {
+            firstName: 'Bryan',
+            email: TEST_EMAIL,
             discoveries: [
                 {
                     id: '1',
@@ -63,10 +71,12 @@ const testData = {
         }
     },
     weeklyNew: {
-        to: 'your-email@example.com', // CHANGE THIS to your actual email
-        type: 'weekly-new',
-        data: {
-            userName: 'Test User',
+        userId: TEST_USER_ID,
+        emailType: 'weekly-new',
+        recipientEmail: TEST_EMAIL,
+        templateData: {
+            firstName: 'Bryan',
+            email: TEST_EMAIL,
             discoveries: [
                 {
                     id: '4',
@@ -96,20 +106,24 @@ const testData = {
         }
     },
     submissionReceived: {
-        to: 'your-email@example.com', // CHANGE THIS to your actual email
-        type: 'submission-received',
-        data: {
-            userName: 'Test User',
+        userId: TEST_USER_ID,
+        emailType: 'submission-received',
+        recipientEmail: TEST_EMAIL,
+        templateData: {
+            firstName: 'Bryan',
+            email: TEST_EMAIL,
             submissionTitle: 'My Awesome Website',
             submissionUrl: 'https://mywebsite.com',
             submittedAt: new Date().toISOString()
         }
     },
     submissionApproved: {
-        to: 'your-email@example.com', // CHANGE THIS to your actual email
-        type: 'submission-approved',
-        data: {
-            userName: 'Test User',
+        userId: TEST_USER_ID,
+        emailType: 'submission-approved',
+        recipientEmail: TEST_EMAIL,
+        templateData: {
+            firstName: 'Bryan',
+            email: TEST_EMAIL,
             submissionTitle: 'My Awesome Website',
             submissionUrl: 'https://mywebsite.com',
             discoveryUrl: 'https://stumbleable.com/discover/123'
@@ -117,44 +131,114 @@ const testData = {
     }
 };
 
-async function sendEmail(emailData) {
-    try {
-        console.log(`\n📧 Sending ${emailData.type} email to ${emailData.to}...`);
+function sendEmail(emailData) {
+    return new Promise((resolve) => {
+        console.log(`\n📧 Sending ${emailData.emailType} email to ${emailData.recipientEmail}...`);
 
-        const response = await fetch(`${BASE_URL}/send`, {
+        const postData = JSON.stringify(emailData);
+        const options = {
+            hostname: '127.0.0.1',
+            port: 7006,
+            path: '/api/send',
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(postData)
             },
-            body: JSON.stringify(emailData)
+            timeout: 5000
+        };
+
+        const req = http.request(options, (res) => {
+            let data = '';
+
+            res.on('data', (chunk) => {
+                data += chunk;
+            });
+
+            res.on('end', () => {
+                try {
+                    const result = JSON.parse(data);
+                    if (res.statusCode >= 200 && res.statusCode < 300) {
+                        console.log(`✅ Success! Email ID: ${result.emailId || result.id}`);
+                        resolve(result);
+                    } else {
+                        console.error(`❌ Failed (${res.statusCode}):`, result);
+                        resolve(null);
+                    }
+                } catch (error) {
+                    console.error(`❌ Error parsing response:`, error.message);
+                    console.error('Response:', data);
+                    resolve(null);
+                }
+            });
         });
 
-        const result = await response.json();
+        req.on('error', (error) => {
+            console.error(`❌ Error:`, error.message);
+            resolve(null);
+        });
 
-        if (response.ok) {
-            console.log(`✅ Success! Job ID: ${result.jobId}`);
-            return result;
-        } else {
-            console.error(`❌ Failed:`, result);
-            return null;
-        }
-    } catch (error) {
-        console.error(`❌ Error:`, error.message);
-        return null;
-    }
+        req.on('timeout', () => {
+            console.error(`❌ Request timeout`);
+            req.destroy();
+            resolve(null);
+        });
+
+        req.write(postData);
+        req.end();
+    });
 }
 
-async function checkService() {
-    try {
+function checkService() {
+    return new Promise((resolve) => {
         console.log('🏥 Checking email service health...');
-        const response = await fetch('http://localhost:7006/health');
-        const data = await response.json();
-        console.log('✅ Service is healthy:', data);
-        return true;
-    } catch (error) {
-        console.error('❌ Service is not running. Please start it with: cd apis/email-service && npm run dev');
-        return false;
-    }
+
+        const options = {
+            hostname: '127.0.0.1',
+            port: 7006,
+            path: '/health',
+            method: 'GET',
+            timeout: 5000
+        };
+
+        const req = http.get(options, (res) => {
+            let data = '';
+
+            res.on('data', (chunk) => {
+                data += chunk;
+            });
+
+            res.on('end', () => {
+                try {
+                    const result = JSON.parse(data);
+                    if (res.statusCode >= 200 && res.statusCode < 300) {
+                        console.log('✅ Service is healthy:', result);
+                        resolve(true);
+                    } else {
+                        console.error('❌ Service health check failed:', res.statusCode);
+                        resolve(false);
+                    }
+                } catch (error) {
+                    console.error('❌ Error parsing health check response');
+                    resolve(false);
+                }
+            });
+        });
+
+        req.on('error', (error) => {
+            console.error('❌ Service is not running. Please start it with: cd apis/email-service && npm run dev');
+            console.error('Error:', error.message);
+            resolve(false);
+        });
+
+        req.on('timeout', () => {
+            console.error('❌ Service health check timeout');
+            req.destroy();
+            resolve(false);
+        });
+
+        req.setTimeout(5000);
+    });
 }
 
 async function runTests() {
@@ -167,8 +251,7 @@ async function runTests() {
         process.exit(1);
     }
 
-    console.log('\n⚠️  IMPORTANT: Update the email addresses in this script to your actual email!');
-    console.log('Edit test-email-service.js and replace "your-email@example.com"\n');
+    console.log('\n📧 Testing email sending to: bkorous@gmail.com');
 
     // Wait a moment
     await new Promise(resolve => setTimeout(resolve, 2000));

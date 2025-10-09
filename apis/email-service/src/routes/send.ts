@@ -10,7 +10,7 @@ const sendRoutes: FastifyPluginAsync = async (fastify) => {
             userId: z.string().uuid(),
             emailType: z.string(),
             recipientEmail: z.string().email(),
-            templateData: z.record(z.any()),
+            templateData: z.record(z.string(), z.any()),
             scheduledAt: z.string().datetime().optional(),
         });
 

@@ -1,6 +1,6 @@
 import { Button, Heading, Hr, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import type { Discovery, WeeklyNewEmailProps } from '../types';
+import type { WeeklyNewEmailProps } from '../types';
 import { EmailLayout } from './components/EmailLayout';
 
 export function WeeklyNewEmail({
@@ -42,11 +42,44 @@ export function WeeklyNewEmail({
             {discoveries.length > 0 ? (
                 <>
                     {discoveries.map((discovery) => (
-                        <NewDiscoveryCard
-                            key={discovery.id}
-                            discovery={discovery}
-                            frontendUrl={frontendUrl}
-                        />
+                        <Section key={discovery.id} style={card}>
+                            <table width="100%" cellPadding="0" cellSpacing="0">
+                                <tr>
+                                    <td width="50" style={iconCell}>
+                                        <Text style={sparkle}>✨</Text>
+                                    </td>
+                                    <td>
+                                        <Heading style={cardTitle}>
+                                            <a href={discovery.url} style={cardLink}>
+                                                {discovery.title}
+                                            </a>
+                                        </Heading>
+                                        {discovery.description && <Text style={cardDescription}>{discovery.description}</Text>}
+                                        <Text style={cardMeta}>
+                                            {discovery.domain}
+                                            {discovery.topics && discovery.topics.length > 0 && (
+                                                <>
+                                                    {' • '}
+                                                    {discovery.topics.slice(0, 3).join(', ')}
+                                                </>
+                                            )}
+                                        </Text>
+                                        <table width="100%" cellPadding="0" cellSpacing="0" style={buttonRow}>
+                                            <tr>
+                                                <td>
+                                                    <a href={discovery.url} style={smallButton}>
+                                                        Visit Site
+                                                    </a>
+                                                    <a href={`${frontendUrl}/stumble?focus=${discovery.id}`} style={smallButtonOutline}>
+                                                        View in App
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </Section>
                     ))}
                 </>
             ) : (
@@ -80,50 +113,6 @@ export function WeeklyNewEmail({
                 </a>
             </Text>
         </EmailLayout>
-    );
-}
-
-interface NewDiscoveryCardProps {
-    discovery: Discovery;
-    frontendUrl: string;
-}
-
-function NewDiscoveryCard({ discovery, frontendUrl }: NewDiscoveryCardProps) {
-    return (
-        <Section style={card}>
-            <table width="100%" cellPadding="0" cellSpacing="0">
-                <tr>
-                    <td width="50" style={iconCell}>
-                        <Text style={sparkle}>✨</Text>
-                    </td>
-                    <td>
-                        <Heading style={cardTitle}>
-                            <a href={discovery.url} style={cardLink}>
-                                {discovery.title}
-                            </a>
-                        </Heading>
-                        {discovery.description && <Text style={cardDescription}>{discovery.description}</Text>}
-                        <Text style={cardMeta}>
-                            {discovery.domain}
-                            {discovery.topics && discovery.topics.length > 0 && (
-                                <>
-                                    {' • '}
-                                    {discovery.topics.slice(0, 3).join(', ')}
-                                </>
-                            )}
-                        </Text>
-                        <Section style={buttonGroup}>
-                            <a href={discovery.url} style={smallButton}>
-                                Visit Site
-                            </a>
-                            <a href={`${frontendUrl}/stumble?focus=${discovery.id}`} style={smallButtonOutline}>
-                                View in App
-                            </a>
-                        </Section>
-                    </td>
-                </tr>
-            </table>
-        </Section>
     );
 }
 
@@ -211,10 +200,6 @@ const cardMeta = {
     margin: '8px 0',
 };
 
-const buttonGroup = {
-    marginTop: '12px',
-};
-
 const smallButton = {
     display: 'inline-block',
     backgroundColor: '#6366f1',
@@ -238,6 +223,8 @@ const smallButtonOutline = {
     border: '1px solid #6366f1',
     textDecoration: 'none',
 };
+
+const buttonRow = { marginTop: '12px' };
 
 const buttonContainer = {
     margin: '32px 0',

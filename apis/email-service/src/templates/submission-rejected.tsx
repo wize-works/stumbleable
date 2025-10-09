@@ -2,6 +2,7 @@ import { Button, Heading, Hr, Section, Text } from '@react-email/components';
 import * as React from 'react';
 import type { SubmissionEmailProps } from '../types';
 import { EmailLayout } from './components/EmailLayout';
+import { BanIcon, BookIcon, ClipboardIcon, LinkIcon, RotateIcon, SparklesIcon, TrendingIcon } from './components/Icons';
 
 export function SubmissionRejectedEmail({
     submissionUrl,
@@ -18,7 +19,7 @@ export function SubmissionRejectedEmail({
             unsubscribeUrl={unsubscribeUrl}
         >
             <Section style={header}>
-                <Text style={headerIcon}>📋</Text>
+                <ClipboardIcon size={48} />
                 <Heading style={h1}>Submission Not Approved</Heading>
             </Section>
 
@@ -47,30 +48,59 @@ export function SubmissionRejectedEmail({
             <Heading style={h2}>Common Reasons for Rejection</Heading>
 
             <Section style={reasonsList}>
-                <ReasonItem
-                    icon="🚫"
-                    title="Content Policy Violation"
-                    description="Content that violates our community guidelines, includes spam, explicit material, or misleading information."
-                />
-                <ReasonItem
-                    icon="🔗"
-                    title="Broken or Invalid Link"
-                    description="The URL doesn't work, leads to an error page, or requires login/payment to access."
-                />
-                <ReasonItem
-                    icon="📉"
-                    title="Low Quality"
-                    description="Content that's thin, poorly written, or doesn't provide significant value to users."
-                />
-                <ReasonItem
-                    icon="🔄"
-                    title="Duplicate Content"
-                    description="The same URL or very similar content has already been submitted."
-                />
+                <table width="100%" cellPadding="0" cellSpacing="0" style={reasonItem}>
+                    <tr>
+                        <td width="32" style={reasonIconCell}>
+                            <BanIcon size={20} />
+                        </td>
+                        <td>
+                            <Text style={reasonTitle}>Content Policy Violation</Text>
+                            <Text style={reasonDescription}>Content that violates our community guidelines, includes spam, explicit material, or misleading information.</Text>
+                        </td>
+                    </tr>
+                </table>
+
+                <table width="100%" cellPadding="0" cellSpacing="0" style={reasonItem}>
+                    <tr>
+                        <td width="32" style={reasonIconCell}>
+                            <LinkIcon size={20} />
+                        </td>
+                        <td>
+                            <Text style={reasonTitle}>Broken or Invalid Link</Text>
+                            <Text style={reasonDescription}>The URL doesn't work, leads to an error page, or requires login/payment to access.</Text>
+                        </td>
+                    </tr>
+                </table>
+
+                <table width="100%" cellPadding="0" cellSpacing="0" style={reasonItem}>
+                    <tr>
+                        <td width="32" style={reasonIconCell}>
+                            <TrendingIcon size={20} style={{ transform: 'scaleY(-1)' }} />
+                        </td>
+                        <td>
+                            <Text style={reasonTitle}>Low Quality</Text>
+                            <Text style={reasonDescription}>Content that's thin, poorly written, or doesn't provide significant value to users.</Text>
+                        </td>
+                    </tr>
+                </table>
+
+                <table width="100%" cellPadding="0" cellSpacing="0" style={reasonItem}>
+                    <tr>
+                        <td width="32" style={reasonIconCell}>
+                            <RotateIcon size={20} />
+                        </td>
+                        <td>
+                            <Text style={reasonTitle}>Duplicate Content</Text>
+                            <Text style={reasonDescription}>The same URL or very similar content has already been submitted.</Text>
+                        </td>
+                    </tr>
+                </table>
             </Section>
 
             <Section style={guidelinesBox}>
-                <Text style={guidelinesTitle}>📖 Review Our Guidelines</Text>
+                <Text style={guidelinesTitle}>
+                    <BookIcon size={18} style={{ marginRight: '8px' }} /> Review Our Guidelines
+                </Text>
                 <Text style={guidelinesText}>
                     Before resubmitting, please review our{' '}
                     <a href={`${frontendUrl}/guidelines`} style={link}>
@@ -85,15 +115,56 @@ export function SubmissionRejectedEmail({
             <Heading style={h2}>What You Can Do</Heading>
 
             <Section style={actionsList}>
-                <ActionItem
-                    number="1"
-                    text="Review the rejection reason and our content guidelines"
-                />
-                <ActionItem number="2" text="Fix any issues with your submission" />
-                <ActionItem
-                    number="3"
-                    text="Submit different content that meets our guidelines"
-                />
+                <table width="100%" cellPadding="0" cellSpacing="0" style={actionItem}>
+                    <tr>
+                        <td width="36" style={actionIconCell}>
+                            <table cellPadding="0" cellSpacing="0" style={actionNumber}>
+                                <tr>
+                                    <td style={actionNumberCell}>
+                                        <Text style={actionNumberText}>1</Text>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <Text style={actionText}>Review the rejection reason and our content guidelines</Text>
+                        </td>
+                    </tr>
+                </table>
+
+                <table width="100%" cellPadding="0" cellSpacing="0" style={actionItem}>
+                    <tr>
+                        <td width="36" style={actionIconCell}>
+                            <table cellPadding="0" cellSpacing="0" style={actionNumber}>
+                                <tr>
+                                    <td style={actionNumberCell}>
+                                        <Text style={actionNumberText}>2</Text>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <Text style={actionText}>Fix any issues with your submission</Text>
+                        </td>
+                    </tr>
+                </table>
+
+                <table width="100%" cellPadding="0" cellSpacing="0" style={actionItem}>
+                    <tr>
+                        <td width="36" style={actionIconCell}>
+                            <table cellPadding="0" cellSpacing="0" style={actionNumber}>
+                                <tr>
+                                    <td style={actionNumberCell}>
+                                        <Text style={actionNumberText}>3</Text>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <Text style={actionText}>Submit different content that meets our guidelines</Text>
+                        </td>
+                    </tr>
+                </table>
             </Section>
 
             <Section style={buttonContainer}>
@@ -115,7 +186,7 @@ export function SubmissionRejectedEmail({
 
             <Section style={encouragementBox}>
                 <Text style={encouragementText}>
-                    ✨ <strong>Don't give up!</strong> Every contributor gets rejections sometimes. The key
+                    <SparklesIcon size={18} style={{ marginRight: '8px' }} /> <strong>Don't give up!</strong> Every contributor gets rejections sometimes. The key
                     is learning what makes great content and trying again. We appreciate your willingness to
                     share discoveries with the community.
                 </Text>
@@ -128,58 +199,10 @@ export function SubmissionRejectedEmail({
     );
 }
 
-interface ReasonItemProps {
-    icon: string;
-    title: string;
-    description: string;
-}
-
-function ReasonItem({ icon, title, description }: ReasonItemProps) {
-    return (
-        <table width="100%" cellPadding="0" cellSpacing="0" style={{ marginBottom: '16px' }}>
-            <tr>
-                <td width="32" style={{ verticalAlign: 'top' as const }}>
-                    <Text style={reasonIcon}>{icon}</Text>
-                </td>
-                <td>
-                    <Text style={reasonTitle}>{title}</Text>
-                    <Text style={reasonDescription}>{description}</Text>
-                </td>
-            </tr>
-        </table>
-    );
-}
-
-interface ActionItemProps {
-    number: string;
-    text: string;
-}
-
-function ActionItem({ number, text }: ActionItemProps) {
-    return (
-        <table width="100%" cellPadding="0" cellSpacing="0" style={{ marginBottom: '12px' }}>
-            <tr>
-                <td width="36" style={{ verticalAlign: 'top' as const }}>
-                    <div style={actionNumber}>{number}</div>
-                </td>
-                <td>
-                    <Text style={actionText}>{text}</Text>
-                </td>
-            </tr>
-        </table>
-    );
-}
-
 // Styles
 const header = {
     textAlign: 'center' as const,
     margin: '24px 0',
-};
-
-const headerIcon = {
-    fontSize: '48px',
-    margin: '0 0 16px 0',
-    lineHeight: '1',
 };
 
 const h1 = {
@@ -223,7 +246,7 @@ const submissionLabel = {
 };
 
 const submissionUrlText = {
-    color: '#6366f1',
+    color: '#FF4D6D', // Brand primary color (Punchy Pink-Red)
     fontSize: '14px',
     margin: '0 0 8px 0',
     wordBreak: 'break-all' as const,
@@ -237,15 +260,15 @@ const submissionTitleText = {
 };
 
 const reasonBox = {
-    backgroundColor: '#fef2f2',
-    border: '1px solid #fca5a5',
+    backgroundColor: '#FFF5F5', // Light error tint
+    border: '1px solid #FF99AA', // Lighter brand error tint
     borderRadius: '8px',
     padding: '16px',
     margin: '16px 0 24px',
 };
 
 const reasonText = {
-    color: '#991b1b',
+    color: '#FF3355', // Brand error color
     fontSize: '15px',
     lineHeight: '22px',
     margin: 0,
@@ -253,12 +276,6 @@ const reasonText = {
 
 const reasonsList = {
     margin: '24px 0',
-};
-
-const reasonIcon = {
-    fontSize: '20px',
-    margin: 0,
-    lineHeight: '1',
 };
 
 const reasonTitle = {
@@ -277,21 +294,21 @@ const reasonDescription = {
 };
 
 const guidelinesBox = {
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#F6F0E9', // Brand base-200 (cream tone)
     borderRadius: '8px',
     padding: '16px',
     margin: '24px 0',
 };
 
 const guidelinesTitle = {
-    color: '#1e40af',
+    color: '#0091FF', // Brand info color
     fontSize: '14px',
     fontWeight: 'bold' as const,
     margin: '0 0 8px 0',
 };
 
 const guidelinesText = {
-    color: '#1e3a8a',
+    color: '#374151', // Standard text gray
     fontSize: '14px',
     lineHeight: '20px',
     margin: 0,
@@ -310,12 +327,7 @@ const actionNumber = {
     width: '28px',
     height: '28px',
     borderRadius: '50%',
-    backgroundColor: '#6366f1',
-    color: '#fff',
-    fontSize: '14px',
-    fontWeight: 'bold' as const,
-    textAlign: 'center' as const,
-    lineHeight: '28px',
+    backgroundColor: '#FF4D6D', // Brand primary color (Punchy Pink-Red)
 };
 
 const actionText = {
@@ -325,13 +337,21 @@ const actionText = {
     lineHeight: '28px',
 };
 
+// Inline styles extracted to consts
+const reasonItem = { marginBottom: '16px' };
+const reasonIconCell = { verticalAlign: 'top' as const };
+const actionItem = { marginBottom: '12px' };
+const actionIconCell = { verticalAlign: 'top' as const };
+const actionNumberCell = { textAlign: 'center' as const };
+const actionNumberText = { color: '#fff', fontSize: '14px', fontWeight: 'bold' as const, margin: 0, lineHeight: '28px' };
+
 const buttonContainer = {
     margin: '32px 0',
     textAlign: 'center' as const,
 };
 
 const buttonPrimary = {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#FF4D6D', // Brand primary color (Punchy Pink-Red)
     borderRadius: '8px',
     color: '#fff',
     fontSize: '16px',
@@ -343,7 +363,7 @@ const buttonPrimary = {
 };
 
 const helpBox = {
-    backgroundColor: '#f3f4f6',
+    backgroundColor: '#F6F0E9', // Brand base-200 (cream tone)
     borderRadius: '8px',
     padding: '16px',
     margin: '24px 0',
@@ -364,14 +384,14 @@ const helpText = {
 };
 
 const encouragementBox = {
-    backgroundColor: '#fef3c7',
+    backgroundColor: '#FFF9E6', // Light warning yellow tint
     borderRadius: '8px',
     padding: '16px',
     margin: '24px 0',
 };
 
 const encouragementText = {
-    color: '#78350f',
+    color: '#6b7280', // Standard secondary text gray
     fontSize: '14px',
     lineHeight: '22px',
     margin: 0,
@@ -386,7 +406,7 @@ const signature = {
 };
 
 const link = {
-    color: '#6366f1',
+    color: '#FF4D6D', // Brand primary color (Punchy Pink-Red)
     textDecoration: 'underline',
 };
 

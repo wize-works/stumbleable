@@ -1,6 +1,6 @@
 import { Button, Heading, Hr, Section, Text } from '@react-email/components';
 import * as React from 'react';
-import type { Discovery, WeeklyTrendingEmailProps } from '../types';
+import type { WeeklyTrendingEmailProps } from '../types';
 import { EmailLayout } from './components/EmailLayout';
 
 export function WeeklyTrendingEmail({
@@ -36,14 +36,46 @@ export function WeeklyTrendingEmail({
 
             {discoveries.length > 0 ? (
                 <>
-                    {discoveries.map((discovery, index) => (
-                        <DiscoveryCard
-                            key={discovery.id}
-                            discovery={discovery}
-                            rank={index + 1}
-                            frontendUrl={frontendUrl}
-                        />
-                    ))}
+                    {discoveries.map((discovery, index) => {
+                        const stats = [];
+                        if (discovery.like_count) stats.push(`${discovery.like_count} likes`);
+                        if (discovery.save_count) stats.push(`${discovery.save_count} saves`);
+                        if (discovery.share_count) stats.push(`${discovery.share_count} shares`);
+                        const statsText = stats.length > 0 ? stats.join(' • ') : 'Just discovered';
+                        const rank = index + 1;
+
+                        return (
+                            <Section key={discovery.id} style={card}>
+                                <table width="100%" cellPadding="0" cellSpacing="0">
+                                    <tr>
+                                        <td width="40" style={rankCell}>
+                                            <Text style={rankNumber}>{rank}</Text>
+                                        </td>
+                                        <td>
+                                            <Heading style={cardTitle}>
+                                                <a href={discovery.url} style={cardLink}>
+                                                    {discovery.title}
+                                                </a>
+                                            </Heading>
+                                            {discovery.description && <Text style={cardDescription}>{discovery.description}</Text>}
+                                            <Text style={cardMeta}>
+                                                {discovery.domain}
+                                                {discovery.topics && discovery.topics.length > 0 && (
+                                                    <>
+                                                        {' • '}
+                                                        {discovery.topics.slice(0, 2).join(', ')}
+                                                    </>
+                                                )}
+                                            </Text>
+                                            <Text style={cardStats}>
+                                                🔥 <strong>{statsText}</strong>
+                                            </Text>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </Section>
+                        );
+                    })}
                 </>
             ) : (
                 <Section style={emptyState}>
@@ -73,52 +105,6 @@ export function WeeklyTrendingEmail({
                 </a>
             </Text>
         </EmailLayout>
-    );
-}
-
-interface DiscoveryCardProps {
-    discovery: Discovery;
-    rank: number;
-    frontendUrl: string;
-}
-
-function DiscoveryCard({ discovery, rank, frontendUrl }: DiscoveryCardProps) {
-    const stats = [];
-    if (discovery.like_count) stats.push(`${discovery.like_count} likes`);
-    if (discovery.save_count) stats.push(`${discovery.save_count} saves`);
-    if (discovery.share_count) stats.push(`${discovery.share_count} shares`);
-    const statsText = stats.length > 0 ? stats.join(' • ') : 'Just discovered';
-
-    return (
-        <Section style={card}>
-            <table width="100%" cellPadding="0" cellSpacing="0">
-                <tr>
-                    <td width="40" style={rankCell}>
-                        <Text style={rankNumber}>{rank}</Text>
-                    </td>
-                    <td>
-                        <Heading style={cardTitle}>
-                            <a href={discovery.url} style={cardLink}>
-                                {discovery.title}
-                            </a>
-                        </Heading>
-                        {discovery.description && <Text style={cardDescription}>{discovery.description}</Text>}
-                        <Text style={cardMeta}>
-                            {discovery.domain}
-                            {discovery.topics && discovery.topics.length > 0 && (
-                                <>
-                                    {' • '}
-                                    {discovery.topics.slice(0, 2).join(', ')}
-                                </>
-                            )}
-                        </Text>
-                        <Text style={cardStats}>
-                            🔥 <strong>{statsText}</strong>
-                        </Text>
-                    </td>
-                </tr>
-            </table>
-        </Section>
     );
 }
 

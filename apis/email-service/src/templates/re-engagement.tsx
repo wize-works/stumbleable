@@ -47,20 +47,22 @@ export function ReEngagementEmail({
             <Section style={highlightBox}>
                 <Text style={highlightIcon}>✨</Text>
                 <Text style={highlightTitle}>While You Were Away</Text>
-                <Section style={highlightStats}>
-                    <HighlightStat
-                        number={discoveries.length}
-                        label="Trending Discoveries"
-                        emoji="🔥"
-                    />
-                    {totalSavedCount > 0 && (
-                        <HighlightStat
-                            number={totalSavedCount}
-                            label="Waiting in Your Saved"
-                            emoji="🔖"
-                        />
-                    )}
-                </Section>
+                <table width="100%" cellPadding="0" cellSpacing="0" style={statsTable}>
+                    <tr>
+                        <td width="50%" style={statCell}>
+                            <Text style={statEmoji}>🔥</Text>
+                            <Text style={statNumber}>{discoveries.length}</Text>
+                            <Text style={statLabel}>Trending Discoveries</Text>
+                        </td>
+                        {totalSavedCount > 0 && (
+                            <td width="50%" style={statCell}>
+                                <Text style={statEmoji}>🔖</Text>
+                                <Text style={statNumber}>{totalSavedCount}</Text>
+                                <Text style={statLabel}>Waiting in Your Saved</Text>
+                            </td>
+                        )}
+                    </tr>
+                </table>
             </Section>
 
             <Heading style={h2}>Trending Now</Heading>
@@ -69,9 +71,63 @@ export function ReEngagementEmail({
                 Here are some of the most popular discoveries from the community:
             </Text>
 
-            {discoveries.map((discovery, index) => (
-                <DiscoveryCard key={discovery.id} discovery={discovery} index={index} frontendUrl={frontendUrl} />
-            ))}
+            {discoveries.map((discovery, index) => {
+                const { url, title, description, domain, topics, like_count, save_count } = discovery;
+                return (
+                    <Section key={discovery.id} style={discoveryCard}>
+                        <table width="100%" cellPadding="0" cellSpacing="0">
+                            <tr>
+                                <td>
+                                    <Text style={discoveryRank}>#{index + 1}</Text>
+                                    <Text style={discoveryDomain}>{domain}</Text>
+
+                                    <a href={url} style={discoveryTitleLink}>
+                                        <Heading style={discoveryTitle}>{title}</Heading>
+                                    </a>
+
+                                    {description && (
+                                        <Text style={discoveryDescription}>
+                                            {description.length > 100 ? `${description.substring(0, 100)}...` : description}
+                                        </Text>
+                                    )}
+
+                                    {topics && topics.length > 0 && (
+                                        <table width="100%" cellPadding="0" cellSpacing="0" style={topicTable}>
+                                            <tr>
+                                                <td>
+                                                    {topics.slice(0, 3).map((topic) => (
+                                                        <Text key={topic} style={topicChip}>
+                                                            {topic}
+                                                        </Text>
+                                                    ))}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    )}
+
+                                    <table width="100%" cellPadding="0" cellSpacing="0" style={statsActionRow}>
+                                        <tr>
+                                            <td>
+                                                {like_count !== undefined && (
+                                                    <Text style={statItem}>👍 {like_count}</Text>
+                                                )}
+                                                {save_count !== undefined && (
+                                                    <Text style={statItem}>🔖 {save_count}</Text>
+                                                )}
+                                            </td>
+                                            <td style={actionCell}>
+                                                <Button style={buttonVisit} href={url}>
+                                                    Visit →
+                                                </Button>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </Section>
+                );
+            })}
 
             <Section style={ctaBox}>
                 <Heading style={ctaTitle}>Ready to Explore?</Heading>
@@ -89,21 +145,39 @@ export function ReEngagementEmail({
             <Heading style={h2}>What's New on Stumbleable</Heading>
 
             <Section style={updatesList}>
-                <UpdateItem
-                    emoji="🎯"
-                    title="Improved Discovery Algorithm"
-                    description="We've fine-tuned the wildness controls for even better content matching."
-                />
-                <UpdateItem
-                    emoji="📊"
-                    title="Creator Analytics"
-                    description="Submit content and track how the community engages with your discoveries."
-                />
-                <UpdateItem
-                    emoji="🎨"
-                    title="Custom Lists"
-                    description="Organize your saved discoveries into collections by theme or interest."
-                />
+                <table width="100%" cellPadding="0" cellSpacing="0" style={updateItem}>
+                    <tr>
+                        <td width="40" style={updateIconCell}>
+                            <Text style={updateEmoji}>🎯</Text>
+                        </td>
+                        <td>
+                            <Text style={updateTitle}>Improved Discovery Algorithm</Text>
+                            <Text style={updateDescription}>We've fine-tuned the wildness controls for even better content matching.</Text>
+                        </td>
+                    </tr>
+                </table>
+                <table width="100%" cellPadding="0" cellSpacing="0" style={updateItem}>
+                    <tr>
+                        <td width="40" style={updateIconCell}>
+                            <Text style={updateEmoji}>📊</Text>
+                        </td>
+                        <td>
+                            <Text style={updateTitle}>Creator Analytics</Text>
+                            <Text style={updateDescription}>Submit content and track how the community engages with your discoveries.</Text>
+                        </td>
+                    </tr>
+                </table>
+                <table width="100%" cellPadding="0" cellSpacing="0" style={updateItem}>
+                    <tr>
+                        <td width="40" style={updateIconCell}>
+                            <Text style={updateEmoji}>🎨</Text>
+                        </td>
+                        <td>
+                            <Text style={updateTitle}>Custom Lists</Text>
+                            <Text style={updateDescription}>Organize your saved discoveries into collections by theme or interest.</Text>
+                        </td>
+                    </tr>
+                </table>
             </Section>
 
             <Section style={personalBox}>
@@ -153,111 +227,6 @@ export function ReEngagementEmail({
                 </Text>
             </Section>
         </EmailLayout>
-    );
-}
-
-interface HighlightStatProps {
-    number: number;
-    label: string;
-    emoji: string;
-}
-
-function HighlightStat({ number, label, emoji }: HighlightStatProps) {
-    return (
-        <table width="50%" cellPadding="0" cellSpacing="0" style={{ display: 'inline-table' }}>
-            <tr>
-                <td style={statCell}>
-                    <Text style={statEmoji}>{emoji}</Text>
-                    <Text style={statNumber}>{number}</Text>
-                    <Text style={statLabel}>{label}</Text>
-                </td>
-            </tr>
-        </table>
-    );
-}
-
-interface DiscoveryCardProps {
-    discovery: Discovery;
-    index: number;
-    frontendUrl: string;
-}
-
-function DiscoveryCard({ discovery, index, frontendUrl }: DiscoveryCardProps) {
-    const { url, title, description, domain, topics, like_count, save_count } = discovery;
-
-    return (
-        <Section style={discoveryCard}>
-            <table width="100%" cellPadding="0" cellSpacing="0">
-                <tr>
-                    <td>
-                        <Text style={discoveryRank}>#{index + 1}</Text>
-                        <Text style={discoveryDomain}>{domain}</Text>
-
-                        <a href={url} style={discoveryTitleLink}>
-                            <Heading style={discoveryTitle}>{title}</Heading>
-                        </a>
-
-                        {description && (
-                            <Text style={discoveryDescription}>
-                                {description.length > 100 ? `${description.substring(0, 100)}...` : description}
-                            </Text>
-                        )}
-
-                        {topics && topics.length > 0 && (
-                            <Section style={topicsContainer}>
-                                {topics.slice(0, 3).map((topic) => (
-                                    <span key={topic} style={topicChip}>
-                                        {topic}
-                                    </span>
-                                ))}
-                            </Section>
-                        )}
-
-                        <table width="100%" cellPadding="0" cellSpacing="0" style={{ marginTop: '12px' }}>
-                            <tr>
-                                <td>
-                                    <Section style={statsRow}>
-                                        {like_count !== undefined && (
-                                            <Text style={statItem}>👍 {like_count}</Text>
-                                        )}
-                                        {save_count !== undefined && (
-                                            <Text style={statItem}>🔖 {save_count}</Text>
-                                        )}
-                                    </Section>
-                                </td>
-                                <td style={{ textAlign: 'right' as const }}>
-                                    <Button style={buttonVisit} href={url}>
-                                        Visit →
-                                    </Button>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
-        </Section>
-    );
-}
-
-interface UpdateItemProps {
-    emoji: string;
-    title: string;
-    description: string;
-}
-
-function UpdateItem({ emoji, title, description }: UpdateItemProps) {
-    return (
-        <table width="100%" cellPadding="0" cellSpacing="0" style={{ marginBottom: '16px' }}>
-            <tr>
-                <td width="40" style={{ verticalAlign: 'top' as const }}>
-                    <Text style={updateEmoji}>{emoji}</Text>
-                </td>
-                <td>
-                    <Text style={updateTitle}>{title}</Text>
-                    <Text style={updateDescription}>{description}</Text>
-                </td>
-            </tr>
-        </table>
     );
 }
 
@@ -331,10 +300,6 @@ const highlightTitle = {
     margin: '0 0 16px 0',
 };
 
-const highlightStats = {
-    margin: '16px 0 0',
-};
-
 const statCell = {
     textAlign: 'center' as const,
     padding: '0 10px',
@@ -405,10 +370,6 @@ const discoveryDescription = {
     margin: '8px 0',
 };
 
-const topicsContainer = {
-    margin: '12px 0 0',
-};
-
 const topicChip = {
     display: 'inline-block',
     backgroundColor: '#f3f4f6',
@@ -419,16 +380,19 @@ const topicChip = {
     margin: '0 6px 6px 0',
 };
 
-const statsRow = {
-    margin: 0,
-};
-
 const statItem = {
     color: '#6b7280',
     fontSize: '13px',
     margin: '0 12px 0 0',
     display: 'inline',
 };
+
+const statsTable = { marginTop: '16px' };
+const topicTable = { margin: '12px 0 0' };
+const statsActionRow = { marginTop: '12px' };
+const actionCell = { textAlign: 'right' as const };
+const updateItem = { marginBottom: '16px' };
+const updateIconCell = { verticalAlign: 'top' as const };
 
 const buttonVisit = {
     backgroundColor: '#6366f1',

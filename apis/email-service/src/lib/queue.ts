@@ -80,29 +80,60 @@ export class EmailQueue {
      * Process pending emails in the queue
      */
     static async processPendingEmails(batchSize: number = 10): Promise<void> {
-        // Get pending emails that are due to be sent
-        const { data: pendingEmails, error } = await supabase
-            .from('email_queue')
-            .select('*')
-            .eq('status', 'pending')
-            .lte('scheduled_at', new Date().toISOString())
-            .lt('attempts', 3)
-            .order('created_at', { ascending: true })
-            .limit(batchSize);
+        console.log(`\n🔄 Queue Processor Starting (batch size: ${batchSize})...`);
+        const startTime = Date.now();
 
-        if (error) {
-            console.error('Failed to fetch pending emails:', error);
-            return;
-        }
+        try {
+            // Get pending emails that are due to be sent
+            console.log(`⏳ Querying database for pending emails...`);
+            const { data: pendingEmails, error } = await supabase
+                .from('email_queue')
+                .select('*')
+                .eq('status', 'pending')
+                .lte('scheduled_at', new Date().toISOString())
+                .lt('attempts', 3)
+                .order('created_at', { ascending: true })
+                .limit(batchSize);
 
-        if (!pendingEmails || pendingEmails.length === 0) {
-            return;
-        }
+            if (error) {
+                console.error('❌ Failed to fetch pending emails:', error);
+                throw error;
+            }
 
-        console.log(`📬 Processing ${pendingEmails.length} pending emails...`);
+            if (!pendingEmails || pendingEmails.length === 0) {
+                console.log(`✓ No pending emails found`);
+                console.log(`⏱️  Processing time: ${Date.now() - startTime}ms\n`);
+                return;
+            }
 
-        for (const emailItem of pendingEmails) {
-            await this.sendEmail(emailItem);
+            console.log(`✓ Found ${pendingEmails.length} pending email(s)`);
+            console.log(`📬 Processing emails...\n`);
+
+            let successCount = 0;
+            let failCount = 0;
+            let skipCount = 0;
+
+            for (const emailItem of pendingEmails) {
+                try {
+                    await this.sendEmail(emailItem);
+                    successCount++;
+                } catch (err) {
+                    failCount++;
+                    console.error(`Failed to process email ${emailItem.id}:`, err);
+                }
+            }
+
+            console.log(`\n✅ Queue Processing Complete:`);
+            console.log(`   Success: ${successCount}`);
+            console.log(`   Failed: ${failCount}`);
+            console.log(`   ⏱️  Total time: ${Date.now() - startTime}ms\n`);
+        } catch (error: any) {
+            console.error('\n❌ FATAL: Queue processing error:', error);
+            console.error('Supabase URL:', process.env.SUPABASE_URL);
+            console.error('Has Supabase Key:', !!process.env.SUPABASE_SERVICE_KEY);
+            console.error('Error type:', error.constructor.name);
+            console.error('Error message:', error.message);
+            throw error;
         }
     }
 
@@ -110,16 +141,24 @@ export class EmailQueue {
      * Send a single email from the queue
      */
     private static async sendEmail(emailItem: EmailQueueItem): Promise<void> {
+        console.log(`\n📧 Processing email ${emailItem.id}...`);
+        console.log(`   Type: ${emailItem.email_type}`);
+        console.log(`   To: ${emailItem.recipient_email}`);
+        console.log(`   Attempt: ${emailItem.attempts + 1}/${emailItem.max_attempts}`);
+
         try {
             // Check user preferences before sending
+            console.log(`   ⏳ Checking user preferences...`);
             const canSend = await this.checkUserPreferences(emailItem.user_id, emailItem.email_type);
             if (!canSend) {
-                console.log(`⏭️  Skipping ${emailItem.email_type} - user has opted out`);
-                await this.updateQueueItem(emailItem.id, 'sent', 'User opted out');
+                console.log(`   ⏭️  User has opted out - marking as failed`);
+                await this.updateQueueItem(emailItem.id, 'failed', 'User opted out of this email type');
                 return;
             }
+            console.log(`   ✓ User preferences OK`);
 
             // Render email template
+            console.log(`   ⏳ Rendering template...`);
             const html = await this.renderEmailTemplate(
                 emailItem.email_type as EmailType,
                 emailItem.template_data
@@ -128,9 +167,13 @@ export class EmailQueue {
             if (!html) {
                 throw new Error(`Failed to render template for ${emailItem.email_type}`);
             }
+            console.log(`   ✓ Template rendered (${html.length} chars)`);
 
             // Send via Resend
+            console.log(`   ⏳ Sending via Resend...`);
+
             if (resend) {
+                console.log(`   ⏳ Calling Resend API...`);
                 const { data, error } = await resend.emails.send({
                     from: EMAIL_FROM,
                     to: emailItem.recipient_email,
@@ -143,29 +186,42 @@ export class EmailQueue {
                 });
 
                 if (error) {
+                    console.log(`   ❌ Resend API error:`, error);
                     throw error;
                 }
 
-                console.log(`✅ Email sent: ${emailItem.email_type} to ${emailItem.recipient_email} (Resend ID: ${data?.id})`);
+                console.log(`   ✓ Resend accepted email (ID: ${data?.id})`);
 
                 // Update queue status
+                console.log(`   ⏳ Updating queue status...`);
                 await this.updateQueueItem(emailItem.id, 'sent');
+                console.log(`   ✓ Queue status updated`);
 
                 // Log successful send
+                console.log(`   ⏳ Logging to email_logs...`);
                 await this.logEmail(emailItem, 'sent', data?.id);
+                console.log(`   ✓ Email logged`);
+
+                console.log(`   ✅ Email sent successfully!\n`);
             } else {
                 // Simulate sending in development
-                console.log(`🧪 [DEV] Would send email: ${emailItem.email_type} to ${emailItem.recipient_email}`);
-                console.log(`📧 Subject: ${emailItem.subject}`);
+                console.log(`   🧪 [DEV MODE] Resend not configured`);
+                console.log(`   📧 Subject: ${emailItem.subject}`);
+                console.log(`   ⏳ Marking as sent in dev mode...`);
                 await this.updateQueueItem(emailItem.id, 'sent', 'Simulated in dev');
                 await this.logEmail(emailItem, 'sent');
+                console.log(`   ✅ Dev mode send complete\n`);
             }
         } catch (error: any) {
-            console.error(`❌ Failed to send email ${emailItem.id}:`, error);
+            console.error(`\n   ❌ ERROR in sendEmail for ${emailItem.id}:`);
+            console.error(`   Type: ${error.constructor.name}`);
+            console.error(`   Message: ${error.message}`);
+            console.error(`   Stack:`, error.stack);
 
             const attempts = emailItem.attempts + 1;
             const newStatus = attempts >= emailItem.max_attempts ? 'failed' : 'pending';
 
+            console.log(`   ⏳ Updating failure status (attempt ${attempts}/${emailItem.max_attempts})...`);
             await this.updateQueueItem(
                 emailItem.id,
                 newStatus,
@@ -173,8 +229,27 @@ export class EmailQueue {
                 attempts
             );
 
+            console.log(`   ⏳ Logging failure to email_logs...`);
             await this.logEmail(emailItem, 'failed', undefined, error.message);
+            console.log(`   ✓ Failure logged\n`);
         }
+    }
+
+    /**
+     * Helper function to get internal user UUID from Clerk user ID
+     */
+    private static async getUserUUID(clerkUserId: string): Promise<string | null> {
+        const { data, error } = await supabase
+            .from('users')
+            .select('id')
+            .eq('clerk_user_id', clerkUserId)
+            .single();
+
+        if (error || !data) {
+            return null;
+        }
+
+        return data.id;
     }
 
     /**
@@ -184,10 +259,21 @@ export class EmailQueue {
         userId: string,
         emailType: string
     ): Promise<boolean> {
+        // Convert Clerk user ID to UUID if needed
+        let userUUID = userId;
+        if (userId.startsWith('user_')) {
+            const uuid = await this.getUserUUID(userId);
+            if (!uuid) {
+                console.log(`   ❌ User not found for Clerk ID: ${userId}`);
+                return false;
+            }
+            userUUID = uuid;
+        }
+
         const { data: prefs } = await supabase
             .from('email_preferences')
             .select('*')
-            .eq('user_id', userId)
+            .eq('user_id', userUUID)
             .single();
 
         if (!prefs) {
@@ -228,6 +314,8 @@ export class EmailQueue {
         emailType: EmailType,
         templateData: Record<string, any>
     ): Promise<string | null> {
+        console.log(`      📝 Rendering ${emailType} template...`);
+
         try {
             // Add common template data
             const fullData = {
@@ -236,10 +324,13 @@ export class EmailQueue {
                 unsubscribeUrl: UNSUBSCRIBE_URL,
             } as any; // Cast to any since templateData contains the required props
 
+            console.log(`      ⏳ Creating React element...`);
+
             // Select the appropriate template component
             let component;
             switch (emailType) {
                 case 'welcome':
+                    console.log(`      ⏳ Using WelcomeEmail component...`);
                     component = React.createElement(WelcomeEmail, fullData);
                     break;
                 case 'weekly-trending':
@@ -279,19 +370,28 @@ export class EmailQueue {
                     component = React.createElement(ReEngagementEmail, fullData);
                     break;
                 default:
-                    console.error(`Unknown email type: ${emailType}`);
+                    console.error(`      ❌ Unknown email type: ${emailType}`);
                     return null;
             }
 
+            console.log(`      ✓ React element created`);
+            console.log(`      ⏳ Rendering to HTML...`);
+            console.log(`      Component type:`, component.type?.name || 'unknown');
+            console.log(`      Full template data:`, JSON.stringify(fullData, null, 2));
+
             // Render React component to HTML string
             const html = await render(component, {
-                pretty: false, // Set to true for debugging
+                pretty: true, // Set to true for debugging
             });
 
+            console.log(`      ✓ HTML rendered successfully (${html.length} bytes)`);
             return html;
-        } catch (error) {
-            console.error('Failed to render email template:', error);
-            console.error('Template data:', templateData);
+        } catch (error: any) {
+            console.error(`      ❌ Template render error:`, error);
+            console.error(`      Error type:`, error.constructor.name);
+            console.error(`      Error message:`, error.message);
+            console.error(`      Template data:`, JSON.stringify(templateData, null, 2));
+            console.error(`      Stack:`, error.stack);
             return null;
         }
     }

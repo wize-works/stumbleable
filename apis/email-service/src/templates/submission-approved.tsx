@@ -2,6 +2,7 @@ import { Button, Heading, Section, Text } from '@react-email/components';
 import * as React from 'react';
 import type { SubmissionEmailProps } from '../types';
 import { EmailLayout } from './components/EmailLayout';
+import { ChartIcon, CommentIcon, GlobeIcon, LightbulbIcon, PartyIcon, RocketIcon, TargetIcon, TrendingIcon } from './components/Icons';
 
 export function SubmissionApprovedEmail({
     submissionUrl,
@@ -13,11 +14,11 @@ export function SubmissionApprovedEmail({
 }: SubmissionEmailProps) {
     return (
         <EmailLayout
-            previewText="🎉 Your submission has been approved!"
+            previewText="Your submission has been approved!"
             unsubscribeUrl={unsubscribeUrl}
         >
             <Section style={celebrationBanner}>
-                <Text style={celebrationIcon}>🎉</Text>
+                <PartyIcon size={48} />
                 <Heading style={h1}>Submission Approved!</Heading>
                 <Text style={bannerText}>Your content is now live on Stumbleable</Text>
             </Section>
@@ -36,26 +37,55 @@ export function SubmissionApprovedEmail({
 
             <Heading style={h2}>What This Means</Heading>
 
-            <Section style={benefitsList}>
-                <BenefitItem
-                    icon="🌍"
-                    title="Now Discoverable"
-                    description="Users can now stumble upon your submission in their discovery feed."
-                />
-                <BenefitItem
-                    icon="🎯"
-                    title="Smart Matching"
-                    description="Our algorithm will show it to users with matching interests and wildness levels."
-                />
-                <BenefitItem
-                    icon="📊"
-                    title="Track Performance"
-                    description="You can see how it's performing in your submission dashboard."
-                />
-            </Section>
+            <div style={benefitsList}>
+                <table width="100%" cellPadding="0" cellSpacing="0" style={benefitItem}>
+                    <tbody>
+                        <tr>
+                            <td width="40" style={iconCell}>
+                                <GlobeIcon size={24} />
+                            </td>
+                            <td>
+                                <strong style={benefitTitle}>Now Discoverable</strong>
+                                <br />
+                                <span style={benefitDescription}>Users can now stumble upon your submission in their discovery feed.</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table width="100%" cellPadding="0" cellSpacing="0" style={benefitItem}>
+                    <tbody>
+                        <tr>
+                            <td width="40" style={iconCell}>
+                                <TargetIcon size={24} />
+                            </td>
+                            <td>
+                                <strong style={benefitTitle}>Smart Matching</strong>
+                                <br />
+                                <span style={benefitDescription}>Our algorithm will show it to users with matching interests and wildness levels.</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table width="100%" cellPadding="0" cellSpacing="0" style={benefitItem}>
+                    <tbody>
+                        <tr>
+                            <td width="40" style={iconCell}>
+                                <ChartIcon size={24} />
+                            </td>
+                            <td>
+                                <strong style={benefitTitle}>Track Performance</strong>
+                                <br />
+                                <span style={benefitDescription}>You can see how it's performing in your submission dashboard.</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
             <Section style={statsBox}>
-                <Text style={statsTitle}>📈 Track Your Submission</Text>
+                <Text style={statsTitle}>
+                    <TrendingIcon size={18} style={{ marginRight: '8px' }} /> Track Your Submission
+                </Text>
                 <Text style={statsText}>
                     Watch as users discover, like, save, and share your submission. Check your dashboard to
                     see real-time engagement metrics.
@@ -74,17 +104,52 @@ export function SubmissionApprovedEmail({
                 Help spread the word about Stumbleable! Every submission makes our discovery engine better.
             </Text>
 
-            <Section style={shareBox}>
-                <Text style={shareTitle}>💬 Ways to Help:</Text>
-                <Section style={shareList}>
-                    <ShareItem text="Submit more great content you've discovered" />
-                    <ShareItem text="Share Stumbleable with friends who love discovery" />
-                    <ShareItem text="Give feedback on submissions you stumble upon" />
-                </Section>
-            </Section>
+            <div style={shareBox}>
+                <div style={shareTitle}>
+                    <CommentIcon size={18} style={{ marginRight: '8px' }} /> Ways to Help:
+                </div>
+                <table width="100%" cellPadding="0" cellSpacing="0" style={shareItem}>
+                    <tbody>
+                        <tr>
+                            <td width="24" style={shareIconCell}>
+                                <span style={checkmark}>→</span>
+                            </td>
+                            <td>
+                                <span style={shareItemText}>Submit more great content you've discovered</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table width="100%" cellPadding="0" cellSpacing="0" style={shareItem}>
+                    <tbody>
+                        <tr>
+                            <td width="24" style={shareIconCell}>
+                                <span style={checkmark}>→</span>
+                            </td>
+                            <td>
+                                <span style={shareItemText}>Share Stumbleable with friends who love discovery</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table width="100%" cellPadding="0" cellSpacing="0" style={shareItem}>
+                    <tbody>
+                        <tr>
+                            <td width="24" style={shareIconCell}>
+                                <span style={checkmark}>→</span>
+                            </td>
+                            <td>
+                                <span style={shareItemText}>Give feedback on submissions you stumble upon</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
             <Section style={tipBox}>
-                <Text style={tipTitle}>💡 Pro Tip</Text>
+                <Text style={tipTitle}>
+                    <LightbulbIcon size={18} style={{ marginRight: '8px' }} /> Pro Tip
+                </Text>
                 <Text style={tipText}>
                     Submissions that get early engagement (likes, saves, shares) tend to reach more users
                     through our algorithm. Share it with your network to give it a boost!
@@ -92,7 +157,7 @@ export function SubmissionApprovedEmail({
             </Section>
 
             <Text style={thanks}>
-                Thank you for contributing quality content to the community! 🚀
+                Thank you for contributing quality content to the community! <RocketIcon size={20} style={{ marginLeft: '4px' }} />
             </Text>
 
             <Text style={signature}>
@@ -102,61 +167,14 @@ export function SubmissionApprovedEmail({
     );
 }
 
-interface BenefitItemProps {
-    icon: string;
-    title: string;
-    description: string;
-}
-
-function BenefitItem({ icon, title, description }: BenefitItemProps) {
-    return (
-        <table width="100%" cellPadding="0" cellSpacing="0" style={{ marginBottom: '16px' }}>
-            <tr>
-                <td width="40" style={{ verticalAlign: 'top' as const }}>
-                    <Text style={benefitIcon}>{icon}</Text>
-                </td>
-                <td>
-                    <Text style={benefitTitle}>{title}</Text>
-                    <Text style={benefitDescription}>{description}</Text>
-                </td>
-            </tr>
-        </table>
-    );
-}
-
-interface ShareItemProps {
-    text: string;
-}
-
-function ShareItem({ text }: ShareItemProps) {
-    return (
-        <table width="100%" cellPadding="0" cellSpacing="0" style={{ marginBottom: '8px' }}>
-            <tr>
-                <td width="24" style={{ verticalAlign: 'middle' as const }}>
-                    <Text style={checkmark}>→</Text>
-                </td>
-                <td>
-                    <Text style={shareItemText}>{text}</Text>
-                </td>
-            </tr>
-        </table>
-    );
-}
-
 // Styles
 const celebrationBanner = {
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#EDFDF6', // Light success green tint
     borderRadius: '12px',
     padding: '32px 24px',
     textAlign: 'center' as const,
     margin: '24px 0',
-    border: '2px solid #86efac',
-};
-
-const celebrationIcon = {
-    fontSize: '48px',
-    margin: '0 0 16px 0',
-    lineHeight: '1',
+    border: '2px solid #7BF3B8', // Lighter brand success tint
 };
 
 const h1 = {
@@ -168,7 +186,7 @@ const h1 = {
 };
 
 const bannerText = {
-    color: '#059669',
+    color: '#17E68F', // Brand success color
     fontSize: '16px',
     fontWeight: '600' as const,
     margin: 0,
@@ -189,15 +207,15 @@ const text = {
 };
 
 const submissionBox = {
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#EDFDF6', // Light success green tint
     borderRadius: '8px',
     padding: '20px',
     margin: '24px 0',
-    borderLeft: '4px solid #10b981',
+    borderLeft: '4px solid #17E68F', // Brand success color
 };
 
 const submissionLabel = {
-    color: '#059669',
+    color: '#17E68F', // Brand success color
     fontSize: '12px',
     textTransform: 'uppercase' as const,
     letterSpacing: '1px',
@@ -206,7 +224,7 @@ const submissionLabel = {
 };
 
 const submissionUrlText = {
-    color: '#6366f1',
+    color: '#FF4D6D', // Brand primary color (Punchy Pink-Red)
     fontSize: '14px',
     margin: '0 0 8px 0',
     wordBreak: 'break-all' as const,
@@ -223,10 +241,12 @@ const benefitsList = {
     margin: '24px 0',
 };
 
-const benefitIcon = {
-    fontSize: '24px',
-    margin: 0,
-    lineHeight: '1',
+const benefitItem = {
+    marginBottom: '16px',
+};
+
+const iconCell = {
+    verticalAlign: 'top' as const,
 };
 
 const benefitTitle = {
@@ -245,21 +265,21 @@ const benefitDescription = {
 };
 
 const statsBox = {
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#F6F0E9', // Brand base-200 (cream tone)
     borderRadius: '8px',
     padding: '16px',
     margin: '24px 0',
 };
 
 const statsTitle = {
-    color: '#1e40af',
+    color: '#1F262E', // Brand neutral color
     fontSize: '14px',
     fontWeight: 'bold' as const,
     margin: '0 0 8px 0',
 };
 
 const statsText = {
-    color: '#1e3a8a',
+    color: '#374151', // Standard text gray
     fontSize: '14px',
     lineHeight: '20px',
     margin: 0,
@@ -271,7 +291,7 @@ const buttonContainer = {
 };
 
 const buttonPrimary = {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#FF4D6D', // Brand primary color (Punchy Pink-Red)
     borderRadius: '8px',
     color: '#fff',
     fontSize: '16px',
@@ -283,14 +303,14 @@ const buttonPrimary = {
 };
 
 const shareBox = {
-    backgroundColor: '#faf5ff',
+    backgroundColor: '#F6F0E9', // Brand base-200 (cream tone)
     borderRadius: '8px',
     padding: '20px',
     margin: '24px 0',
 };
 
 const shareTitle = {
-    color: '#6b21a8',
+    color: '#1F262E', // Brand neutral color
     fontSize: '15px',
     fontWeight: 'bold' as const,
     margin: '0 0 12px 0',
@@ -300,8 +320,16 @@ const shareList = {
     margin: 0,
 };
 
+const shareItem = {
+    marginBottom: '8px',
+};
+
+const shareIconCell = {
+    verticalAlign: 'middle' as const,
+};
+
 const checkmark = {
-    color: '#6366f1',
+    color: '#FF4D6D', // Brand primary color (Punchy Pink-Red)
     fontSize: '16px',
     fontWeight: 'bold' as const,
     margin: 0,
@@ -315,21 +343,21 @@ const shareItemText = {
 };
 
 const tipBox = {
-    backgroundColor: '#fef3c7',
+    backgroundColor: '#FFF9E6', // Light warning yellow tint
     borderRadius: '8px',
     padding: '16px',
     margin: '24px 0',
 };
 
 const tipTitle = {
-    color: '#92400e',
+    color: '#FF8C42', // Brand warning color
     fontSize: '14px',
     fontWeight: 'bold' as const,
     margin: '0 0 8px 0',
 };
 
 const tipText = {
-    color: '#78350f',
+    color: '#6b7280', // Standard secondary text gray
     fontSize: '13px',
     lineHeight: '20px',
     margin: 0,

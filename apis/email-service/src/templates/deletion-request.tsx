@@ -2,6 +2,7 @@ import { Button, Heading, Hr, Section, Text } from '@react-email/components';
 import * as React from 'react';
 import type { DeletionRequestEmailProps } from '../types';
 import { EmailLayout } from './components/EmailLayout';
+import { CalendarIcon, InboxIcon, LockIcon, TrashIcon, WarningIcon } from './components/Icons';
 
 export function DeletionRequestEmail({
     scheduledDeletionDate,
@@ -33,7 +34,9 @@ export function DeletionRequestEmail({
             </Text>
 
             <Section style={warningBox}>
-                <Text style={warningTitle}>⚠️ Important Information</Text>
+                <Text style={warningTitle}>
+                    <WarningIcon size={18} style={{ marginRight: '8px' }} /> Important Information
+                </Text>
                 <Text style={warningText}>
                     Your account will be permanently deleted on <strong>{formattedDate}</strong>.
                 </Text>
@@ -46,21 +49,39 @@ export function DeletionRequestEmail({
             <Heading style={h2}>What Happens Next?</Heading>
 
             <Section style={timeline}>
-                <TimelineItem
-                    icon="🔒"
-                    title="Now: Account Locked"
-                    description="You can no longer access your account, but your data is still safe."
-                />
-                <TimelineItem
-                    icon="📅"
-                    title="30-Day Grace Period"
-                    description="You'll receive reminder emails at 7 days and 1 day before deletion."
-                />
-                <TimelineItem
-                    icon="🗑️"
-                    title={`${formattedDate}: Permanent Deletion`}
-                    description="All your data will be permanently removed from our systems."
-                />
+                <table width="100%" cellPadding="0" cellSpacing="0" style={timelineItem}>
+                    <tr>
+                        <td width="40" style={timelineIconCell}>
+                            <LockIcon size={24} />
+                        </td>
+                        <td>
+                            <Text style={timelineTitle}>Now: Account Locked</Text>
+                            <Text style={timelineDescription}>You can no longer access your account, but your data is still safe.</Text>
+                        </td>
+                    </tr>
+                </table>
+                <table width="100%" cellPadding="0" cellSpacing="0" style={timelineItem}>
+                    <tr>
+                        <td width="40" style={timelineIconCell}>
+                            <CalendarIcon size={24} />
+                        </td>
+                        <td>
+                            <Text style={timelineTitle}>30-Day Grace Period</Text>
+                            <Text style={timelineDescription}>You'll receive reminder emails at 7 days and 1 day before deletion.</Text>
+                        </td>
+                    </tr>
+                </table>
+                <table width="100%" cellPadding="0" cellSpacing="0" style={timelineItem}>
+                    <tr>
+                        <td width="40" style={timelineIconCell}>
+                            <TrashIcon size={24} />
+                        </td>
+                        <td>
+                            <Text style={timelineTitle}>{formattedDate}: Permanent Deletion</Text>
+                            <Text style={timelineDescription}>All your data will be permanently removed from our systems.</Text>
+                        </td>
+                    </tr>
+                </table>
             </Section>
 
             <Heading style={h2}>Changed Your Mind?</Heading>
@@ -79,7 +100,9 @@ export function DeletionRequestEmail({
             <Hr style={hr} />
 
             <Section style={infoBox}>
-                <Text style={infoTitle}>📥 Before We Go</Text>
+                <Text style={infoTitle}>
+                    <InboxIcon size={18} style={{ marginRight: '8px' }} /> Before We Go
+                </Text>
                 <Text style={infoText}>
                     Don't forget to <a href={`${frontendUrl}/data-export`} style={link}>export your data</a>{' '}
                     if you haven't already. This includes all your saved discoveries and preferences.
@@ -90,28 +113,6 @@ export function DeletionRequestEmail({
                 Questions? <a href={`${frontendUrl}/contact`} style={link}>Contact our support team</a>.
             </Text>
         </EmailLayout>
-    );
-}
-
-interface TimelineItemProps {
-    icon: string;
-    title: string;
-    description: string;
-}
-
-function TimelineItem({ icon, title, description }: TimelineItemProps) {
-    return (
-        <table width="100%" cellPadding="0" cellSpacing="0" style={{ marginBottom: '16px' }}>
-            <tr>
-                <td width="40" style={{ verticalAlign: 'top' as const }}>
-                    <Text style={timelineIcon}>{icon}</Text>
-                </td>
-                <td>
-                    <Text style={timelineTitle}>{title}</Text>
-                    <Text style={timelineDescription}>{description}</Text>
-                </td>
-            </tr>
-        </table>
     );
 }
 
@@ -139,22 +140,22 @@ const text = {
 };
 
 const warningBox = {
-    backgroundColor: '#fef2f2',
-    border: '2px solid #fca5a5',
+    backgroundColor: '#FFF5F5', // Light error tint
+    border: '2px solid #FF99AA', // Lighter brand error tint
     borderRadius: '8px',
     padding: '20px',
     margin: '24px 0',
 };
 
 const warningTitle = {
-    color: '#991b1b',
+    color: '#FF3355', // Brand error color
     fontSize: '16px',
     fontWeight: 'bold' as const,
     margin: '0 0 12px 0',
 };
 
 const warningText = {
-    color: '#7f1d1d',
+    color: '#6b7280', // Standard secondary text gray
     fontSize: '14px',
     lineHeight: '20px',
     margin: '8px 0',
@@ -162,12 +163,6 @@ const warningText = {
 
 const timeline = {
     margin: '24px 0',
-};
-
-const timelineIcon = {
-    fontSize: '24px',
-    margin: 0,
-    lineHeight: '1',
 };
 
 const timelineTitle = {
@@ -185,13 +180,16 @@ const timelineDescription = {
     margin: 0,
 };
 
+const timelineItem = { marginBottom: '16px' };
+const timelineIconCell = { verticalAlign: 'top' as const };
+
 const buttonContainer = {
     margin: '32px 0',
     textAlign: 'center' as const,
 };
 
 const buttonPrimary = {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#FF4D6D', // Brand primary color (Punchy Pink-Red)
     borderRadius: '8px',
     color: '#fff',
     fontSize: '16px',
@@ -208,21 +206,21 @@ const hr = {
 };
 
 const infoBox = {
-    backgroundColor: '#f0f9ff',
+    backgroundColor: '#F6F0E9', // Brand base-200 (cream tone)
     borderRadius: '8px',
     padding: '16px',
     margin: '24px 0',
 };
 
 const infoTitle = {
-    color: '#1e40af',
+    color: '#0091FF', // Brand info color
     fontSize: '14px',
     fontWeight: 'bold' as const,
     margin: '0 0 8px 0',
 };
 
 const infoText = {
-    color: '#1e3a8a',
+    color: '#374151', // Standard text gray
     fontSize: '14px',
     lineHeight: '20px',
     margin: 0,
@@ -237,7 +235,7 @@ const footerNote = {
 };
 
 const link = {
-    color: '#6366f1',
+    color: '#FF4D6D', // Brand primary color (Punchy Pink-Red)
     textDecoration: 'underline',
 };
 

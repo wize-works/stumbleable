@@ -73,9 +73,74 @@ export function SavedDigestEmail({
 
             <Heading style={h2}>Your Saved Collection</Heading>
 
-            {discoveries.map((discovery, index) => (
-                <DiscoveryCard key={discovery.id} discovery={discovery} index={index} />
-            ))}
+            {discoveries.map((discovery, index) => {
+                const { url, title, description, domain, topics, image_url } = discovery;
+
+                return (
+                    <Section key={discovery.id} style={discoveryCard}>
+                        <table width="100%" cellPadding="0" cellSpacing="0">
+                            <tr>
+                                <td>
+                                    <table width="100%" cellPadding="0" cellSpacing="0">
+                                        <tr>
+                                            <td>
+                                                <Text style={discoveryNumber}>#{index + 1}</Text>
+                                                <Text style={discoveryDomain}>{domain}</Text>
+                                            </td>
+                                            <td style={savedBadgeCell}>
+                                                <Text style={savedBadge}>SAVED</Text>
+                                            </td>
+                                        </tr>
+                                    </table>
+
+                                    <a href={url} style={discoveryTitleLink}>
+                                        <Heading style={discoveryTitle}>{title}</Heading>
+                                    </a>
+
+                                    {description && (
+                                        <Text style={discoveryDescription}>
+                                            {description.length > 120 ? `${description.substring(0, 120)}...` : description}
+                                        </Text>
+                                    )}
+
+                                    {topics && topics.length > 0 && (
+                                        <table width="100%" cellPadding="0" cellSpacing="0" style={topicsContainer}>
+                                            <tr>
+                                                <td>
+                                                    <Text style={topicText}>
+                                                        {topics.slice(0, 3).map((topic, idx) => (
+                                                            <React.Fragment key={topic}>
+                                                                <strong style={topicChip}>{topic}</strong>
+                                                                {idx < Math.min(2, topics.length - 1) && ' '}
+                                                            </React.Fragment>
+                                                        ))}
+                                                        {topics.length > 3 && (
+                                                            <em style={topicMore}> +{topics.length - 3} more</em>
+                                                        )}
+                                                    </Text>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    )}
+
+                                    <table width="100%" cellPadding="0" cellSpacing="0" style={actionRow}>
+                                        <tr>
+                                            <td>
+                                                <Button style={buttonVisit} href={url}>
+                                                    Visit Site
+                                                </Button>
+                                                <a href={`${url}?ref=stumbleable`} style={viewInAppLink}>
+                                                    View in App →
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </Section>
+                );
+            })}
 
             {hasMoreThanShown && (
                 <Section style={moreBox}>
@@ -117,69 +182,6 @@ export function SavedDigestEmail({
                 how we can make them better.
             </Text>
         </EmailLayout>
-    );
-}
-
-interface DiscoveryCardProps {
-    discovery: Discovery;
-    index: number;
-}
-
-function DiscoveryCard({ discovery, index }: DiscoveryCardProps) {
-    const { url, title, description, domain, topics, image_url } = discovery;
-
-    return (
-        <Section style={discoveryCard}>
-            <table width="100%" cellPadding="0" cellSpacing="0">
-                <tr>
-                    <td>
-                        <table width="100%" cellPadding="0" cellSpacing="0">
-                            <tr>
-                                <td>
-                                    <Text style={discoveryNumber}>#{index + 1}</Text>
-                                    <Text style={discoveryDomain}>{domain}</Text>
-                                </td>
-                                <td style={{ textAlign: 'right' as const }}>
-                                    <Text style={savedBadge}>SAVED</Text>
-                                </td>
-                            </tr>
-                        </table>
-
-                        <a href={url} style={discoveryTitleLink}>
-                            <Heading style={discoveryTitle}>{title}</Heading>
-                        </a>
-
-                        {description && (
-                            <Text style={discoveryDescription}>
-                                {description.length > 120 ? `${description.substring(0, 120)}...` : description}
-                            </Text>
-                        )}
-
-                        {topics && topics.length > 0 && (
-                            <Section style={topicsContainer}>
-                                {topics.slice(0, 3).map((topic) => (
-                                    <span key={topic} style={topicChip}>
-                                        {topic}
-                                    </span>
-                                ))}
-                                {topics.length > 3 && (
-                                    <span style={topicMore}>+{topics.length - 3} more</span>
-                                )}
-                            </Section>
-                        )}
-
-                        <Section style={actionRow}>
-                            <Button style={buttonVisit} href={url}>
-                                Visit Site
-                            </Button>
-                            <a href={`${url}?ref=stumbleable`} style={viewInAppLink}>
-                                View in App →
-                            </a>
-                        </Section>
-                    </td>
-                </tr>
-            </table>
-        </Section>
     );
 }
 
@@ -330,6 +332,9 @@ const topicMore = {
     fontSize: '12px',
     margin: '0 6px 6px 0',
 };
+
+const savedBadgeCell = { textAlign: 'right' as const };
+const topicText = { margin: '0' };
 
 const actionRow = {
     margin: '16px 0 0',

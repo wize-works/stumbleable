@@ -101,6 +101,7 @@ export default function AdminDashboard() {
             { name: 'Interaction Service', url: process.env.NEXT_PUBLIC_INTERACTION_API_URL || 'http://localhost:7002' },
             { name: 'Moderation Service', url: process.env.NEXT_PUBLIC_MODERATION_API_URL || 'http://localhost:7005' },
             { name: 'Crawler Service', url: process.env.NEXT_PUBLIC_CRAWLER_API_URL || 'http://localhost:7004' },
+            { name: 'Email Service', url: process.env.NEXT_PUBLIC_EMAIL_API_URL || 'http://localhost:7006' },
         ];
 
         const statuses: ServiceStatus[] = await Promise.all(
@@ -497,7 +498,7 @@ export default function AdminDashboard() {
                                 <i className="fa-solid fa-duotone fa-tools text-primary"></i>
                                 Admin Tools
                             </h2>
-                            <div className="space-y-3">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <Link
                                     href="/admin/moderation"
                                     className="btn btn-block btn-outline justify-start"
@@ -533,6 +534,16 @@ export default function AdminDashboard() {
                                     <i className="fa-solid fa-duotone fa-chart-line text-info"></i>
                                     Analytics Dashboard
                                 </Link>
+                                <Link
+                                    href="/admin/email-queue"
+                                    className="btn btn-block btn-outline justify-start"
+                                >
+                                    <i className="fa-solid fa-duotone fa-envelope text-secondary"></i>
+                                    Email Queue
+                                    {stats && stats.pendingModeration > 0 && (
+                                        <span className="badge badge-warning badge-sm">{stats.pendingModeration}</span>
+                                    )}
+                                </Link>
                                 <button
                                     className="btn btn-block btn-outline justify-start"
                                     disabled
@@ -565,7 +576,7 @@ export default function AdminDashboard() {
                                     <i className="fa-solid fa-duotone fa-rotate-right"></i>
                                 </button>
                             </div>
-                            <div className="space-y-3">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 {serviceStatuses.length === 0 ? (
                                     <div className="text-center py-4 text-base-content/60">
                                         <div className="loading loading-spinner loading-sm"></div>

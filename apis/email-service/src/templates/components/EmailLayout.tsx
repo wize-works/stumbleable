@@ -4,7 +4,7 @@ import {
     Head,
     Hr,
     Html,
-    Link,
+    Preview,
     Section,
     Text
 } from '@react-email/components';
@@ -20,20 +20,7 @@ export function EmailLayout({ children, previewText, unsubscribeUrl }: EmailLayo
     return (
         <Html>
             <Head />
-            {previewText && (
-                <div
-                    style={{
-                        display: 'none',
-                        overflow: 'hidden',
-                        lineHeight: '1px',
-                        opacity: 0,
-                        maxHeight: 0,
-                        maxWidth: 0,
-                    }}
-                >
-                    {previewText}
-                </div>
-            )}
+            {previewText && <Preview>{previewText}</Preview>}
             <Body style={main}>
                 <Container style={container}>
                     {/* Header */}
@@ -42,31 +29,25 @@ export function EmailLayout({ children, previewText, unsubscribeUrl }: EmailLayo
                     </Section>
 
                     {/* Content */}
-                    <Section style={content}>{children}</Section>
+                    <div style={content}>{children}</div>
 
                     {/* Footer */}
                     <Hr style={hr} />
-                    <Section style={footer}>
-                        <Text style={footerText}>
+                    <div style={footer}>
+                        <p style={footerText}>
                             You're receiving this email because you have an account on Stumbleable.
-                        </Text>
-                        <Text style={footerLinks}>
-                            <Link href={unsubscribeUrl} style={link}>
-                                Unsubscribe
-                            </Link>
+                        </p>
+                        <p style={footerLinks}>
+                            <a href={unsubscribeUrl} style={link}>Unsubscribe</a>
                             {' • '}
-                            <Link href="https://stumbleable.com/privacy" style={link}>
-                                Privacy Policy
-                            </Link>
+                            <a href="https://stumbleable.com/privacy" style={link}>Privacy Policy</a>
                             {' • '}
-                            <Link href="https://stumbleable.com/contact" style={link}>
-                                Contact Us
-                            </Link>
-                        </Text>
-                        <Text style={footerCopyright}>
+                            <a href="https://stumbleable.com/contact" style={link}>Contact Us</a>
+                        </p>
+                        <p style={footerCopyright}>
                             © {new Date().getFullYear()} Stumbleable. All rights reserved.
-                        </Text>
-                    </Section>
+                        </p>
+                    </div>
                 </Container>
             </Body>
         </Html>
@@ -75,13 +56,13 @@ export function EmailLayout({ children, previewText, unsubscribeUrl }: EmailLayo
 
 // Styles
 const main = {
-    backgroundColor: '#f6f9fc',
+    backgroundColor: '#EDE3D9', // Brand base-300 (cream background)
     fontFamily:
         '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
 };
 
 const container = {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#FFFDF7', // Brand base-100 (lightest cream)
     margin: '0 auto',
     padding: '20px 0 48px',
     marginBottom: '64px',
@@ -96,7 +77,7 @@ const header = {
 const logo = {
     fontSize: '32px',
     fontWeight: 'bold',
-    color: '#6366f1',
+    color: '#FF4D6D', // Brand primary color (Punchy Pink-Red)
     margin: 0,
 };
 
@@ -137,6 +118,6 @@ const footerCopyright = {
 };
 
 const link = {
-    color: '#6366f1',
+    color: '#FF4D6D', // Brand primary color (Punchy Pink-Red)
     textDecoration: 'none',
 };

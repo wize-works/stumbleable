@@ -2,6 +2,7 @@ import { Button, Heading, Section, Text } from '@react-email/components';
 import * as React from 'react';
 import type { DeletionCancelledEmailProps } from '../types';
 import { EmailLayout } from './components/EmailLayout';
+import { BookmarkIcon, CheckIcon, CommentIcon, FireIcon, LightbulbIcon, PartyIcon, RocketIcon, TargetIcon } from './components/Icons';
 
 export function DeletionCancelledEmail({
     cancelledDate,
@@ -25,7 +26,7 @@ export function DeletionCancelledEmail({
             unsubscribeUrl={unsubscribeUrl}
         >
             <Section style={celebrationBanner}>
-                <Text style={celebrationIcon}>🎉</Text>
+                <PartyIcon size={48} />
                 <Heading style={h1}>Welcome Back!</Heading>
                 <Text style={bannerText}>Your account has been restored</Text>
             </Section>
@@ -38,13 +39,49 @@ export function DeletionCancelledEmail({
             </Text>
 
             <Section style={statusBox}>
-                <Text style={statusTitle}>✅ Your Account Status</Text>
-                <Section style={statusList}>
-                    <StatusItem label="Account" status="Active" />
-                    <StatusItem label="Saved Discoveries" status="Fully Restored" />
-                    <StatusItem label="Preferences" status="Intact" />
-                    <StatusItem label="Interaction History" status="Preserved" />
-                </Section>
+                <Text style={statusTitle}>
+                    <CheckIcon size={18} style={{ marginRight: '8px' }} /> Your Account Status
+                </Text>
+                <table width="100%" cellPadding="0" cellSpacing="0" style={statusRow}>
+                    <tr>
+                        <td width="140">
+                            <Text style={statusLabel}>Account:</Text>
+                        </td>
+                        <td>
+                            <Text style={statusValue}>Active</Text>
+                        </td>
+                    </tr>
+                </table>
+                <table width="100%" cellPadding="0" cellSpacing="0" style={statusRow}>
+                    <tr>
+                        <td width="140">
+                            <Text style={statusLabel}>Saved Discoveries:</Text>
+                        </td>
+                        <td>
+                            <Text style={statusValue}>Fully Restored</Text>
+                        </td>
+                    </tr>
+                </table>
+                <table width="100%" cellPadding="0" cellSpacing="0" style={statusRow}>
+                    <tr>
+                        <td width="140">
+                            <Text style={statusLabel}>Preferences:</Text>
+                        </td>
+                        <td>
+                            <Text style={statusValue}>Intact</Text>
+                        </td>
+                    </tr>
+                </table>
+                <table width="100%" cellPadding="0" cellSpacing="0" style={statusRow}>
+                    <tr>
+                        <td width="140">
+                            <Text style={statusLabel}>Interaction History:</Text>
+                        </td>
+                        <td>
+                            <Text style={statusValue}>Preserved</Text>
+                        </td>
+                    </tr>
+                </table>
             </Section>
 
             <Heading style={h2}>Ready to Stumble Again?</Heading>
@@ -62,23 +99,42 @@ export function DeletionCancelledEmail({
 
             <Section style={quickLinksBox}>
                 <Text style={quickLinksTitle}>Quick Links to Get Back In:</Text>
-                <Section style={quickLinksList}>
-                    <QuickLink
-                        emoji="🔖"
-                        text="View your saved discoveries"
-                        url={`${frontendUrl}/saved`}
-                    />
-                    <QuickLink
-                        emoji="🎯"
-                        text="Update your interests"
-                        url={`${frontendUrl}/dashboard`}
-                    />
-                    <QuickLink
-                        emoji="🔥"
-                        text="Check out trending content"
-                        url={`${frontendUrl}/explore?sort=trending`}
-                    />
-                </Section>
+                <table width="100%" cellPadding="0" cellSpacing="0" style={quickLinkRow}>
+                    <tr>
+                        <td width="30" style={quickLinkIconCell}>
+                            <BookmarkIcon size={18} />
+                        </td>
+                        <td>
+                            <a href={`${frontendUrl}/saved`} style={quickLinkText}>
+                                View your saved discoveries
+                            </a>
+                        </td>
+                    </tr>
+                </table>
+                <table width="100%" cellPadding="0" cellSpacing="0" style={quickLinkRow}>
+                    <tr>
+                        <td width="30" style={quickLinkIconCell}>
+                            <TargetIcon size={18} />
+                        </td>
+                        <td>
+                            <a href={`${frontendUrl}/dashboard`} style={quickLinkText}>
+                                Update your interests
+                            </a>
+                        </td>
+                    </tr>
+                </table>
+                <table width="100%" cellPadding="0" cellSpacing="0" style={quickLinkRow}>
+                    <tr>
+                        <td width="30" style={quickLinkIconCell}>
+                            <FireIcon size={18} />
+                        </td>
+                        <td>
+                            <a href={`${frontendUrl}/explore?sort=trending`} style={quickLinkText}>
+                                Check out trending content
+                            </a>
+                        </td>
+                    </tr>
+                </table>
             </Section>
 
             <Heading style={h2}>We're Here to Help</Heading>
@@ -90,14 +146,16 @@ export function DeletionCancelledEmail({
 
             <Section style={supportBox}>
                 <Text style={supportText}>
-                    💬 <a href={`${frontendUrl}/contact`} style={link}>Share your feedback</a> or{' '}
+                    <CommentIcon size={18} style={{ marginRight: '8px' }} /> <a href={`${frontendUrl}/contact`} style={link}>Share your feedback</a> or{' '}
                     <a href={`${frontendUrl}/help`} style={link}>browse our help center</a> if you need
                     assistance.
                 </Text>
             </Section>
 
             <Section style={tipBox}>
-                <Text style={tipTitle}>💡 Did You Know?</Text>
+                <Text style={tipTitle}>
+                    <LightbulbIcon size={18} style={{ marginRight: '8px' }} /> Did You Know?
+                </Text>
                 <Text style={tipText}>
                     You can always take a break without deleting your account. Just sign out and come back
                     whenever you're ready. Your discoveries will be waiting!
@@ -105,7 +163,7 @@ export function DeletionCancelledEmail({
             </Section>
 
             <Text style={welcomeBack}>
-                We're glad you decided to stay. Happy stumbling! 🚀
+                We're glad you decided to stay. Happy stumbling! <RocketIcon size={20} style={{ marginLeft: '4px' }} />
             </Text>
 
             <Text style={signature}>
@@ -115,63 +173,14 @@ export function DeletionCancelledEmail({
     );
 }
 
-interface StatusItemProps {
-    label: string;
-    status: string;
-}
-
-function StatusItem({ label, status }: StatusItemProps) {
-    return (
-        <table width="100%" cellPadding="0" cellSpacing="0" style={{ marginBottom: '8px' }}>
-            <tr>
-                <td width="140">
-                    <Text style={statusLabel}>{label}:</Text>
-                </td>
-                <td>
-                    <Text style={statusValue}>{status}</Text>
-                </td>
-            </tr>
-        </table>
-    );
-}
-
-interface QuickLinkProps {
-    emoji: string;
-    text: string;
-    url: string;
-}
-
-function QuickLink({ emoji, text, url }: QuickLinkProps) {
-    return (
-        <table width="100%" cellPadding="0" cellSpacing="0" style={{ marginBottom: '10px' }}>
-            <tr>
-                <td width="30" style={{ verticalAlign: 'middle' as const }}>
-                    <Text style={quickLinkIcon}>{emoji}</Text>
-                </td>
-                <td>
-                    <a href={url} style={quickLinkText}>
-                        {text}
-                    </a>
-                </td>
-            </tr>
-        </table>
-    );
-}
-
 // Styles
 const celebrationBanner = {
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#EDFDF6', // Light success green tint
     borderRadius: '12px',
     padding: '32px 24px',
     textAlign: 'center' as const,
     margin: '24px 0',
-    border: '2px solid #86efac',
-};
-
-const celebrationIcon = {
-    fontSize: '48px',
-    margin: '0 0 16px 0',
-    lineHeight: '1',
+    border: '2px solid #7BF3B8', // Lighter brand success tint
 };
 
 const h1 = {
@@ -182,7 +191,7 @@ const h1 = {
 };
 
 const bannerText = {
-    color: '#059669',
+    color: '#17E68F', // Brand success color
     fontSize: '16px',
     fontWeight: '600' as const,
     margin: 0,
@@ -203,7 +212,7 @@ const text = {
 };
 
 const statusBox = {
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#F6F0E9', // Brand base-200 (cream tone)
     borderRadius: '8px',
     padding: '20px',
     margin: '24px 0',
@@ -216,10 +225,6 @@ const statusTitle = {
     margin: '0 0 16px 0',
 };
 
-const statusList = {
-    margin: 0,
-};
-
 const statusLabel = {
     color: '#6b7280',
     fontSize: '14px',
@@ -227,7 +232,7 @@ const statusLabel = {
 };
 
 const statusValue = {
-    color: '#059669',
+    color: '#17E68F', // Brand success color
     fontSize: '14px',
     fontWeight: '600' as const,
     margin: 0,
@@ -239,7 +244,7 @@ const buttonContainer = {
 };
 
 const buttonPrimary = {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#FF4D6D', // Brand primary color (Punchy Pink-Red)
     borderRadius: '8px',
     color: '#fff',
     fontSize: '16px',
@@ -251,65 +256,61 @@ const buttonPrimary = {
 };
 
 const quickLinksBox = {
-    backgroundColor: '#faf5ff',
+    backgroundColor: '#F6F0E9', // Brand base-200 (cream tone)
     borderRadius: '8px',
     padding: '20px',
     margin: '24px 0',
 };
 
 const quickLinksTitle = {
-    color: '#6b21a8',
+    color: '#1F262E', // Brand neutral color
     fontSize: '15px',
     fontWeight: 'bold' as const,
     margin: '0 0 12px 0',
 };
 
-const quickLinksList = {
-    margin: 0,
-};
-
-const quickLinkIcon = {
-    fontSize: '18px',
-    margin: 0,
-};
-
 const quickLinkText = {
-    color: '#6366f1',
+    color: '#FF4D6D', // Brand primary color (Punchy Pink-Red)
     fontSize: '14px',
     textDecoration: 'underline',
     lineHeight: '1.5',
 };
 
+// Inline styles extracted to consts
+const statusRow = { marginBottom: '8px' };
+const quickLinkRow = { marginBottom: '10px' };
+const quickLinkIconCell = { verticalAlign: 'middle' as const };
+
 const supportBox = {
-    backgroundColor: '#f0f9ff',
+    backgroundColor: '#F6F0E9', // Brand base-200 (cream tone)
     borderRadius: '8px',
     padding: '16px',
     margin: '24px 0',
 };
 
 const supportText = {
-    color: '#1e3a8a',
+    color: '#374151', // Standard text gray
     fontSize: '14px',
     lineHeight: '20px',
     margin: 0,
 };
 
 const tipBox = {
-    backgroundColor: '#fffbeb',
+    backgroundColor: '#FFF9E6', // Light warning yellow tint
     borderRadius: '8px',
     padding: '16px',
     margin: '24px 0',
 };
 
 const tipTitle = {
-    color: '#92400e',
+    color: '#FF8C42', // Brand warning color
     fontSize: '14px',
     fontWeight: 'bold' as const,
     margin: '0 0 8px 0',
 };
 
 const tipText = {
-    color: '#78350f',
+    color: '#6b7280', // Standard secondary text gray
     fontSize: '13px',
     lineHeight: '20px',
     margin: 0,
@@ -331,7 +332,7 @@ const signature = {
 };
 
 const link = {
-    color: '#6366f1',
+    color: '#FF4D6D', // Brand primary color (Punchy Pink-Red)
     textDecoration: 'underline',
 };
 
