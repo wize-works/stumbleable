@@ -34,28 +34,53 @@ export default function OnboardingPage() {
         }
     }, [isLoaded, isSignedIn, router]);
 
-    // Load available topics
+    // Load available topics and existing user preferences
     useEffect(() => {
-        async function loadTopics() {
-            if (!isSignedIn) return;
+        async function loadData() {
+            if (!isSignedIn || !user?.id) return;
 
             try {
                 const token = await getToken();
                 if (!token) return;
 
-                const availableTopics = await UserAPI.getTopics(token);
+                // Load topics and existing preferences in parallel
+                const [availableTopics, existingUser] = await Promise.all([
+                    UserAPI.getTopics(token),
+                    UserAPI.getUser(user.id, token).catch(() => null) // Don't fail if user doesn't exist yet
+                ]);
+
                 setTopics(availableTopics);
+
+                // If user has existing preferences, load them
+                if (existingUser) {
+                    console.log('Loading existing preferences:', existingUser);
+
+                    // Pre-select user's preferred topics
+                    if (existingUser.preferredTopics && existingUser.preferredTopics.length > 0) {
+                        setSelectedTopics(existingUser.preferredTopics);
+                    }
+
+                    // Set user's wildness preference
+                    if (existingUser.wildness !== undefined) {
+                        setWildness(existingUser.wildness);
+                    }
+
+                    // Check if guidelines were already accepted
+                    if (existingUser.guidelinesAcceptedAt) {
+                        setGuidelinesAccepted(true);
+                    }
+                }
             } catch (error) {
-                console.error('Error loading topics:', error);
+                console.error('Error loading data:', error);
             } finally {
                 setTopicsLoading(false);
             }
         }
 
-        if (isLoaded && isSignedIn) {
-            loadTopics();
+        if (isLoaded && isSignedIn && user?.id) {
+            loadData();
         }
-    }, [isLoaded, isSignedIn, getToken]);
+    }, [isLoaded, isSignedIn, user?.id, getToken]);
 
     const handleTopicToggle = (topicId: string) => {
         setSelectedTopics(prev =>

@@ -1,7 +1,12 @@
+'use client';
+
+import { useToaster } from '@/components/toaster';
 import Link from 'next/link';
 import Logo from '../components/ui/logo';
 
 export default function NotFound() {
+    const { showToast } = useToaster();
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-primary/5 via-base-100 to-secondary/5 flex items-center justify-center p-4">
             <div className="max-w-2xl mx-auto text-center">
@@ -118,7 +123,7 @@ export default function NotFound() {
                                 "🚀 To infinity... and beyond the 404!"
                             ];
                             const message = messages[Math.floor(Math.random() * messages.length)];
-                            alert(message);
+                            showToast(message, 'success');
                         }}
                     >
                         psst... click me

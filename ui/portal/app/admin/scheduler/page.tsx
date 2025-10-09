@@ -1,5 +1,6 @@
 'use client';
 
+import { useToaster } from '@/components/toaster';
 import { JobExecution, JobStats, ScheduledJob, SchedulerAPI } from '@/lib/api-client';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
@@ -7,6 +8,7 @@ import { useEffect, useState } from 'react';
 export default function SchedulerManagementPage() {
     const { getToken } = useAuth();
     const { user } = useUser();
+    const { showToast } = useToaster();
     const [jobs, setJobs] = useState<ScheduledJob[]>([]);
     const [selectedJob, setSelectedJob] = useState<ScheduledJob | null>(null);
     const [executions, setExecutions] = useState<JobExecution[]>([]);
@@ -83,10 +85,10 @@ export default function SchedulerManagementPage() {
                 await loadJobDetails(jobName);
             }
 
-            alert(`Job ${jobName} triggered successfully!`);
+            showToast(`Job ${jobName} triggered successfully!`, 'success');
         } catch (err: any) {
             console.error('Failed to trigger job:', err);
-            alert(`Failed to trigger job: ${err.message}`);
+            showToast(`Failed to trigger job: ${err.message}`, 'error');
         } finally {
             setExecuting(null);
         }
@@ -117,7 +119,7 @@ export default function SchedulerManagementPage() {
                     }
                 } catch (err: any) {
                     console.error('Failed to toggle job:', err);
-                    alert(`Failed to ${action} job: ${err.message}`);
+                    showToast(`Failed to ${action} job: ${err.message}`, 'error');
                 } finally {
                     setConfirmation(null);
                 }
