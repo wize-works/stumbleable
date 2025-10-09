@@ -21,6 +21,25 @@ export interface DomainReputation {
     lastUpdated: Date;
 }
 
+export interface UserTrustInfo {
+    trustLevel: number;
+    submissionsApproved: number;
+    submissionsRejected: number;
+}
+
+// Trust thresholds for moderation decisions
+const TRUST_THRESHOLDS = {
+    AUTO_APPROVE: 0.80,   // 80%+ trust = auto-approve
+    REQUIRES_REVIEW: 0.50, // 50-80% trust = needs review
+    LIKELY_REJECT: 0.30    // <30% trust = additional scrutiny
+};
+
+const DOMAIN_THRESHOLDS = {
+    TRUSTED: 0.80,         // Known good domains
+    NEUTRAL: 0.50,         // New/unknown domains
+    SUSPICIOUS: 0.30       // Flagged domains
+};
+
 /**
  * Content Quality and Safety Service
  * Handles content filtering, spam detection, and domain reputation
@@ -285,14 +304,64 @@ export class ContentModerationService {
     }
 
     /**
-     * Comprehensive content quality check
+     * Get submitter trust level from database
      */
-    async moderateContent(url: string, title: string, description: string): Promise<{
+    async getSubmitterTrustLevel(userId?: string): Promise<number> {
+        // Anonymous or missing user = low trust
+        if (!userId) {
+            console.log('[Moderation] Anonymous submission - low trust (0.30)');
+            return 0.30;
+        }
+
+        try {
+            const { data, error } = await supabase
+                .from('users')
+                .select('trust_level, submissions_approved, submissions_rejected')
+                .eq('id', userId)
+                .single();
+
+            if (error) {
+                console.error('[Moderation] Error fetching user trust:', error);
+                return 0.50; // Default neutral on error
+            }
+
+            if (!data) {
+                console.log('[Moderation] User not found - neutral trust (0.50)');
+                return 0.50;
+            }
+
+            const trustLevel = data.trust_level || 0.50;
+            console.log('[Moderation] User trust level:', {
+                userId,
+                trustLevel,
+                approved: data.submissions_approved,
+                rejected: data.submissions_rejected
+            });
+
+            return trustLevel;
+        } catch (error) {
+            console.error('[Moderation] Exception getting submitter trust:', error);
+            return 0.50; // Default neutral on exception
+        }
+    }
+
+    /**
+     * Comprehensive content quality check with trust-based decisions
+     */
+    async moderateContent(
+        url: string,
+        title: string,
+        description: string,
+        submittedBy?: string
+    ): Promise<{
         approved: boolean;
         confidence: number;
         issues: string[];
         recommendation: 'approve' | 'reject' | 'review';
+        trustScore?: number;
+        domainScore?: number;
     }> {
+        // Run safety and spam checks
         const [safetyResult, spamResult] = await Promise.all([
             this.checkContentSafety(url, title, description),
             this.detectSpam(url, title, description)
@@ -302,24 +371,101 @@ export class ContentModerationService {
         let approved = true;
         let recommendation: 'approve' | 'reject' | 'review' = 'approve';
 
-        // Safety violations are automatic rejections
+        // Safety violations are automatic rejections (regardless of trust)
         if (!safetyResult.isSafe) {
+            console.log('[Moderation] Safety violation detected - rejecting', {
+                url,
+                flags: safetyResult.flags
+            });
             approved = false;
             recommendation = 'reject';
             issues.push(...safetyResult.flags);
+
+            const confidence = Math.min(safetyResult.confidence, 1.0 - spamResult.confidence);
+            return {
+                approved,
+                confidence,
+                issues,
+                recommendation
+            };
         }
 
-        // High confidence spam is rejected
+        // High confidence spam is rejected (regardless of trust)
         if (spamResult.isSpam && spamResult.confidence > 0.7) {
+            console.log('[Moderation] High confidence spam detected - rejecting', {
+                url,
+                confidence: spamResult.confidence,
+                reasons: spamResult.reasons
+            });
             approved = false;
             recommendation = 'reject';
             issues.push(...spamResult.reasons);
+
+            const confidence = Math.min(safetyResult.confidence, 1.0 - spamResult.confidence);
+            return {
+                approved,
+                confidence,
+                issues,
+                recommendation
+            };
         }
-        // Medium confidence spam goes to review
-        else if (spamResult.isSpam && spamResult.confidence > 0.4) {
-            approved = false;
-            recommendation = 'review';
+
+        // Get trust scores for balanced decision
+        const submitterTrust = await this.getSubmitterTrustLevel(submittedBy);
+        const domain = new URL(url).hostname;
+        const domainRep = await this.getDomainReputation(domain);
+        const domainScore = domainRep?.score || 0.50;
+
+        // Combined trust score (weighted: 60% submitter, 40% domain)
+        const combinedTrustScore = (submitterTrust * 0.6) + (domainScore * 0.4);
+
+        console.log('[Moderation] Trust analysis:', {
+            url,
+            submitterTrust,
+            domainScore,
+            combinedTrustScore,
+            spamConfidence: spamResult.confidence,
+            isSpam: spamResult.isSpam
+        });
+
+        // Medium confidence spam - trust determines outcome
+        if (spamResult.isSpam && spamResult.confidence > 0.4) {
             issues.push(...spamResult.reasons);
+
+            // High trust can override medium spam concerns
+            if (combinedTrustScore >= TRUST_THRESHOLDS.AUTO_APPROVE) {
+                console.log('[Moderation] Medium spam but high trust - approving with review flag');
+                approved = true;
+                recommendation = 'approve';
+                issues.push('approved-despite-spam-due-to-trust');
+            } else {
+                console.log('[Moderation] Medium spam + medium/low trust - sending to review');
+                approved = false;
+                recommendation = 'review';
+            }
+        }
+        // No spam detected - trust-based decision
+        else {
+            // High trust (0.8+) = auto-approve
+            if (combinedTrustScore >= TRUST_THRESHOLDS.AUTO_APPROVE) {
+                console.log('[Moderation] High trust - auto-approving');
+                approved = true;
+                recommendation = 'approve';
+            }
+            // Medium trust (0.5-0.8) = review queue
+            else if (combinedTrustScore >= TRUST_THRESHOLDS.REQUIRES_REVIEW) {
+                console.log('[Moderation] Medium trust - sending to review');
+                approved = false;
+                recommendation = 'review';
+                issues.push('new-submitter-requires-review');
+            }
+            // Low trust (<0.5) = review with scrutiny
+            else {
+                console.log('[Moderation] Low trust - sending to review with scrutiny');
+                approved = false;
+                recommendation = 'review';
+                issues.push('low-trust-requires-review');
+            }
         }
 
         const confidence = Math.min(safetyResult.confidence, 1.0 - spamResult.confidence);
@@ -328,7 +474,9 @@ export class ContentModerationService {
             approved,
             confidence,
             issues,
-            recommendation
+            recommendation,
+            trustScore: combinedTrustScore,
+            domainScore
         };
     }
 

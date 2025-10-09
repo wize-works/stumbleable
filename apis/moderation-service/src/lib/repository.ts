@@ -23,7 +23,17 @@ export class ModerationRepository {
 
         let query = supabase
             .from('moderation_queue')
-            .select('*', { count: 'exact' })
+            .select(`
+                *,
+                submitted_by_user:users!submitted_by(
+                    id,
+                    email,
+                    full_name,
+                    trust_level,
+                    submissions_approved,
+                    submissions_rejected
+                )
+            `, { count: 'exact' })
             .order('created_at', { ascending: false });
 
         // Filter by status
@@ -73,6 +83,7 @@ export class ModerationRepository {
 
     /**
      * Review content (approve or reject)
+     * Note: When approved, you must separately create the discovery in the discoveries table
      */
     async reviewContent(
         queueId: string,
@@ -82,6 +93,7 @@ export class ModerationRepository {
     ): Promise<ModerationQueueItem> {
         const now = new Date().toISOString();
 
+        // Update the moderation queue item
         const { data, error } = await supabase
             .from('moderation_queue')
             .update({
@@ -98,7 +110,88 @@ export class ModerationRepository {
             throw new Error(`Failed to review content: ${error.message}`);
         }
 
+        // If approved, create the discovery
+        if (status === 'approved' && data) {
+            try {
+                await this.createDiscoveryFromQueueItem(data);
+            } catch (createError) {
+                // Log error but don't fail the review
+                console.error('Failed to create discovery from queue item:', createError);
+                // Update queue item to indicate discovery creation failed
+                await supabase
+                    .from('moderation_queue')
+                    .update({
+                        moderator_notes: `${notes || ''}\n[ERROR: Failed to create discovery: ${createError instanceof Error ? createError.message : 'Unknown error'}]`
+                    })
+                    .eq('id', queueId);
+            }
+        }
+
         return data;
+    }
+
+    /**
+     * Create discovery from approved moderation queue item
+     */
+    private async createDiscoveryFromQueueItem(item: any): Promise<void> {
+        // Check if discovery already exists
+        const { data: existing } = await supabase
+            .from('discoveries')
+            .select('id')
+            .eq('url', item.url)
+            .single();
+
+        if (existing) {
+            console.log('Discovery already exists for URL:', item.url);
+            return;
+        }
+
+        // Auto-classify topics based on URL and content
+        const topics = this.classifyContent(item.url, item.title, item.description || '');
+
+        // Create the discovery
+        const { error } = await supabase
+            .from('discoveries')
+            .insert({
+                url: item.url,
+                title: item.title,
+                description: item.description,
+                domain: item.domain,
+                topics: topics,
+                read_time: Math.max(1, Math.floor((item.title.length + (item.description?.length || 0)) / 200)),
+                submitted_at: item.created_at,
+                submitted_by: item.submitted_by,
+                // Image and favicon would need to be captured separately if not already done
+                created_at: new Date().toISOString()
+            });
+
+        if (error) {
+            throw new Error(`Failed to create discovery: ${error.message}`);
+        }
+    }
+
+    /**
+     * Simple topic classification (copy from submit route logic)
+     */
+    private classifyContent(url: string, title: string, description: string): string[] {
+        const content = `${url} ${title} ${description}`.toLowerCase();
+        const topics: string[] = [];
+
+        const topicKeywords: Record<string, string[]> = {
+            'technology': ['tech', 'software', 'computer', 'programming', 'code'],
+            'science': ['science', 'research', 'study', 'discovery'],
+            'business': ['business', 'finance', 'market', 'economy'],
+            'culture': ['art', 'film', 'culture', 'creative'],
+            'education': ['learn', 'education', 'course', 'tutorial'],
+        };
+
+        Object.entries(topicKeywords).forEach(([topic, keywords]) => {
+            if (keywords.some(keyword => content.includes(keyword))) {
+                topics.push(topic);
+            }
+        });
+
+        return topics.length > 0 ? topics.slice(0, 3) : ['general'];
     }
 
     /**

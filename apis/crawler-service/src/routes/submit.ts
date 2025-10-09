@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { captureContentMedia } from '../lib/image-capture';
 import { ContentModerationService } from '../lib/moderation';
 import { DiscoveryRepository } from '../lib/repository';
+import { supabase } from '../lib/supabase';
 
 const repository = new DiscoveryRepository();
 const moderationService = new ContentModerationService();
@@ -289,8 +290,13 @@ export const submitRoutes: FastifyPluginAsync = async (fastify) => {
                 ? providedTopics
                 : classifyContent(url, title, description);
 
-            // Moderate content before creating discovery
-            const moderationResult = await moderationService.moderateContent(url, title, description);
+            // Moderate content before creating discovery (pass userId for trust check)
+            const moderationResult = await moderationService.moderateContent(
+                url,
+                title,
+                description,
+                validationResult.data.userId
+            );
 
             // Update domain reputation
             await moderationService.updateDomainReputation(metadata.domain, moderationResult.approved);
@@ -319,6 +325,36 @@ export const submitRoutes: FastifyPluginAsync = async (fastify) => {
                 });
             }
 
+            // Get internal user UUID from Clerk ID if provided (needed for both moderation queue and discovery)
+            let internalUserId: string | undefined;
+            if (validationResult.data.userId) {
+                try {
+                    const { data: userData, error: userError } = await supabase
+                        .from('users')
+                        .select('id')
+                        .eq('clerk_user_id', validationResult.data.userId)
+                        .single();
+
+                    if (userData && !userError) {
+                        internalUserId = userData.id;
+                        fastify.log.info({
+                            clerkUserId: validationResult.data.userId,
+                            internalUserId
+                        }, 'Resolved internal user ID for submission tracking');
+                    } else {
+                        fastify.log.warn({
+                            clerkUserId: validationResult.data.userId,
+                            error: userError
+                        }, 'Could not resolve internal user ID - submission will not be tracked to user');
+                    }
+                } catch (lookupError) {
+                    fastify.log.warn({
+                        error: lookupError,
+                        clerkUserId: validationResult.data.userId
+                    }, 'Error looking up internal user ID');
+                }
+            }
+
             if (moderationResult.recommendation === 'review') {
                 // Add to moderation queue for manual review
                 const queueId = await moderationService.addToModerationQueue({
@@ -328,7 +364,7 @@ export const submitRoutes: FastifyPluginAsync = async (fastify) => {
                     domain: metadata.domain,
                     issues: moderationResult.issues,
                     confidence: moderationResult.confidence,
-                    submittedBy: validationResult.data.userId
+                    submittedBy: internalUserId // Use internal UUID, not Clerk ID
                 });
 
                 fastify.log.info({
@@ -385,8 +421,8 @@ export const submitRoutes: FastifyPluginAsync = async (fastify) => {
                 topics,
                 readTime: Math.max(1, Math.floor((title.length + description.length) / 200)), // Estimate read time
                 submittedAt: new Date(),
-                allowsFraming: metadata.allowsFraming
-                // Note: submittedBy removed - Clerk IDs are not UUIDs and would cause DB errors
+                allowsFraming: metadata.allowsFraming,
+                submittedBy: internalUserId // Track who submitted this content (internal UUID, not Clerk ID)
             });
 
             fastify.log.info({

@@ -1159,6 +1159,9 @@ export interface ModerationQueueItem {
         id: string;
         email: string;
         full_name?: string;
+        trust_level?: number; // User's trust level (0-1)
+        submissions_approved?: number;
+        submissions_rejected?: number;
     };
     reviewed_by?: string;
     reviewed_by_user?: {
@@ -1167,6 +1170,8 @@ export interface ModerationQueueItem {
         full_name?: string;
     };
     moderator_notes?: string;
+    trust_score?: number; // Combined trust score used for moderation decision
+    domain_score?: number; // Domain reputation score
     created_at: string;
     reviewed_at?: string;
 }

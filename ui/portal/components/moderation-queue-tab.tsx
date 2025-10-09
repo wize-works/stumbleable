@@ -205,15 +205,57 @@ export default function ModerationQueueTab({ items, loading, onRefresh, token }:
                                     )}
 
                                     {/* Metadata */}
-                                    <div className="text-sm text-base-content/70 space-y-1">
+                                    <div className="text-sm text-base-content/70 space-y-2">
                                         <p>
                                             Domain: <span className="font-mono">{item.domain}</span>
+                                            {item.domain_score !== undefined && (
+                                                <span className="ml-2 badge badge-sm badge-neutral">
+                                                    Domain: {Math.round(item.domain_score * 100)}%
+                                                </span>
+                                            )}
                                         </p>
                                         <p>Submitted: {new Date(item.created_at).toLocaleString()}</p>
                                         {item.submitted_by_user && (
-                                            <p>
-                                                By: {item.submitted_by_user.full_name || item.submitted_by_user.email}
-                                            </p>
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <span>
+                                                    By: {item.submitted_by_user.full_name || item.submitted_by_user.email}
+                                                </span>
+                                                {item.submitted_by_user.trust_level !== undefined && (
+                                                    <span className={`badge badge-sm ${item.submitted_by_user.trust_level >= 0.8 ? 'badge-success' :
+                                                            item.submitted_by_user.trust_level >= 0.5 ? 'badge-warning' :
+                                                                'badge-error'
+                                                        }`}>
+                                                        Trust: {Math.round(item.submitted_by_user.trust_level * 100)}%
+                                                    </span>
+                                                )}
+                                                {item.submitted_by_user.submissions_approved !== undefined && (
+                                                    <span className="badge badge-sm badge-ghost">
+                                                        ✓ {item.submitted_by_user.submissions_approved} approved
+                                                    </span>
+                                                )}
+                                                {item.submitted_by_user.submissions_rejected !== undefined &&
+                                                    item.submitted_by_user.submissions_rejected > 0 && (
+                                                        <span className="badge badge-sm badge-ghost">
+                                                            ✗ {item.submitted_by_user.submissions_rejected} rejected
+                                                        </span>
+                                                    )}
+                                            </div>
+                                        )}
+                                        {item.trust_score !== undefined && (
+                                            <div>
+                                                <span className="font-semibold">Combined Trust Score: </span>
+                                                <span className={`${item.trust_score >= 0.8 ? 'text-success' :
+                                                        item.trust_score >= 0.5 ? 'text-warning' :
+                                                            'text-error'
+                                                    } font-bold`}>
+                                                    {Math.round(item.trust_score * 100)}%
+                                                </span>
+                                                <span className="ml-2 text-xs">
+                                                    ({item.trust_score >= 0.8 ? 'High - would auto-approve' :
+                                                        item.trust_score >= 0.5 ? 'Medium - requires review' :
+                                                            'Low - extra scrutiny needed'})
+                                                </span>
+                                            </div>
                                         )}
                                     </div>
 
