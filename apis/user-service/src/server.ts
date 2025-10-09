@@ -21,6 +21,7 @@ const envSchema = {
         PORT: { type: 'string', default: '7003' },
         HOST: { type: 'string', default: '0.0.0.0' },
         ALLOWED_ORIGINS: { type: 'string', default: 'http://localhost:3000' },
+        EMAIL_API_URL: { type: 'string', default: 'http://email-service:8080' },
         SUPABASE_URL: { type: 'string' },
         SUPABASE_SERVICE_KEY: { type: 'string' },
         RATE_LIMIT_MAX: { type: 'string', default: '100' },

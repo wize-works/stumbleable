@@ -1,7 +1,7 @@
-import { getAuth } from '@clerk/fastify';
 import { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { authenticateAndAuthorize, authenticateUser } from '../lib/auth';
+import { EmailClient } from '../lib/email-client';
 import { UserRepository } from '../lib/repository';
 import { CreateUserRequest, UpdatePreferencesRequest } from '../types';
 
@@ -156,6 +156,15 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
             }
 
             const user = await repository.createUser(userId, finalUserData);
+
+            // Send welcome email (don't block response if email fails)
+            if (user.email) {
+                EmailClient.sendWelcomeEmail(userId, user.email, finalUserData.fullName || undefined)
+                    .catch(err => {
+                        fastify.log.error({ error: err, userId, email: user.email }, 'Failed to queue welcome email');
+                    });
+            }
+
             return reply.status(201).send({ user });
         } catch (error) {
             fastify.log.error(error, 'Error in POST /users');
@@ -326,6 +335,18 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
             // Soft delete the user (deactivate account)
             await repository.softDeleteUser(userId, deletionRequest.id);
 
+            // Send deletion request confirmation email (don't block response)
+            if (user.email) {
+                EmailClient.sendDeletionRequestEmail(
+                    userId,
+                    user.email,
+                    deletionRequest.scheduledDeletionAt,
+                    deletionRequest.id
+                ).catch(err => {
+                    fastify.log.error({ error: err, userId, email: user.email }, 'Failed to queue deletion request email');
+                });
+            }
+
             return reply.status(201).send({
                 deletionRequest: {
                     id: deletionRequest.id,
@@ -379,6 +400,16 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
             if (!result) {
                 return reply.status(404).send({
                     error: 'No active deletion request found for this user'
+                });
+            }
+
+            // Send deletion cancelled email (don't block response)
+            if (result.email) {
+                EmailClient.sendDeletionCancelledEmail(
+                    userId,
+                    result.email
+                ).catch(err => {
+                    fastify.log.error({ error: err, userId, email: result.email }, 'Failed to queue deletion cancelled email');
                 });
             }
 
