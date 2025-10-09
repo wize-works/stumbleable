@@ -27,8 +27,8 @@ export default function NotFound() {
                     <h1 className="text-4xl md:text-6xl font-black text-base-content">
                         Oops! You've Stumbled Upon...
                     </h1>
-                    <p className="text-2xl md:text-3xl font-bold text-primary">
-                        The Void 🕳️
+                    <p className="text-2xl md:text-3xl font-bold text-primary flex items-center justify-center gap-2">
+                        The Void <i className="fa-solid fa-duotone fa-circle-dot"></i>
                     </p>
                     <p className="text-lg md:text-xl text-base-content/70 max-w-xl mx-auto">
                         This page doesn't exist (or maybe it's in another dimension).
@@ -45,21 +45,21 @@ export default function NotFound() {
                         </h3>
                         <div className="text-left space-y-3 text-sm">
                             <div className="flex items-start gap-3">
-                                <span className="text-2xl">🎲</span>
+                                <i className="fa-solid fa-duotone fa-dice text-2xl text-primary"></i>
                                 <p>
                                     <strong>Did you know?</strong> The average person gets lost on the internet
                                     47 times a day. (We may have made that up.)
                                 </p>
                             </div>
                             <div className="flex items-start gap-3">
-                                <span className="text-2xl">✨</span>
+                                <i className="fa-solid fa-duotone fa-sparkles text-2xl text-warning"></i>
                                 <p>
                                     <strong>Fun fact:</strong> HTTP 404 was named after room 404 at CERN where
                                     the World Wide Web was born!
                                 </p>
                             </div>
                             <div className="flex items-start gap-3">
-                                <span className="text-2xl">🧭</span>
+                                <i className="fa-solid fa-duotone fa-compass text-2xl text-secondary"></i>
                                 <p>
                                     <strong>Silver lining:</strong> Every wrong turn teaches us something.
                                     Like how you just learned this page doesn't exist!
@@ -72,7 +72,7 @@ export default function NotFound() {
                 {/* CTA Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                     <Link href="/stumble" className="btn btn-primary btn-lg gap-2 min-w-[200px] group">
-                        <Logo size="xs" logoShadow={false} />
+                        <i className='fa-solid fa-duotone fa-shuffle'></i>
                         <span>Start Stumbling</span>
                         <i className="fa-solid fa-duotone fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
                     </Link>
@@ -115,12 +115,12 @@ export default function NotFound() {
                         className="text-xs text-base-content/30 hover:text-base-content/60 transition-colors"
                         onClick={() => {
                             const messages = [
-                                "🎉 You found the secret button!",
-                                "🦄 Unicorns are real (citation needed)",
-                                "🌈 Keep exploring, adventurer!",
-                                "🎪 The internet is your playground",
-                                "🎨 Beauty in unexpected places",
-                                "🚀 To infinity... and beyond the 404!"
+                                "You found the secret button!",
+                                "Unicorns are real (citation needed)",
+                                "Keep exploring, adventurer!",
+                                "The internet is your playground",
+                                "Beauty in unexpected places",
+                                "To infinity... and beyond the 404!"
                             ];
                             const message = messages[Math.floor(Math.random() * messages.length)];
                             showToast(message, 'success');
