@@ -79,6 +79,11 @@ spec:
             configMapKeyRef:
               name: stumbleable-config
               key: RATE_LIMIT_WINDOW
+        - name: EMAIL_API_URL
+          valueFrom:
+            configMapKeyRef:
+              name: stumbleable-config
+              key: EMAIL_API_URL
         resources:
           requests:
             memory: "256Mi"

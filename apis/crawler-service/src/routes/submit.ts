@@ -1,5 +1,6 @@
 import { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
+import { EmailClient } from '../lib/email-client';
 import { captureContentMedia } from '../lib/image-capture';
 import { ContentModerationService } from '../lib/moderation';
 import { DiscoveryRepository } from '../lib/repository';
@@ -373,6 +374,27 @@ export const submitRoutes: FastifyPluginAsync = async (fastify) => {
                     queueId,
                     issues: moderationResult.issues
                 }, 'Content added to moderation queue');
+
+                // Send submission received email (don't block response)
+                if (internalUserId) {
+                    // Get user email from Clerk user ID
+                    const { data: userData } = await supabase
+                        .from('users')
+                        .select('email')
+                        .eq('id', internalUserId)
+                        .single();
+
+                    if (userData?.email) {
+                        EmailClient.sendSubmissionReceivedEmail(
+                            internalUserId,
+                            userData.email,
+                            title,
+                            url
+                        ).catch(err => {
+                            fastify.log.error({ error: err, userId: internalUserId }, 'Failed to queue submission received email');
+                        });
+                    }
+                }
 
                 return reply.status(202).send({
                     message: 'Content submitted for review',

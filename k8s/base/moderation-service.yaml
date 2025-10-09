@@ -81,6 +81,11 @@ spec:
               key: RATE_LIMIT_WINDOW
         - name: USER_SERVICE_URL
           value: "http://user-service:7003"
+        - name: EMAIL_API_URL
+          valueFrom:
+            configMapKeyRef:
+              name: stumbleable-config
+              key: EMAIL_API_URL
         resources:
           requests:
             memory: "128Mi"

@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
+import { EmailClient } from '../lib/email-client.js';
 import { ModerationRepository } from '../lib/repository.js';
 import { supabase } from '../lib/supabase.js';
 import { requireAuth, requireModeratorRole } from '../middleware/auth.js';
@@ -166,6 +167,47 @@ export async function moderationRoutes(fastify: FastifyInstance) {
                     dbUserId,
                     body.moderatorNotes
                 );
+
+                // Send email notification (don't block response)
+                if (updated.submitted_by) {
+                    // Get submitter's email
+                    const { data: userData } = await supabase
+                        .from('users')
+                        .select('email')
+                        .eq('id', updated.submitted_by)
+                        .single();
+
+                    if (userData?.email) {
+                        if (body.status === 'approved') {
+                            // Get the discovery ID if content was approved
+                            const { data: discovery } = await supabase
+                                .from('discoveries')
+                                .select('id')
+                                .eq('url', updated.url)
+                                .single();
+
+                            EmailClient.sendSubmissionApprovedEmail(
+                                updated.submitted_by,
+                                userData.email,
+                                updated.title,
+                                updated.url,
+                                discovery?.id || ''
+                            ).catch(err => {
+                                request.log.error({ error: err, userId: updated.submitted_by }, 'Failed to queue submission approved email');
+                            });
+                        } else if (body.status === 'rejected') {
+                            EmailClient.sendSubmissionRejectedEmail(
+                                updated.submitted_by,
+                                userData.email,
+                                updated.title,
+                                updated.url,
+                                body.moderatorNotes
+                            ).catch(err => {
+                                request.log.error({ error: err, userId: updated.submitted_by }, 'Failed to queue submission rejected email');
+                            });
+                        }
+                    }
+                }
 
                 return reply.code(200).send({
                     success: true,
