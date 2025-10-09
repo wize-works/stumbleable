@@ -235,7 +235,7 @@ export class Scheduler {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
 
-            const result: JobResult = await response.json();
+            const result = await response.json() as JobResult;
 
             // Calculate duration
             const duration = Date.now() - startTime;
