@@ -13,6 +13,11 @@ export interface SendEmailRequest {
     template_data: Record<string, any>;
 }
 
+export interface SendEmailResponse {
+    emailId?: string;
+    success?: boolean;
+}
+
 export class EmailClient {
     /**
      * Queue an email to be sent via the email service
@@ -35,7 +40,7 @@ export class EmailClient {
                 return false;
             }
 
-            const result = await response.json();
+            const result = await response.json() as SendEmailResponse;
             console.log(`✅ Email queued successfully: ${result.emailId || 'unknown ID'}`);
             return true;
         } catch (error: any) {
