@@ -147,6 +147,7 @@ jobs:
                     --from-literal=CLERK_SECRET_KEY="${{ secrets.CLERK_SECRET_KEY }}" \
                     --from-literal=CLERK_WEBHOOK_SECRET="${{ secrets.CLERK_WEBHOOK_SECRET }}" \
                     --from-literal=RESEND_API_KEY="${{ secrets.RESEND_API_KEY }}" \
+                    --from-literal=SERVICE_TOKEN="${{ secrets.SERVICE_TOKEN }}" \
                     --dry-run=client -o yaml | kubectl apply -f -
 
             - name: Set image tag

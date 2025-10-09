@@ -740,6 +740,37 @@ export class UserAPI {
             throw error;
         }
     }
+
+    /**
+     * Get deletion request details
+     */
+    static async getDeletionRequest(userId: string, token: string): Promise<{
+        id: string;
+        requestedAt: string;
+        scheduledDeletionAt: string;
+        status: 'pending' | 'cancelled' | 'completed';
+    } | null> {
+        try {
+            const response = await apiRequest<{
+                deletionRequest: {
+                    id: string;
+                    requestedAt: string;
+                    scheduledDeletionAt: string;
+                    status: 'pending' | 'cancelled' | 'completed';
+                };
+            }>(
+                `${USER_API}/users/${userId}/deletion-request`,
+                {},
+                token
+            );
+            return response.deletionRequest;
+        } catch (error) {
+            if (error instanceof ApiError && error.status === 404) {
+                return null;
+            }
+            throw error;
+        }
+    }
 }
 
 /**

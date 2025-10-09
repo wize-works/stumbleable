@@ -343,10 +343,20 @@ export class EmailQueue {
                     component = React.createElement(DeletionRequestEmail, fullData);
                     break;
                 case 'deletion-reminder-7d':
-                    component = React.createElement(DeletionReminderEmail, { ...fullData, daysRemaining: 7 });
+                    component = React.createElement(DeletionReminderEmail, {
+                        ...fullData,
+                        daysRemaining: 7,
+                        cancelUrl: `${FRONTEND_URL}/account-recovery`,
+                        scheduledDeletionDate: fullData.scheduledDeletionAt
+                    });
                     break;
                 case 'deletion-reminder-1d':
-                    component = React.createElement(DeletionReminderEmail, { ...fullData, daysRemaining: 1 });
+                    component = React.createElement(DeletionReminderEmail, {
+                        ...fullData,
+                        daysRemaining: 1,
+                        cancelUrl: `${FRONTEND_URL}/account-recovery`,
+                        scheduledDeletionDate: fullData.scheduledDeletionAt
+                    });
                     break;
                 case 'deletion-complete':
                     component = React.createElement(DeletionCompleteEmail, fullData);

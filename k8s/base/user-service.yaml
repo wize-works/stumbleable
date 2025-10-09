@@ -64,6 +64,13 @@ spec:
             secretKeyRef:
               name: stumbleable-secrets
               key: CLERK_SECRET_KEY
+        - name: SERVICE_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: stumbleable-secrets
+              key: SERVICE_TOKEN
+        - name: SCHEDULER_API_URL
+          value: "http://scheduler-service:7007"
         - name: ALLOWED_ORIGINS
           valueFrom:
             configMapKeyRef:

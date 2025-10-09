@@ -61,6 +61,11 @@ spec:
             secretKeyRef:
               name: stumbleable-secrets
               key: CLERK_SECRET_KEY
+        - name: SERVICE_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: stumbleable-secrets
+              key: SERVICE_TOKEN
         - name: ALLOWED_ORIGINS
           valueFrom:
             configMapKeyRef:

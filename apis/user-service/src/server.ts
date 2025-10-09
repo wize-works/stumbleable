@@ -7,6 +7,7 @@ import 'dotenv/config';
 import Fastify from 'fastify';
 
 import { adminRoutes } from './routes/admin';
+import { jobRoutes } from './routes/jobs';
 import { listsRoutes } from './routes/lists';
 import { roleRoutes } from './routes/roles';
 import { topicsRoutes } from './routes/topics';
@@ -156,6 +157,7 @@ async function buildApp() {
     await fastify.register(roleRoutes, { prefix: '/api' });
     await fastify.register(listsRoutes, { prefix: '/api' });
     await fastify.register(adminRoutes, { prefix: '/api' });
+    await fastify.register(jobRoutes, { prefix: '/api' });
 
     // Global error handler
     fastify.setErrorHandler((error, request, reply) => {
@@ -186,6 +188,60 @@ async function buildApp() {
     return fastify;
 }
 
+// Register jobs with scheduler-service
+const SCHEDULER_API_URL = process.env.SCHEDULER_API_URL || 'http://127.0.0.1:7007';
+
+async function registerJobsWithScheduler(logger: any) {
+    const jobs = [
+        {
+            name: 'deletion-cleanup',
+            displayName: 'Account Deletion Cleanup',
+            description: 'Process pending account deletions after 30-day grace period and send reminder emails',
+            cronExpression: '0 2 * * *', // Daily at 2 AM UTC
+            jobType: 'cleanup',
+            service: 'user-service',
+            endpoint: '/api/jobs/process-deletions',
+            enabled: true,
+            config: {
+                gracePeriodDays: 30,
+                batchSize: 100,
+                sendReminders: true,
+            },
+        },
+    ];
+
+    for (const job of jobs) {
+        try {
+            console.log(`Registering job: ${job.name} to ${SCHEDULER_API_URL}/api/jobs/register`);
+
+            const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+            if (process.env.SERVICE_TOKEN) {
+                headers['X-Service-Token'] = process.env.SERVICE_TOKEN;
+            }
+
+            const response = await fetch(`${SCHEDULER_API_URL}/api/jobs/register`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(job),
+            });
+
+            if (!response.ok) {
+                const error = await response.text();
+                console.error(`Failed to register job ${job.name}: ${response.status} ${response.statusText}`);
+                console.error(`Error details: ${error}`);
+                logger.error(`Failed to register job ${job.name}: ${error}`);
+            } else {
+                const result = await response.json();
+                console.log(`✅ Successfully registered job: ${job.name}`, result);
+                logger.info(`✅ Registered job: ${job.name}`);
+            }
+        } catch (error: any) {
+            console.error(`Exception while registering job ${job.name}:`, error);
+            logger.error(`Failed to register job ${job.name}:`, error.message);
+        }
+    }
+}
+
 // Start server
 async function start() {
     try {
@@ -199,8 +255,18 @@ async function start() {
         console.log(`📊 Health check: http://${host}:${port}/health`);
         console.log(`👤 User management: GET/POST/PUT/DELETE http://${host}:${port}/api/users`);
         console.log(`📚 Topics: GET http://${host}:${port}/api/topics`);
-        console.log(`� Roles: GET http://${host}:${port}/api/roles/check, /api/roles/me, PUT /api/roles/:userId`);
-        console.log(`�🛡️  Rate limiting: ${process.env.RATE_LIMIT_MAX || 100} requests per ${(parseInt(process.env.RATE_LIMIT_WINDOW || '60000', 10) / 1000)} seconds`);
+        console.log(`🛡️  Roles: GET http://${host}:${port}/api/roles/check, /api/roles/me, PUT /api/roles/:userId`);
+        console.log(`🛡️  Rate limiting: ${process.env.RATE_LIMIT_MAX || 100} requests per ${(parseInt(process.env.RATE_LIMIT_WINDOW || '60000', 10) / 1000)} seconds`);
+
+        // Register jobs with scheduler (with delay to ensure scheduler is ready)
+        setTimeout(async () => {
+            try {
+                await registerJobsWithScheduler(app.log);
+                app.log.info('✅ Jobs registered with scheduler-service');
+            } catch (error) {
+                app.log.error({ error }, '❌ Failed to register jobs with scheduler-service');
+            }
+        }, 2000);
 
     } catch (error) {
         console.error('Error starting server:', error);

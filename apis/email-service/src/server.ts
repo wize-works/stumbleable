@@ -69,12 +69,12 @@ setInterval(async () => {
 }, 60000); // Process every minute
 
 // Register jobs with scheduler-service
-const SCHEDULER_API_URL = process.env.SCHEDULER_API_URL || 'http://localhost:7007';
+const SCHEDULER_API_URL = process.env.SCHEDULER_API_URL || 'http://127.0.0.1:7007';
 
 async function registerJobsWithScheduler() {
     const jobs = [
         {
-            jobName: 'weekly-digest',
+            name: 'weekly-digest',
             displayName: 'Weekly Digest',
             description: 'Send weekly trending content digest to opted-in users',
             cronExpression: '0 9 * * 1', // Mondays at 9 AM
@@ -88,7 +88,7 @@ async function registerJobsWithScheduler() {
             },
         },
         {
-            jobName: 're-engagement',
+            name: 're-engagement',
             displayName: 'Re-engagement Emails',
             description: 'Send personalized emails to inactive users (7+ days)',
             cronExpression: '0 10 * * *', // Daily at 10 AM
@@ -103,7 +103,7 @@ async function registerJobsWithScheduler() {
             },
         },
         {
-            jobName: 'queue-cleanup',
+            name: 'queue-cleanup',
             displayName: 'Email Queue Cleanup',
             description: 'Remove old processed emails from queue',
             cronExpression: '0 2 * * *', // Daily at 2 AM
@@ -119,20 +119,25 @@ async function registerJobsWithScheduler() {
 
     for (const job of jobs) {
         try {
+            const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+            if (process.env.SERVICE_TOKEN) {
+                headers['X-Service-Token'] = process.env.SERVICE_TOKEN;
+            }
+
             const response = await fetch(`${SCHEDULER_API_URL}/api/jobs/register`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers,
                 body: JSON.stringify(job),
             });
 
             if (!response.ok) {
                 const error = await response.text();
-                app.log.error(`Failed to register job ${job.jobName}: ${error}`);
+                app.log.error(`Failed to register job ${job.name}: ${error}`);
             } else {
-                app.log.info(`✅ Registered job: ${job.jobName}`);
+                app.log.info(`✅ Registered job: ${job.name}`);
             }
         } catch (error: any) {
-            app.log.error(`Failed to register job ${job.jobName}:`, error.message);
+            app.log.error(`Failed to register job ${job.name}:`, error.message);
         }
     }
 }
