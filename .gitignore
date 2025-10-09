@@ -273,6 +273,9 @@ crawled-content/
 uploads/
 user-uploads/
 
+# Sentry build plugin config
+.env.sentry-build-plugin
+
 # ==============================================================================
 # Keep These Files
 # ==============================================================================
@@ -286,3 +289,5 @@ user-uploads/
 !docker-compose.yml
 !*.md
 !LICENSE
+
+
