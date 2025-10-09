@@ -12,12 +12,14 @@ const USER_API_URL = process.env.NEXT_PUBLIC_USER_API_URL || 'http://localhost:7
 const MODERATION_API_URL = process.env.NEXT_PUBLIC_MODERATION_API_URL || 'http://localhost:7005';
 const EMAIL_API_URL = process.env.NEXT_PUBLIC_EMAIL_API_URL || 'http://localhost:7006';
 const CRAWLER_API_URL = process.env.NEXT_PUBLIC_CRAWLER_API_URL || 'http://localhost:7004';
+const SCHEDULER_API_URL = process.env.NEXT_PUBLIC_SCHEDULER_API_URL || 'http://localhost:7007';
 const DISCOVERY_API = `${DISCOVERY_API_URL}/api`;
 const INTERACTION_API = `${INTERACTION_API_URL}/api`; // Direct access to service endpoints
 const USER_API = `${USER_API_URL}/api`;
 const MODERATION_API = `${MODERATION_API_URL}/api`;
 const EMAIL_API = `${EMAIL_API_URL}/api`;
 const CRAWLER_API = `${CRAWLER_API_URL}/api`;
+const SCHEDULER_API = `${SCHEDULER_API_URL}/api`;
 
 // Custom error class for API errors
 export class ApiError extends Error {
@@ -1567,6 +1569,49 @@ export interface EmailPreferences {
     updated_at: string;
 }
 
+export interface ScheduledJob {
+    name: string;
+    displayName: string;
+    description: string;
+    cronExpression: string;
+    enabled: boolean;
+    isRunning: boolean;
+    jobType: string;
+    lastRunAt: string | null;
+    lastRunStatus: string | null;
+    lastRunDuration: number | null;
+    nextRunAt: string | null;
+    totalRuns: number;
+    successfulRuns: number;
+    failedRuns: number;
+    config: Record<string, any>;
+}
+
+export interface JobExecution {
+    id: string;
+    job_name: string;
+    job_type: string;
+    status: 'running' | 'completed' | 'failed';
+    started_at: string;
+    completed_at: string | null;
+    duration_ms: number | null;
+    items_processed: number;
+    items_succeeded: number;
+    items_failed: number;
+    error_message: string | null;
+    metadata: Record<string, any> | null;
+    triggered_by: string;
+    triggered_by_user: string | null;
+}
+
+export interface JobStats {
+    total_executions: number;
+    successful_executions: number;
+    failed_executions: number;
+    avg_duration_ms: number;
+    total_items_processed: number;
+}
+
 /**
  * Email Service API - Manage email preferences and notifications
  */
@@ -1628,6 +1673,149 @@ export class EmailAPI {
             token
         );
         return response;
+    }
+
+}
+
+/**
+ * Scheduler Service API - Centralized job scheduling and management
+ */
+export class SchedulerAPI {
+    /**
+     * Get all scheduled jobs
+     */
+    static async getScheduledJobs(token: string): Promise<ScheduledJob[]> {
+        const response = await apiRequest<{ jobs: ScheduledJob[] }>(
+            `${SCHEDULER_API}/jobs`,
+            {},
+            token
+        );
+        return response.jobs;
+    }
+
+    /**
+     * Get details of a specific scheduled job
+     */
+    static async getScheduledJob(jobName: string, token: string): Promise<ScheduledJob> {
+        return await apiRequest<ScheduledJob>(
+            `${SCHEDULER_API}/jobs/${jobName}`,
+            {},
+            token
+        );
+    }
+
+    /**
+     * Manually trigger a scheduled job
+     */
+    static async triggerJob(jobName: string, userId: string, token: string): Promise<{
+        message: string;
+        result: {
+            success: boolean;
+            itemsProcessed: number;
+            itemsSucceeded: number;
+            itemsFailed: number;
+            error: string | null;
+            metadata: Record<string, any>;
+        };
+    }> {
+        return await apiRequest(
+            `${SCHEDULER_API}/jobs/${jobName}/trigger`,
+            {
+                method: 'POST',
+                body: JSON.stringify({ userId }),
+            },
+            token
+        );
+    }
+
+    /**
+     * Enable a scheduled job
+     */
+    static async enableJob(jobName: string, token: string): Promise<{ message: string }> {
+        return await apiRequest(
+            `${SCHEDULER_API}/jobs/${jobName}/enable`,
+            {
+                method: 'POST',
+            },
+            token
+        );
+    }
+
+    /**
+     * Disable a scheduled job
+     */
+    static async disableJob(jobName: string, token: string): Promise<{ message: string }> {
+        return await apiRequest(
+            `${SCHEDULER_API}/jobs/${jobName}/disable`,
+            {
+                method: 'POST',
+            },
+            token
+        );
+    }
+
+    /**
+     * Get execution history for a job
+     */
+    static async getJobHistory(
+        jobName: string,
+        token: string,
+        limit: number = 20,
+        offset: number = 0
+    ): Promise<{
+        executions: JobExecution[];
+        pagination: {
+            limit: number;
+            offset: number;
+            total: number;
+            hasMore: boolean;
+        };
+    }> {
+        return await apiRequest(
+            `${SCHEDULER_API}/jobs/${jobName}/history?limit=${limit}&offset=${offset}`,
+            {},
+            token
+        );
+    }
+
+    /**
+     * Get execution statistics for a job
+     */
+    static async getJobStats(
+        jobName: string,
+        token: string,
+        days: number = 30
+    ): Promise<{
+        stats: JobStats;
+        period: {
+            days: number;
+            from: string;
+            to: string;
+        };
+    }> {
+        return await apiRequest(
+            `${SCHEDULER_API}/jobs/${jobName}/stats?days=${days}`,
+            {},
+            token
+        );
+    }
+
+    /**
+     * Update job cron expression
+     */
+    static async updateJobCron(
+        jobName: string,
+        cronExpression: string,
+        token: string
+    ): Promise<{ message: string; cronExpression: string }> {
+        return await apiRequest(
+            `${SCHEDULER_API}/jobs/${jobName}/cron`,
+            {
+                method: 'PUT',
+                body: JSON.stringify({ cronExpression }),
+            },
+            token
+        );
     }
 }
 

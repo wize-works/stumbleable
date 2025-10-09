@@ -170,3 +170,12 @@ spec:
             name: email-service
             port:
               number: 8080
+      
+      # Scheduler Service (admin only)
+      - path: /scheduler(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: scheduler-service
+            port:
+              number: 8080

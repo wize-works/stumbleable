@@ -1,0 +1,44 @@
+{
+    "name": "@stumbleable/scheduler-service",
+    "version": "1.0.0",
+    "description": "Centralized scheduler service for managing cron jobs across all Stumbleable services",
+    "main": "dist/server.js",
+    "scripts": {
+        "dev": "tsx watch src/server.ts",
+        "build": "tsc",
+        "start": "node dist/server.js",
+        "lint": "eslint src --ext .ts",
+        "type-check": "tsc --noEmit"
+    },
+    "keywords": [
+        "scheduler",
+        "cron",
+        "fastify",
+        "stumbleable"
+    ],
+    "author": "Stumbleable Team",
+    "license": "MIT",
+    "dependencies": {
+        "@clerk/fastify": "^2.4.34",
+        "@fastify/cors": "^10.1.0",
+        "@fastify/env": "^5.0.3",
+        "@fastify/helmet": "^12.0.1",
+        "@fastify/rate-limit": "^10.3.0",
+        "@supabase/supabase-js": "^2.58.0",
+        "dotenv": "^16.6.1",
+        "fastify": "^5.6.1",
+        "fastify-plugin": "^5.1.0",
+        "node-cron": "^3.0.3",
+        "pino-pretty": "^11.2.2",
+        "zod": "^3.23.8"
+    },
+    "devDependencies": {
+        "@types/node": "^20.16.5",
+        "@types/node-cron": "^3.0.11",
+        "tsx": "^4.19.1",
+        "typescript": "^5.6.2"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}

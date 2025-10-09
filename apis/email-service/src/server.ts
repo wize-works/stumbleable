@@ -2,9 +2,9 @@ import cors from '@fastify/cors';
 import dotenv from 'dotenv';
 import Fastify from 'fastify';
 import { EmailQueue } from './lib/queue.js';
+import jobRoutes from './routes/jobs.js';
 import preferencesRoutes from './routes/preferences.js';
 import queueRoutes from './routes/queue.js';
-import scheduledRoutes from './routes/scheduled.js';
 import sendRoutes from './routes/send.js';
 
 dotenv.config();
@@ -27,7 +27,7 @@ const app = Fastify({
 
 // Register CORS
 await app.register(cors, {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: (process.env.ALLOWED_ORIGINS || 'http://localhost:3000').split(','),
     credentials: true,
 });
 
@@ -45,7 +45,7 @@ app.get('/health', async () => {
 await app.register(sendRoutes, { prefix: '/api' });
 await app.register(preferencesRoutes, { prefix: '/api' });
 await app.register(queueRoutes, { prefix: '/api' });
-await app.register(scheduledRoutes, { prefix: '/api' });
+await app.register(jobRoutes, { prefix: '/api' });
 
 // Start background queue processor with retry logic
 let queueProcessorRetries = 0;
@@ -68,6 +68,85 @@ setInterval(async () => {
     }
 }, 60000); // Process every minute
 
+// Register jobs with scheduler-service
+const SCHEDULER_API_URL = process.env.SCHEDULER_API_URL || 'http://localhost:7007';
+
+async function registerJobsWithScheduler() {
+    const jobs = [
+        {
+            jobName: 'weekly-digest',
+            displayName: 'Weekly Digest',
+            description: 'Send weekly trending content digest to opted-in users',
+            cronExpression: '0 9 * * 1', // Mondays at 9 AM
+            jobType: 'email',
+            service: 'email-service',
+            endpoint: '/api/jobs/weekly-digest',
+            enabled: true,
+            config: {
+                batchSize: 100,
+                maxEmails: 10000,
+            },
+        },
+        {
+            jobName: 're-engagement',
+            displayName: 'Re-engagement Emails',
+            description: 'Send personalized emails to inactive users (7+ days)',
+            cronExpression: '0 10 * * *', // Daily at 10 AM
+            jobType: 'email',
+            service: 'email-service',
+            endpoint: '/api/jobs/re-engagement',
+            enabled: true,
+            config: {
+                daysInactive: 7,
+                batchSize: 50,
+                maxEmails: 500,
+            },
+        },
+        {
+            jobName: 'queue-cleanup',
+            displayName: 'Email Queue Cleanup',
+            description: 'Remove old processed emails from queue',
+            cronExpression: '0 2 * * *', // Daily at 2 AM
+            jobType: 'cleanup',
+            service: 'email-service',
+            endpoint: '/api/jobs/queue-cleanup',
+            enabled: true,
+            config: {
+                retentionDays: 30,
+            },
+        },
+    ];
+
+    for (const job of jobs) {
+        try {
+            const response = await fetch(`${SCHEDULER_API_URL}/api/jobs/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(job),
+            });
+
+            if (!response.ok) {
+                const error = await response.text();
+                app.log.error(`Failed to register job ${job.jobName}: ${error}`);
+            } else {
+                app.log.info(`✅ Registered job: ${job.jobName}`);
+            }
+        } catch (error: any) {
+            app.log.error(`Failed to register job ${job.jobName}:`, error.message);
+        }
+    }
+}
+
+// Register jobs on startup (with retry if scheduler not ready)
+setTimeout(async () => {
+    try {
+        await registerJobsWithScheduler();
+        app.log.info('✅ Email jobs registered with scheduler-service');
+    } catch (error) {
+        app.log.error({ error }, '❌ Failed to register jobs with scheduler-service');
+    }
+}, 2000); // Wait 2 seconds for scheduler to be ready
+
 // Start server
 try {
     await app.listen({ port, host });
@@ -77,6 +156,7 @@ try {
   ║   Port: ${port}                           ║
   ║   Host: ${host}                    ║
   ║   Health: http://${host}:${port}/health    ║
+  ║   Job Endpoints: /api/jobs/*           ║
   ╚════════════════════════════════════════╝
   `);
 } catch (err) {

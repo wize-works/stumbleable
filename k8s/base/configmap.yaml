@@ -16,6 +16,7 @@ data:
   CRAWLER_PORT: "7004"
   MODERATION_PORT: "7005"
   EMAIL_PORT: "7006"
+  SCHEDULER_PORT: "7007"
   
   # Internal service URLs (for server-side calls)
   DISCOVERY_API_URL: "http://discovery-service:8080"
@@ -24,6 +25,7 @@ data:
   CRAWLER_API_URL: "http://crawler-service:8080"
   MODERATION_API_URL: "http://moderation-service:8080"
   EMAIL_API_URL: "http://email-service:8080"
+  SCHEDULER_API_URL: "http://scheduler-service:8080"
   
   # Public API URLs (for client-side calls - will be overridden with actual domain)
   NEXT_PUBLIC_DISCOVERY_API_URL: "https://api.stumbleable.com/discovery"
@@ -32,6 +34,7 @@ data:
   NEXT_PUBLIC_CRAWLER_API_URL: "https://api.stumbleable.com/crawler"
   NEXT_PUBLIC_MODERATION_API_URL: "https://api.stumbleable.com/moderation"
   NEXT_PUBLIC_EMAIL_API_URL: "https://api.stumbleable.com/email"
+  NEXT_PUBLIC_SCHEDULER_API_URL: "https://api.stumbleable.com/scheduler"
   
   # Frontend URL (for CORS and email links)
   FRONTEND_URL: "https://stumbleable.com"

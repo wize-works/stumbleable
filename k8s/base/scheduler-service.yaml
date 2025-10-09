@@ -2,32 +2,29 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: email-service
+  name: scheduler-service
   namespace: stumbleable
   labels:
-    app: email-service
+    app: scheduler-service
     component: api
 spec:
-  replicas: 2
+  replicas: 1  # Single instance to avoid duplicate cron executions
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
+    type: Recreate  # Ensure only one scheduler instance at a time
   selector:
     matchLabels:
-      app: email-service
+      app: scheduler-service
   template:
     metadata:
       labels:
-        app: email-service
+        app: scheduler-service
         component: api
       annotations:
         deployment.timestamp: "${DEPLOYMENT_TIMESTAMP}"
     spec:
       containers:
-      - name: email-service
-        image: ${ACR_NAME}.azurecr.io/stumbleable-email:${IMAGE_TAG}
+      - name: scheduler-service
+        image: ${ACR_NAME}.azurecr.io/stumbleable-scheduler:${IMAGE_TAG}
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -54,32 +51,36 @@ spec:
             secretKeyRef:
               name: stumbleable-secrets
               key: SUPABASE_SERVICE_KEY
-        - name: RESEND_API_KEY
+        - name: CLERK_PUBLISHABLE_KEY
           valueFrom:
             secretKeyRef:
               name: stumbleable-secrets
-              key: RESEND_API_KEY
+              key: CLERK_PUBLISHABLE_KEY
+        - name: CLERK_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: stumbleable-secrets
+              key: CLERK_SECRET_KEY
         - name: ALLOWED_ORIGINS
           valueFrom:
             configMapKeyRef:
               name: stumbleable-config
               key: ALLOWED_ORIGINS
-        - name: FRONTEND_URL
-          valueFrom:
-            configMapKeyRef:
-              name: stumbleable-config
-              key: FRONTEND_URL
-        - name: EMAIL_FROM_ADDRESS
-          value: "noreply@updates.stumbleable.com"
-        - name: EMAIL_FROM_NAME
-          value: "Stumbleable"
+        - name: EMAIL_SERVICE_URL
+          value: "http://email-service:7006"
+        - name: CRAWLER_SERVICE_URL
+          value: "http://crawler-service:7004"
+        - name: DISCOVERY_SERVICE_URL
+          value: "http://discovery-service:7001"
+        - name: INTERACTION_SERVICE_URL
+          value: "http://interaction-service:7002"
         resources:
           requests:
             memory: "128Mi"
             cpu: "100m"
           limits:
             memory: "256Mi"
-            cpu: "250m"
+            cpu: "200m"
         livenessProbe:
           httpGet:
             path: /health
@@ -100,16 +101,16 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: email-service
+  name: scheduler-service
   namespace: stumbleable
   labels:
-    app: email-service
+    app: scheduler-service
 spec:
   type: ClusterIP
   ports:
-  - port: 7006
+  - port: 7007
     targetPort: 8080
     protocol: TCP
     name: http
   selector:
-    app: email-service
+    app: scheduler-service

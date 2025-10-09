@@ -102,6 +102,7 @@ export default function AdminDashboard() {
             { name: 'Moderation Service', url: process.env.NEXT_PUBLIC_MODERATION_API_URL || 'http://localhost:7005' },
             { name: 'Crawler Service', url: process.env.NEXT_PUBLIC_CRAWLER_API_URL || 'http://localhost:7004' },
             { name: 'Email Service', url: process.env.NEXT_PUBLIC_EMAIL_API_URL || 'http://localhost:7006' },
+            { name: 'Scheduler Service', url: process.env.NEXT_PUBLIC_SCHEDULER_API_URL || 'http://localhost:7007' },
         ];
 
         const statuses: ServiceStatus[] = await Promise.all(
@@ -543,6 +544,13 @@ export default function AdminDashboard() {
                                     {stats && stats.pendingModeration > 0 && (
                                         <span className="badge badge-warning badge-sm">{stats.pendingModeration}</span>
                                     )}
+                                </Link>
+                                <Link
+                                    href="/admin/scheduler"
+                                    className="btn btn-block btn-outline justify-start"
+                                >
+                                    <i className="fa-solid fa-duotone fa-clock text-primary"></i>
+                                    Scheduled Jobs
                                 </Link>
                                 <button
                                     className="btn btn-block btn-outline justify-start"
