@@ -243,15 +243,15 @@ export default function SchedulerManagementPage() {
             <Breadcrumbs items={[
                 { label: 'Home', href: '/' },
                 { label: 'Admin Dashboard', href: '/admin' },
-                { label: 'Email Scheduler', href: '/admin/scheduler' }
+                { label: 'Job Scheduler', href: '/admin/scheduler' }
             ]} />
 
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold">Email Scheduler</h1>
+                    <h1 className="text-3xl font-bold">Job Scheduler</h1>
                     <p className="text-base-content/70 mt-2">
-                        Manage scheduled email jobs and view execution history
+                        Manage scheduled jobs and view execution history
                     </p>
                 </div>
                 <button onClick={loadJobs} className="btn btn-primary">

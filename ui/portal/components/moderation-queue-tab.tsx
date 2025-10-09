@@ -222,21 +222,21 @@ export default function ModerationQueueTab({ items, loading, onRefresh, token }:
                                                 </span>
                                                 {item.submitted_by_user.trust_level !== undefined && (
                                                     <span className={`badge badge-sm ${item.submitted_by_user.trust_level >= 0.8 ? 'badge-success' :
-                                                            item.submitted_by_user.trust_level >= 0.5 ? 'badge-warning' :
-                                                                'badge-error'
+                                                        item.submitted_by_user.trust_level >= 0.5 ? 'badge-warning' :
+                                                            'badge-error'
                                                         }`}>
                                                         Trust: {Math.round(item.submitted_by_user.trust_level * 100)}%
                                                     </span>
                                                 )}
                                                 {item.submitted_by_user.submissions_approved !== undefined && (
-                                                    <span className="badge badge-sm badge-ghost">
-                                                        ✓ {item.submitted_by_user.submissions_approved} approved
+                                                    <span className="badge badge-sm badge-ghost flex items-center gap-1">
+                                                        <i className="fa-solid fa-duotone fa-check"></i> {item.submitted_by_user.submissions_approved} approved
                                                     </span>
                                                 )}
                                                 {item.submitted_by_user.submissions_rejected !== undefined &&
                                                     item.submitted_by_user.submissions_rejected > 0 && (
-                                                        <span className="badge badge-sm badge-ghost">
-                                                            ✗ {item.submitted_by_user.submissions_rejected} rejected
+                                                        <span className="badge badge-sm badge-ghost flex items-center gap-1">
+                                                            <i className="fa-solid fa-duotone fa-xmark"></i> {item.submitted_by_user.submissions_rejected} rejected
                                                         </span>
                                                     )}
                                             </div>
@@ -245,8 +245,8 @@ export default function ModerationQueueTab({ items, loading, onRefresh, token }:
                                             <div>
                                                 <span className="font-semibold">Combined Trust Score: </span>
                                                 <span className={`${item.trust_score >= 0.8 ? 'text-success' :
-                                                        item.trust_score >= 0.5 ? 'text-warning' :
-                                                            'text-error'
+                                                    item.trust_score >= 0.5 ? 'text-warning' :
+                                                        'text-error'
                                                     } font-bold`}>
                                                     {Math.round(item.trust_score * 100)}%
                                                 </span>

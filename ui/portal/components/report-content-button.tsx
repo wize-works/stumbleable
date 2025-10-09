@@ -30,7 +30,7 @@ export default function ReportContentButton({ discoveryId, className = '', onRep
     };
 
     const closeModal = () => {
-        console.log('🔒 Closing modal');
+        console.log('� Closing modal');
         modalStateRef.current = false;
         setIsModalOpen(false);
     };
@@ -38,7 +38,7 @@ export default function ReportContentButton({ discoveryId, className = '', onRep
     // Restore modal state after Strict Mode remount
     React.useEffect(() => {
         if (modalStateRef.current && !isModalOpen) {
-            console.log('🔄 Restoring modal state after remount');
+            console.log('� Restoring modal state after remount');
             setIsModalOpen(true);
         }
     }, [isModalOpen]);
@@ -139,7 +139,7 @@ export default function ReportContentButton({ discoveryId, className = '', onRep
                             className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
                             onClick={() => setIsModalOpen(false)}
                         >
-                            ✕
+                            <i className="fa-solid fa-duotone fa-xmark"></i>
                         </button>
 
                         <h3 className="font-bold text-lg mb-4">Report Content</h3>

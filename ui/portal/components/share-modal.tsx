@@ -47,7 +47,7 @@ export function ShareModal({ listId, listTitle, onClose }: ShareModalProps) {
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="font-bold text-lg">Share List</h3>
                     <button onClick={onClose} className="btn btn-sm btn-circle btn-ghost">
-                        ✕
+                        <i className="fa-solid fa-duotone fa-xmark"></i>
                     </button>
                 </div>
 

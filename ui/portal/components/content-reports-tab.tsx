@@ -400,8 +400,8 @@ export default function ContentReportsTab({ reports, loading, onRefresh, token }
                                                     {report.similar_reports.length >= 3 && (
                                                         <div className="alert alert-error mt-2">
                                                             <i className="fa-solid fa-duotone fa-exclamation-circle"></i>
-                                                            <span className="text-sm font-semibold">
-                                                                ⚠️ Multiple users have flagged this content - likely a genuine issue!
+                                                            <span className="text-sm font-semibold flex items-center gap-2">
+                                                                <i className="fa-solid fa-duotone fa-triangle-exclamation"></i> Multiple users have flagged this content - likely a genuine issue!
                                                             </span>
                                                         </div>
                                                     )}

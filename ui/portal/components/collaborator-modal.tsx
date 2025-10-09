@@ -93,7 +93,7 @@ export function CollaboratorModal({
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="font-bold text-lg">Manage Collaborators</h3>
                     <button onClick={onClose} className="btn btn-sm btn-circle btn-ghost">
-                        ✕
+                        <i className="fa-solid fa-duotone fa-xmark"></i>
                     </button>
                 </div>
 

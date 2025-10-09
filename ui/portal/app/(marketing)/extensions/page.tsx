@@ -15,7 +15,7 @@ export default function ExtensionsPage() {
                 <div className="container relative mx-auto px-4 py-20 sm:py-32">
                     <div className="mx-auto max-w-4xl text-center">
                         <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm">
-                            <span className="text-2xl">🚀</span>
+                            <i className="fa-solid fa-duotone fa-rocket text-2xl"></i>
                             <span>Discover from Anywhere</span>
                         </div>
                         <h1 className="mb-6 text-5xl font-bold tracking-tight text-white sm:text-6xl md:text-7xl">
@@ -44,7 +44,7 @@ export default function ExtensionsPage() {
                             </Link>
                         </div>
                         <p className="mt-6 text-sm text-purple-200">
-                            ⭐ Rated 4.8/5 by users • 🔒 Privacy-first • 🆓 Free forever
+                            <i className="fa-solid fa-duotone fa-star"></i> Rated 4.8/5 by users • <i className="fa-solid fa-duotone fa-lock"></i> Privacy-first • <i className="fa-solid fa-duotone fa-circle-check"></i> Free forever
                         </p>
                     </div>
                 </div>
@@ -137,7 +137,7 @@ export default function ExtensionsPage() {
                     <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-2 lg:grid-cols-3">
                         {/* Feature 1 */}
                         <div className="rounded-xl bg-gradient-to-br from-purple-50 to-indigo-50 p-6">
-                            <div className="mb-4 text-4xl">🎲</div>
+                            <i className="fa-solid fa-duotone fa-dice text-4xl mb-4 text-purple-600"></i>
                             <h3 className="mb-2 text-xl font-bold text-gray-900">Quick Stumbling</h3>
                             <p className="text-gray-600">
                                 Click the extension icon to discover amazing content instantly. Beautiful popup interface with full discovery cards.
@@ -146,7 +146,7 @@ export default function ExtensionsPage() {
 
                         {/* Feature 2 */}
                         <div className="rounded-xl bg-gradient-to-br from-pink-50 to-rose-50 p-6">
-                            <div className="mb-4 text-4xl">📤</div>
+                            <i className="fa-solid fa-duotone fa-share-from-square text-4xl mb-4 text-pink-600"></i>
                             <h3 className="mb-2 text-xl font-bold text-gray-900">Submit Pages</h3>
                             <p className="text-gray-600">
                                 Right-click any page to submit it to Stumbleable. Share interesting content with the community.
@@ -155,7 +155,7 @@ export default function ExtensionsPage() {
 
                         {/* Feature 3 */}
                         <div className="rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 p-6">
-                            <div className="mb-4 text-4xl">🔖</div>
+                            <i className="fa-solid fa-duotone fa-bookmark text-4xl mb-4 text-blue-600"></i>
                             <h3 className="mb-2 text-xl font-bold text-gray-900">Save Anywhere</h3>
                             <p className="text-gray-600">
                                 Save interesting pages with a right-click or keyboard shortcut. Access them later in your collection.
@@ -164,7 +164,7 @@ export default function ExtensionsPage() {
 
                         {/* Feature 4 */}
                         <div className="rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 p-6">
-                            <div className="mb-4 text-4xl">⌨️</div>
+                            <i className="fa-solid fa-duotone fa-keyboard text-4xl mb-4 text-green-600"></i>
                             <h3 className="mb-2 text-xl font-bold text-gray-900">Keyboard Shortcuts</h3>
                             <p className="text-gray-600">
                                 Lightning-fast navigation with keyboard shortcuts. Space to stumble, arrows for reactions, and more.
@@ -173,7 +173,7 @@ export default function ExtensionsPage() {
 
                         {/* Feature 5 */}
                         <div className="rounded-xl bg-gradient-to-br from-orange-50 to-amber-50 p-6">
-                            <div className="mb-4 text-4xl">⚙️</div>
+                            <i className="fa-solid fa-duotone fa-gear text-4xl mb-4 text-orange-600"></i>
                             <h3 className="mb-2 text-xl font-bold text-gray-900">Sync Preferences</h3>
                             <p className="text-gray-600">
                                 Your wildness setting and preferences sync across all devices. Seamless experience everywhere.
@@ -182,7 +182,7 @@ export default function ExtensionsPage() {
 
                         {/* Feature 6 */}
                         <div className="rounded-xl bg-gradient-to-br from-violet-50 to-purple-50 p-6">
-                            <div className="mb-4 text-4xl">🔒</div>
+                            <i className="fa-solid fa-duotone fa-lock text-4xl mb-4 text-violet-600"></i>
                             <h3 className="mb-2 text-xl font-bold text-gray-900">Privacy First</h3>
                             <p className="text-gray-600">
                                 No tracking, no ads, no data collection. Only the permissions needed for core functionality.

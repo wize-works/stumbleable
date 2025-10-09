@@ -84,25 +84,25 @@ export default function NotFound() {
 
                 {/* Quick Links */}
                 <div className="mt-12 pt-8 border-t border-base-300">
-                    <p className="text-sm text-base-content/60 mb-4">Or try one of these:</p>
+                    <p className="text-base-content/60 mb-4">Or try one of these:</p>
                     <div className="flex flex-wrap gap-3 justify-center">
-                        <Link href="/saved" className="link link-hover text-sm">
+                        <Link href="/saved" className="link link-hover">
                             <i className="fa-solid fa-duotone fa-bookmark mr-1"></i>
                             Saved Items
                         </Link>
-                        <Link href="/lists" className="link link-hover text-sm">
+                        <Link href="/lists" className="link link-hover">
                             <i className="fa-solid fa-duotone fa-list mr-1"></i>
                             My Lists
                         </Link>
-                        <Link href="/about" className="link link-hover text-sm">
+                        <Link href="/about" className="link link-hover">
                             <i className="fa-solid fa-duotone fa-info-circle mr-1"></i>
                             About Us
                         </Link>
-                        <Link href="/submit" className="link link-hover text-sm">
+                        <Link href="/submit" className="link link-hover">
                             <i className="fa-solid fa-duotone fa-plus-circle mr-1"></i>
                             Submit Content
                         </Link>
-                        <Link href="/contact" className="link link-hover text-sm">
+                        <Link href="/contact" className="link link-hover">
                             <i className="fa-solid fa-duotone fa-envelope mr-1"></i>
                             Contact
                         </Link>

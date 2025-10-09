@@ -162,13 +162,13 @@ export default function FeaturesPage() {
                                 </p>
                                 <ul className="space-y-2 text-sm text-base-content/60">
                                     <li className="flex items-center gap-2">
-                                        <span className="text-primary">✓</span> Automatic metadata extraction
+                                        <i className="fa-solid fa-duotone fa-check text-primary"></i> Automatic metadata extraction
                                     </li>
                                     <li className="flex items-center gap-2">
-                                        <span className="text-primary">✓</span> Content moderation for quality
+                                        <i className="fa-solid fa-duotone fa-check text-primary"></i> Content moderation for quality
                                     </li>
                                     <li className="flex items-center gap-2">
-                                        <span className="text-primary">✓</span> Get credit for great submissions
+                                        <i className="fa-solid fa-duotone fa-check text-primary"></i> Get credit for great submissions
                                     </li>
                                 </ul>
                             </div>
@@ -185,13 +185,13 @@ export default function FeaturesPage() {
                                 </p>
                                 <ul className="space-y-2 text-sm text-base-content/60">
                                     <li className="flex items-center gap-2">
-                                        <span className="text-secondary">✓</span> Automatic duplicate detection
+                                        <i className="fa-solid fa-duotone fa-check text-secondary"></i> Automatic duplicate detection
                                     </li>
                                     <li className="flex items-center gap-2">
-                                        <span className="text-secondary">✓</span> Domain-level filtering
+                                        <i className="fa-solid fa-duotone fa-check text-secondary"></i> Domain-level filtering
                                     </li>
                                     <li className="flex items-center gap-2">
-                                        <span className="text-secondary">✓</span> Respect your skip preferences
+                                        <i className="fa-solid fa-duotone fa-check text-secondary"></i> Respect your skip preferences
                                     </li>
                                 </ul>
                             </div>
@@ -208,13 +208,13 @@ export default function FeaturesPage() {
                                 </p>
                                 <ul className="space-y-2 text-sm text-base-content/60">
                                     <li className="flex items-center gap-2">
-                                        <span className="text-accent">✓</span> Share to social media
+                                        <i className="fa-solid fa-duotone fa-check text-accent"></i> Share to social media
                                     </li>
                                     <li className="flex items-center gap-2">
-                                        <span className="text-accent">✓</span> Collaborative lists
+                                        <i className="fa-solid fa-duotone fa-check text-accent"></i> Collaborative lists
                                     </li>
                                     <li className="flex items-center gap-2">
-                                        <span className="text-accent">✓</span> Follow other curators
+                                        <i className="fa-solid fa-duotone fa-check text-accent"></i> Follow other curators
                                     </li>
                                 </ul>
                             </div>
@@ -231,13 +231,13 @@ export default function FeaturesPage() {
                                 </p>
                                 <ul className="space-y-2 text-sm text-base-content/60">
                                     <li className="flex items-center gap-2">
-                                        <span className="text-primary">✓</span> Responsive web design
+                                        <i className="fa-solid fa-duotone fa-check text-primary"></i> Responsive web design
                                     </li>
                                     <li className="flex items-center gap-2">
-                                        <span className="text-primary">✓</span> Touch-friendly mobile UI
+                                        <i className="fa-solid fa-duotone fa-check text-primary"></i> Touch-friendly mobile UI
                                     </li>
                                     <li className="flex items-center gap-2">
-                                        <span className="text-primary">✓</span> Sync across devices
+                                        <i className="fa-solid fa-duotone fa-check text-primary"></i> Sync across devices
                                     </li>
                                 </ul>
                             </div>

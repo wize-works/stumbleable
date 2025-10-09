@@ -130,43 +130,43 @@ export default function StumbleUponAlternativePage() {
                                 <tbody>
                                     <tr>
                                         <td className="font-semibold">One-Click Discovery</td>
-                                        <td>✅ Yes</td>
-                                        <td className="bg-primary/10">✅ Yes</td>
+                                        <td><i className="fa-solid fa-duotone fa-check text-success"></i> Yes</td>
+                                        <td className="bg-primary/10"><i className="fa-solid fa-duotone fa-check text-success"></i> Yes</td>
                                     </tr>
                                     <tr>
                                         <td className="font-semibold">Wildness Control</td>
-                                        <td>❌ No</td>
-                                        <td className="bg-primary/10">✅ Yes (0-100 slider)</td>
+                                        <td><i className="fa-solid fa-duotone fa-xmark text-error"></i> No</td>
+                                        <td className="bg-primary/10"><i className="fa-solid fa-duotone fa-check text-success"></i> Yes (0-100 slider)</td>
                                     </tr>
                                     <tr>
                                         <td className="font-semibold">AI-Powered Curation</td>
-                                        <td>❌ Basic algorithm</td>
-                                        <td className="bg-primary/10">✅ Advanced AI + human curation</td>
+                                        <td><i className="fa-solid fa-duotone fa-xmark text-error"></i> Basic algorithm</td>
+                                        <td className="bg-primary/10"><i className="fa-solid fa-duotone fa-check text-success"></i> Advanced AI + human curation</td>
                                     </tr>
                                     <tr>
                                         <td className="font-semibold">Custom Lists</td>
-                                        <td>❌ Limited</td>
-                                        <td className="bg-primary/10">✅ Unlimited lists</td>
+                                        <td><i className="fa-solid fa-duotone fa-xmark text-error"></i> Limited</td>
+                                        <td className="bg-primary/10"><i className="fa-solid fa-duotone fa-check text-success"></i> Unlimited lists</td>
                                     </tr>
                                     <tr>
                                         <td className="font-semibold">Keyboard Shortcuts</td>
-                                        <td>❌ No</td>
-                                        <td className="bg-primary/10">✅ Full keyboard navigation</td>
+                                        <td><i className="fa-solid fa-duotone fa-xmark text-error"></i> No</td>
+                                        <td className="bg-primary/10"><i className="fa-solid fa-duotone fa-check text-success"></i> Full keyboard navigation</td>
                                     </tr>
                                     <tr>
                                         <td className="font-semibold">Dark Mode</td>
-                                        <td>❌ No</td>
-                                        <td className="bg-primary/10">✅ Automatic + manual toggle</td>
+                                        <td><i className="fa-solid fa-duotone fa-xmark text-error"></i> No</td>
+                                        <td className="bg-primary/10"><i className="fa-solid fa-duotone fa-check text-success"></i> Automatic + manual toggle</td>
                                     </tr>
                                     <tr>
                                         <td className="font-semibold">Mobile Experience</td>
-                                        <td>⚠️ Okay</td>
-                                        <td className="bg-primary/10">✅ Excellent (PWA ready)</td>
+                                        <td><i className="fa-solid fa-duotone fa-triangle-exclamation text-warning"></i> Okay</td>
+                                        <td className="bg-primary/10"><i className="fa-solid fa-duotone fa-check text-success"></i> Excellent (PWA ready)</td>
                                     </tr>
                                     <tr>
                                         <td className="font-semibold">Page Load Speed</td>
-                                        <td>⚠️ Slow</td>
-                                        <td className="bg-primary/10">✅ Lightning fast</td>
+                                        <td><i className="fa-solid fa-duotone fa-triangle-exclamation text-warning"></i> Slow</td>
+                                        <td className="bg-primary/10"><i className="fa-solid fa-duotone fa-check text-success"></i> Lightning fast</td>
                                     </tr>
                                     <tr>
                                         <td className="font-semibold">Price</td>
@@ -245,19 +245,25 @@ export default function StumbleUponAlternativePage() {
 
                             <div className="grid md:grid-cols-3 gap-4 mt-4">
                                 <div className="bg-base-100 rounded-lg p-4">
-                                    <div className="text-sm font-bold text-success mb-2">🎯 Low (0-30)</div>
+                                    <div className="text-sm font-bold text-success mb-2 flex items-center gap-2">
+                                        <i className="fa-solid fa-duotone fa-bullseye"></i> Low (0-30)
+                                    </div>
                                     <p className="text-sm text-base-content/70">
                                         Familiar territory. Content closely aligned with your interests.
                                     </p>
                                 </div>
                                 <div className="bg-base-100 rounded-lg p-4">
-                                    <div className="text-sm font-bold text-warning mb-2">⚡ Medium (30-70)</div>
+                                    <div className="text-sm font-bold text-warning mb-2 flex items-center gap-2">
+                                        <i className="fa-solid fa-duotone fa-bolt"></i> Medium (30-70)
+                                    </div>
                                     <p className="text-sm text-base-content/70">
                                         The sweet spot. Surprises that still feel relevant.
                                     </p>
                                 </div>
                                 <div className="bg-base-100 rounded-lg p-4">
-                                    <div className="text-sm font-bold text-error mb-2">🔥 High (70-100)</div>
+                                    <div className="text-sm font-bold text-error mb-2 flex items-center gap-2">
+                                        <i className="fa-solid fa-duotone fa-fire"></i> High (70-100)
+                                    </div>
                                     <p className="text-sm text-base-content/70">
                                         Pure chaos. Completely random discoveries.
                                     </p>

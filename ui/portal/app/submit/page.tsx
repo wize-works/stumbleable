@@ -263,7 +263,9 @@ export default function SubmitPage() {
                                     <div className="mt-3 space-y-2">
                                         {(submissionResult as any).details.suggestions && (
                                             <div className="bg-base-100/20 rounded p-3">
-                                                <div className="font-medium mb-1">💡 Suggestions:</div>
+                                                <div className="font-medium mb-1 flex items-center gap-2">
+                                                    <i className="fa-solid fa-duotone fa-lightbulb text-warning"></i> Suggestions:
+                                                </div>
                                                 <ul className="list-disc list-inside space-y-1 text-xs">
                                                     {(submissionResult as any).details.suggestions.map((suggestion: string, idx: number) => (
                                                         <li key={idx}>{suggestion}</li>
@@ -373,8 +375,8 @@ export default function SubmitPage() {
                                     )}
                                 </div>
                                 <label className="label">
-                                    <span className="label-text-alt">
-                                        💡 This preview shows you if the site will load properly for users
+                                    <span className="label-text-alt flex items-center gap-1">
+                                        <i className="fa-solid fa-duotone fa-lightbulb text-warning"></i> This preview shows you if the site will load properly for users
                                     </span>
                                 </label>
                             </div>
@@ -521,7 +523,9 @@ export default function SubmitPage() {
 
                     {/* Help Text */}
                     <div className="mt-8 p-4 bg-base-200 rounded-lg">
-                        <h3 className="font-semibold mb-2">📋 Submission Guidelines</h3>
+                        <h3 className="font-semibold mb-2 flex items-center gap-2">
+                            <i className="fa-solid fa-duotone fa-clipboard-list"></i> Submission Guidelines
+                        </h3>
                         <ul className="text-sm space-y-1 text-base-content/70">
                             <li>• Only <strong>HTTPS</strong> URLs are accepted for security (no HTTP)</li>
                             <li>• We'll automatically extract metadata if you don't provide it</li>

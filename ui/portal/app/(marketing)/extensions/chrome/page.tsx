@@ -48,17 +48,17 @@ export default function ChromeExtensionPage() {
                             </div>
                             <div className="mt-6 flex items-center gap-6 text-white/90">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-2xl">⭐</span>
+                                    <i className="fa-solid fa-duotone fa-star text-2xl"></i>
                                     <span className="font-semibold">4.8/5</span>
                                 </div>
                                 <div className="h-6 w-px bg-white/30"></div>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-2xl">👥</span>
+                                    <i className="fa-solid fa-duotone fa-users text-2xl"></i>
                                     <span className="font-semibold">10K+ Users</span>
                                 </div>
                                 <div className="h-6 w-px bg-white/30"></div>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-2xl">🔒</span>
+                                    <i className="fa-solid fa-duotone fa-lock text-2xl"></i>
                                     <span className="font-semibold">Privacy First</span>
                                 </div>
                             </div>
@@ -69,7 +69,7 @@ export default function ChromeExtensionPage() {
                             <div className="rounded-2xl bg-white p-4 shadow-2xl">
                                 <div className="aspect-video rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center">
                                     <div className="text-center">
-                                        <div className="text-6xl mb-4">🎲</div>
+                                        <i className="fa-solid fa-duotone fa-dice text-6xl mb-4 text-purple-600"></i>
                                         <div className="text-gray-700 font-semibold">Extension Preview</div>
                                         <div className="text-sm text-gray-500">Screenshot coming soon</div>
                                     </div>
@@ -191,22 +191,22 @@ export default function ChromeExtensionPage() {
                     <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-2">
                         {/* Feature: Quick Stumbling */}
                         <div className="rounded-2xl bg-gradient-to-br from-purple-50 to-indigo-50 p-8">
-                            <div className="mb-4 text-5xl">🎲</div>
+                            <i className="fa-solid fa-duotone fa-dice text-5xl mb-4 text-purple-600"></i>
                             <h3 className="mb-3 text-2xl font-bold text-gray-900">Quick Stumbling</h3>
                             <p className="mb-4 text-gray-700">
                                 Click the extension icon to open a beautiful popup with full discovery cards. See images, titles, descriptions, and topics—all without leaving your current page.
                             </p>
                             <ul className="space-y-2 text-gray-600">
                                 <li className="flex items-center gap-2">
-                                    <span className="text-green-500">✓</span>
+                                    <i className="fa-solid fa-duotone fa-check text-green-500"></i>
                                     <span>Beautiful popup interface</span>
                                 </li>
                                 <li className="flex items-center gap-2">
-                                    <span className="text-green-500">✓</span>
+                                    <i className="fa-solid fa-duotone fa-check text-green-500"></i>
                                     <span>Like, skip, save, or visit</span>
                                 </li>
                                 <li className="flex items-center gap-2">
-                                    <span className="text-green-500">✓</span>
+                                    <i className="fa-solid fa-duotone fa-check text-green-500"></i>
                                     <span>Wildness control slider</span>
                                 </li>
                             </ul>
@@ -214,22 +214,22 @@ export default function ChromeExtensionPage() {
 
                         {/* Feature: Context Menu */}
                         <div className="rounded-2xl bg-gradient-to-br from-pink-50 to-rose-50 p-8">
-                            <div className="mb-4 text-5xl">📤</div>
+                            <i className="fa-solid fa-duotone fa-share-from-square text-5xl mb-4 text-pink-600"></i>
                             <h3 className="mb-3 text-2xl font-bold text-gray-900">Right-Click Actions</h3>
                             <p className="mb-4 text-gray-700">
                                 Right-click any page or link to quickly submit it to Stumbleable or save it to your collection. Share interesting content with the community effortlessly.
                             </p>
                             <ul className="space-y-2 text-gray-600">
                                 <li className="flex items-center gap-2">
-                                    <span className="text-green-500">✓</span>
+                                    <i className="fa-solid fa-duotone fa-check text-green-500"></i>
                                     <span>Submit current page</span>
                                 </li>
                                 <li className="flex items-center gap-2">
-                                    <span className="text-green-500">✓</span>
+                                    <i className="fa-solid fa-duotone fa-check text-green-500"></i>
                                     <span>Save for later</span>
                                 </li>
                                 <li className="flex items-center gap-2">
-                                    <span className="text-green-500">✓</span>
+                                    <i className="fa-solid fa-duotone fa-check text-green-500"></i>
                                     <span>Works on links too</span>
                                 </li>
                             </ul>
@@ -237,7 +237,7 @@ export default function ChromeExtensionPage() {
 
                         {/* Feature: Keyboard Shortcuts */}
                         <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50 p-8">
-                            <div className="mb-4 text-5xl">⌨️</div>
+                            <i className="fa-solid fa-duotone fa-keyboard text-5xl mb-4 text-blue-600"></i>
                             <h3 className="mb-3 text-2xl font-bold text-gray-900">Keyboard Shortcuts</h3>
                             <p className="mb-4 text-gray-700">
                                 Navigate at the speed of thought with powerful keyboard shortcuts. Stumble, save, and submit without touching your mouse.
@@ -260,22 +260,22 @@ export default function ChromeExtensionPage() {
 
                         {/* Feature: Preferences Sync */}
                         <div className="rounded-2xl bg-gradient-to-br from-orange-50 to-amber-50 p-8">
-                            <div className="mb-4 text-5xl">⚙️</div>
+                            <i className="fa-solid fa-duotone fa-gear text-5xl mb-4 text-orange-600"></i>
                             <h3 className="mb-3 text-2xl font-bold text-gray-900">Seamless Sync</h3>
                             <p className="mb-4 text-gray-700">
                                 Your wildness preference and settings sync automatically across all your devices. Pick up where you left off, anywhere.
                             </p>
                             <ul className="space-y-2 text-gray-600">
                                 <li className="flex items-center gap-2">
-                                    <span className="text-green-500">✓</span>
+                                    <i className="fa-solid fa-duotone fa-check text-green-500"></i>
                                     <span>Chrome Sync Storage</span>
                                 </li>
                                 <li className="flex items-center gap-2">
-                                    <span className="text-green-500">✓</span>
+                                    <i className="fa-solid fa-duotone fa-check text-green-500"></i>
                                     <span>Real-time updates</span>
                                 </li>
                                 <li className="flex items-center gap-2">
-                                    <span className="text-green-500">✓</span>
+                                    <i className="fa-solid fa-duotone fa-check text-green-500"></i>
                                     <span>Cross-device continuity</span>
                                 </li>
                             </ul>
@@ -338,7 +338,7 @@ export default function ChromeExtensionPage() {
                         </div>
 
                         <p className="mt-6 text-center text-sm text-gray-400">
-                            💡 On Mac, use ⌘ (Command) instead of Ctrl • Customize shortcuts at chrome://extensions/shortcuts
+                            <i className="fa-solid fa-duotone fa-lightbulb"></i> On Mac, use ⌘ (Command) instead of Ctrl • Customize shortcuts at chrome://extensions/shortcuts
                         </p>
                     </div>
                 </div>
@@ -348,7 +348,7 @@ export default function ChromeExtensionPage() {
             <section className="py-20">
                 <div className="container mx-auto px-4">
                     <div className="mx-auto max-w-4xl text-center">
-                        <div className="mb-6 text-6xl">🔒</div>
+                        <i className="fa-solid fa-duotone fa-lock text-6xl mb-6 text-green-600"></i>
                         <h2 className="mb-4 text-4xl font-bold text-gray-900">Your Privacy Matters</h2>
                         <p className="mb-8 text-xl text-gray-600">
                             We believe in building extensions the right way—with respect for your privacy and data.
@@ -356,21 +356,21 @@ export default function ChromeExtensionPage() {
 
                         <div className="grid gap-6 text-left md:grid-cols-3">
                             <div className="rounded-xl bg-white p-6 shadow-lg">
-                                <div className="mb-3 text-3xl">🚫</div>
+                                <i className="fa-solid fa-duotone fa-ban text-3xl mb-3 text-red-600"></i>
                                 <h3 className="mb-2 font-bold text-gray-900">No Tracking</h3>
                                 <p className="text-sm text-gray-600">
                                     We don't track your browsing history or monitor what pages you visit.
                                 </p>
                             </div>
                             <div className="rounded-xl bg-white p-6 shadow-lg">
-                                <div className="mb-3 text-3xl">📊</div>
+                                <i className="fa-solid fa-duotone fa-chart-simple text-3xl mb-3 text-blue-600"></i>
                                 <h3 className="mb-2 font-bold text-gray-900">Minimal Data</h3>
                                 <p className="text-sm text-gray-600">
                                     We only store your preferences and authentication—nothing more.
                                 </p>
                             </div>
                             <div className="rounded-xl bg-white p-6 shadow-lg">
-                                <div className="mb-3 text-3xl">✅</div>
+                                <i className="fa-solid fa-duotone fa-check-circle text-3xl mb-3 text-green-600"></i>
                                 <h3 className="mb-2 font-bold text-gray-900">Open Source</h3>
                                 <p className="text-sm text-gray-600">
                                     All our code is open source. You can audit exactly what we're doing.
@@ -416,19 +416,19 @@ export default function ChromeExtensionPage() {
                                 <h3 className="mb-4 text-xl font-bold text-gray-900">Get Support</h3>
                                 <div className="space-y-4">
                                     <Link href="/faq" className="flex items-center gap-2 text-purple-600 hover:underline">
-                                        <span>📚</span>
+                                        <i className="fa-solid fa-duotone fa-book"></i>
                                         <span>View Full FAQ</span>
                                     </Link>
                                     <Link href="/contact" className="flex items-center gap-2 text-purple-600 hover:underline">
-                                        <span>✉️</span>
+                                        <i className="fa-solid fa-duotone fa-envelope"></i>
                                         <span>Contact Support</span>
                                     </Link>
                                     <a href="https://github.com/wize-works/stumbleable/issues" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-purple-600 hover:underline">
-                                        <span>🐛</span>
+                                        <i className="fa-solid fa-duotone fa-bug"></i>
                                         <span>Report a Bug</span>
                                     </a>
                                     <a href="https://github.com/wize-works/stumbleable" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-purple-600 hover:underline">
-                                        <span>💻</span>
+                                        <i className="fa-solid fa-duotone fa-code"></i>
                                         <span>View Source Code</span>
                                     </a>
                                 </div>

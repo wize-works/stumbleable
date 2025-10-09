@@ -495,7 +495,9 @@ export default function CrawlerManagement() {
                                 <div className="alert alert-info mt-3">
                                     <i className="fa-solid fa-duotone fa-robot text-info" />
                                     <div className="flex-1">
-                                        <p className="font-semibold">🤖 Automatic Enhancement Active</p>
+                                        <p className="font-semibold flex items-center gap-2">
+                                            <i className="fa-solid fa-duotone fa-robot"></i> Automatic Enhancement Active
+                                        </p>
                                         <p className="text-sm">
                                             The scheduler processes 20 items every 30 minutes automatically.
                                             At {enhancementStatus.needs_enhancement} items remaining, completion in approximately{' '}

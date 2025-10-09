@@ -605,7 +605,7 @@ export default function StumblePage() {
                             sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
                             referrerPolicy="strict-origin-when-cross-origin"
                             onLoad={() => {
-                                console.log('[Stumble] ✓ Iframe onLoad fired:', currentDiscovery.domain);
+                                console.log('[Stumble] ✅ Iframe onLoad fired:', currentDiscovery.domain);
 
                                 // Mark as successfully loaded
                                 iframeLoadedRef.current = true;
@@ -620,11 +620,11 @@ export default function StumblePage() {
                                 // Only clear error if not from database knowledge
                                 if (currentDiscovery.allowsFraming !== false && !iframeError) {
                                     // Successfully loaded before timeout, no error to clear
-                                    console.log('[Stumble] ✓ Iframe loaded successfully within timeout');
+                                    console.log('[Stumble] ✅ Iframe loaded successfully within timeout');
                                 }
                             }}
                             onError={() => {
-                                console.error('[Stumble] ✗ Iframe onError fired:', currentDiscovery.domain);
+                                console.error('[Stumble] ❌ Iframe onError fired:', currentDiscovery.domain);
                                 // Note: onError typically fires for network failures, not HTTP error codes like 404
                                 // A 404 page with HTML content will still load in the iframe and trigger onLoad
                                 // Set error indicator to suggest viewing Discovery Card

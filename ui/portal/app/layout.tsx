@@ -86,7 +86,7 @@ export const metadata = {
         site: '@stumbleable',
         creator: '@stumbleable',
         title: 'Stumbleable - Best StumbleUpon Alternative',
-        description: 'Discover amazing websites with one click! Free random website generator. Start exploring now! 🎲',
+        description: 'Discover amazing websites with one click! Free random website generator. Start exploring now!',
         images: ['/og-image-homepage.png'],
     },
     robots: {
