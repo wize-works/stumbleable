@@ -90,7 +90,7 @@ export const enhanceRoute: FastifyPluginAsync = async (fastify) => {
 
             let processed = 0;
             let enhanced = 0;
-            const results: Array<{ id: string; url: string; status: string; fieldsAdded?: string[] }> = [];
+            const results: Array<{ id: string; url: string; status: string; fieldsAdded?: string[]; error?: string }> = [];
 
             for (const record of contentRecords) {
                 try {
@@ -211,12 +211,28 @@ export const enhanceRoute: FastifyPluginAsync = async (fastify) => {
                     // Rate limiting - wait 500ms between requests
                     await new Promise(resolve => setTimeout(resolve, 500));
 
-                } catch (error) {
+                } catch (error: any) {
+                    // CRITICAL: Mark as scraped even on failure to prevent infinite retries
+                    // This is especially important for manual enhancement where users click buttons
+                    try {
+                        await supabase
+                            .from('content')
+                            .update({
+                                metadata_scraped_at: new Date().toISOString()
+                            })
+                            .eq('id', record.id);
+
+                        fastify.log.warn(`⚠️  Marked ${record.url} as scraped despite error (won't retry)`);
+                    } catch (markError: any) {
+                        fastify.log.error(`❌ Failed to mark ${record.url} as scraped:`, markError);
+                    }
+
                     fastify.log.error(error, `Error processing ${record.url}`);
                     results.push({
                         id: record.id,
                         url: record.url,
-                        status: 'error'
+                        status: 'error',
+                        error: error.message
                     });
                     processed++;
                 }
@@ -361,6 +377,22 @@ export const enhanceRoute: FastifyPluginAsync = async (fastify) => {
                     fastify.log.info(`✓ Enhanced ${record.url}`);
 
                 } catch (error: any) {
+                    // CRITICAL: Mark as scraped even on failure to prevent infinite retries
+                    // This allows the job to make progress instead of getting stuck on bad URLs
+                    try {
+                        await supabase
+                            .from('content')
+                            .update({
+                                metadata_scraped_at: new Date().toISOString()
+                            })
+                            .eq('id', record.id);
+
+                        fastify.log.warn(`⚠️  Marked ${record.url} as scraped despite error (won't retry)`);
+                    } catch (markError: any) {
+                        fastify.log.error(`❌ Failed to mark ${record.url} as scraped:`, markError);
+                        // Continue anyway - don't let marking failure block the entire job
+                    }
+
                     failed++;
                     const errorMsg = `${record.url}: ${error.message}`;
                     errors.push(errorMsg);

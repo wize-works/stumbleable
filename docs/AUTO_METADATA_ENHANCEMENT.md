@@ -19,7 +19,42 @@ The automatic metadata enhancement system processes unscraped content in small b
 - Extracts missing metadata: images, authors, content text, word count, topics
 - **Always marks items as scraped** to prevent re-processing
 
-### 3. **Performance Impact**
+### 3. **Critical Error Handling** ⚠️
+**Problem**: Without proper error handling, failed items would retry forever, blocking all progress.
+
+**Solution**: 
+- ✅ **Always mark as scraped** - Even if extraction fails
+- ✅ **Log the error** - Track what went wrong for debugging
+- ✅ **Continue processing** - Don't let one bad URL stop the entire batch
+- ✅ **Manual retry available** - Use `forceRescrape` flag if needed
+
+**Why this matters**:
+```typescript
+// ❌ BAD: Failed items retry forever
+try {
+  const metadata = await extractMetadata(url);
+  await saveMetadata(metadata);
+} catch (error) {
+  console.error(error); // Item stays unscraped, retries next run
+}
+
+// ✅ GOOD: Failed items are marked, progress continues
+try {
+  const metadata = await extractMetadata(url);
+  await saveMetadata(metadata);
+} catch (error) {
+  await markAsScraped(url); // Mark as attempted even on failure
+  console.error(error);     // Log for debugging
+}
+```
+
+Common failures that should be skipped:
+- **404/403 errors**: Content removed or access denied
+- **Timeouts**: Server not responding
+- **Invalid HTML**: Malformed pages
+- **Bot blocking**: Site blocking automated access
+
+### 4. **Performance Impact**
 With 3,117 unscraped items:
 - **156 runs** needed (3,117 ÷ 20)
 - **~78 hours** to complete (156 × 0.5 hours)
@@ -30,6 +65,7 @@ This gradual approach ensures:
 - ✅ System remains responsive
 - ✅ Failed items don't block progress
 - ✅ Can run alongside normal operations
+- ✅ Bad URLs marked and skipped automatically
 
 ## Database Schema
 
@@ -163,6 +199,56 @@ WHERE job_name = 'auto-enhance-metadata'
   AND items_failed > 0
 ORDER BY started_at DESC
 LIMIT 5;
+```
+
+## Manual Retry for Failed Items
+
+If you need to retry items that failed during auto-enhancement:
+
+### Option 1: Force Rescrape Specific URLs
+```bash
+curl -X POST http://localhost:7004/api/enhance/metadata \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contentIds": ["uuid1", "uuid2"],
+    "forceRescrape": true
+  }'
+```
+
+### Option 2: Reset Scraped Status
+If many items failed and you want to retry them all:
+
+```sql
+-- Reset scraped status for items with missing critical fields
+UPDATE content 
+SET metadata_scraped_at = NULL 
+WHERE metadata_scraped_at IS NOT NULL 
+  AND (
+    image_url IS NULL 
+    OR author IS NULL 
+    OR content_text IS NULL
+  );
+```
+
+**Warning**: Use this cautiously - it will cause items to be re-processed!
+
+### Option 3: Identify Problematic Domains
+Find domains with high failure rates:
+
+```sql
+SELECT 
+  domain,
+  COUNT(*) as total,
+  COUNT(image_url) as has_image,
+  COUNT(author) as has_author,
+  COUNT(content_text) as has_content,
+  (COUNT(*) - COUNT(image_url)) as missing_images
+FROM content
+WHERE metadata_scraped_at IS NOT NULL
+GROUP BY domain
+HAVING (COUNT(*) - COUNT(image_url)) > 5
+ORDER BY missing_images DESC
+LIMIT 20;
 ```
 
 ## Troubleshooting
