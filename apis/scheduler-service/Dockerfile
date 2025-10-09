@@ -1,22 +1,48 @@
-FROM node:20-alpine
-
+# Multi-stage build for Fastify TypeScript service
+# Stage 1: Dependencies (production only)
+FROM node:20-alpine AS deps
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copy package files
+COPY package*.json ./
+RUN npm install --omit=dev
+
+# Stage 2: Builder (all dependencies including dev)
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+COPY package*.json tsconfig.json ./
+RUN npm install
+
+COPY src ./src
+RUN npm run build
+
+# Stage 3: Runner
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 apiuser
+
+# Copy dependencies and built files
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Set correct permissions
+RUN chown -R apiuser:nodejs /app
 
-# Copy source code
-COPY dist ./dist
+USER apiuser
 
-# Expose port (container internal port is always 8080)
 EXPOSE 8080
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:8080/health', (r) => { process.exit(r.statusCode === 200 ? 0 : 1) })"
+ENV PORT=8080
 
-# Run the service
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:8080/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+
 CMD ["node", "dist/server.js"]
