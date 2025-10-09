@@ -88,6 +88,7 @@ jobs:
                   cache-to: type=registry,ref=${{ env.ACR_NAME }}.azurecr.io/stumbleable-${{ matrix.service.name }}:buildcache,mode=max
                   build-args: |
                       NODE_ENV=production
+                      SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
                       NEXT_PUBLIC_DISCOVERY_API_URL=https://api.stumbleable.com/discovery
                       NEXT_PUBLIC_INTERACTION_API_URL=https://api.stumbleable.com/interaction
                       NEXT_PUBLIC_USER_API_URL=https://api.stumbleable.com/user
