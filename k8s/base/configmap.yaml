@@ -27,7 +27,10 @@ data:
   EMAIL_API_URL: "http://email-service:8080"
   SCHEDULER_API_URL: "http://scheduler-service:8080"
   
-  # Public API URLs (for client-side calls - will be overridden with actual domain)
+  # Public API URLs (for client-side calls)
+  # These point to api.stumbleable.com subdomain with service-specific paths
+  # Ingress rewrite rule: /servicename(/|$)(.*) -> /$2
+  # So /discovery/api/next becomes /api/next at the service
   NEXT_PUBLIC_DISCOVERY_API_URL: "https://api.stumbleable.com/discovery"
   NEXT_PUBLIC_INTERACTION_API_URL: "https://api.stumbleable.com/interaction"
   NEXT_PUBLIC_USER_API_URL: "https://api.stumbleable.com/user"
