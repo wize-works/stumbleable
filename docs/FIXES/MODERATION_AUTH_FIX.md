@@ -1,178 +1,123 @@
-# Moderation Service Auth Middleware Fix
+# Moderation Service Authentication & Database Fixes
 
-## Issue
-When accessing `/admin/moderation`, the moderation service was throwing this error:
-```
-moderation [10:24:21 UTC] ERROR: Failed to check user role
-moderation     reqId: "req-6"
-moderation     userId: "user_33PGhUbW2lsixmS9EZC5VkKvAs6"
-moderation     error: {}
-```
+## Issues Fixed
 
-## Root Cause
-The moderation service's `requireModeratorRole` middleware had **two bugs**:
+### 1. User ID Conversion (Clerk ID → Database UUID)
+**Problem:** Moderation endpoints were receiving Clerk user IDs (e.g., `user_33Y570gkACu4Qe3WDnlZ23edbeB`) but database columns expect UUIDs.
 
-### Bug 1: Wrong Query Parameter Name
-**Incorrect code:**
-```typescript
-const response = await fetch(`${userServiceUrl}/api/roles/check?userId=${userId}&requiredRole=moderator`);
-```
+**Fixed Endpoints:**
+- ✅ `/api/moderation/queue/:queueId/review` - Review content (approve/reject)
+- ✅ `/api/moderation/queue/bulk-approve` - Bulk approve
+- ✅ `/api/moderation/queue/bulk-reject` - Bulk reject  
+- ✅ `/api/moderation/reports/:reportId/resolve` - Resolve content reports
 
-**Problem:** 
-- Moderation service was sending `requiredRole=moderator`
-- User service expects `required=moderator` (not `requiredRole`)
-- User service gets `userId` from Clerk JWT in Authorization header, not query params
+**Solution:** Added `getDatabaseUserId()` helper calls before passing user ID to repository methods.
 
-### Bug 2: Missing Authorization Header
-**Problem:**
-- Moderation service wasn't forwarding the Authorization header to user-service
-- User service endpoint `/api/roles/check` requires Clerk authentication
-- Without the header, user-service couldn't authenticate the request
+### 2. Database Schema Issues
 
-## Solution
+#### Domain Reputation Table
+**Problem:** Old trigger `update_domain_reputation_on_flag()` referenced dropped `score` column.
 
-Updated `apis/moderation-service/src/middleware/auth.ts`:
+**Migrations Applied:**
+- `014_fix_domain_reputation_trigger.sql` - Initial trigger fix attempt
+- `015_complete_domain_reputation_schema.sql` - Complete schema update
 
-### 1. Fixed Query Parameter
-Changed from:
-```typescript
-?userId=${userId}&requiredRole=moderator
-```
+**Changes:**
+- ✅ Added missing columns: `total_approved`, `total_rejected`, `is_blacklisted`, `blacklist_reason`, `notes`, `last_reviewed`, `updated_at`
+- ✅ Migrated `flagged_count` → `total_rejected`
+- ✅ Dropped old columns: `flagged_count`, `submission_count`
+- ✅ Fixed trigger to use `trust_score` instead of `score`
+- ✅ Added auto-update trigger for `updated_at`
+- ✅ Added indexes for performance
 
-To:
-```typescript
-?required=moderator
-```
+#### Moderation Queue Table
+**Problem:** Column name mismatch between code and database.
 
-### 2. Forward Authorization Header
-Added:
-```typescript
-const authHeader = request.headers.authorization;
-if (!authHeader) {
-    return reply.code(401).send({
-        error: 'Unauthorized',
-        message: 'No authorization header found',
-    });
-}
+**Fixed:**
+- ✅ Updated code to use correct column names: `moderated_by`, `moderated_at`, `moderator_notes`
+- ✅ Migration 012 had already renamed columns in database
 
-const response = await fetch(`${userServiceUrl}/api/roles/check?required=moderator`, {
-    headers: {
-        'Authorization': authHeader  // ← Forward the JWT token
-    }
-});
+### 3. Error Logging Improvements
+**Problem:** Empty error objects in logs made debugging difficult.
+
+**Fixed:** All moderation endpoints now log:
+- `error.message` - Human-readable error message
+- `errorDetails` - Full error object for debugging
+- Contextual information (reportId, queueId, etc.)
+
+## Authentication Configuration
+
+The moderation service requires Clerk environment variables:
+
+```env
+CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
 ```
 
-### 3. Improved Error Handling
-Added:
-- Better logging with actual error messages
-- Proper handling of 401/403 responses
-- More detailed error information for debugging
-- Log success cases too for visibility
+These are already configured in `apis/moderation-service/.env`.
 
-### 4. Better Response Parsing
-Changed from:
-```typescript
-const result = await response.json() as { hasRole: boolean };
-if (!result.hasRole) { ... }
-```
+## Testing Checklist
 
-To:
-```typescript
-const result = await response.json() as { hasAccess: boolean, role: string };
-if (!result.hasAccess) { ... }
-```
+After restarting the moderation service, test:
 
-**Reason:** User service returns `hasAccess` not `hasRole`
+1. **Review Content:**
+   - [ ] Approve content in moderation queue
+   - [ ] Reject content in moderation queue
+   - [ ] Bulk approve multiple items
+   - [ ] Bulk reject multiple items
 
-## How It Works Now
+2. **Content Reports:**
+   - [ ] Resolve content report as "resolved"
+   - [ ] Dismiss content report as "dismissed"
+   - [ ] Verify reporter sees updated status
 
-### Request Flow
-```
-1. Frontend → Moderation Service
-   POST /admin/moderation
-   Authorization: Bearer <clerk-jwt>
+3. **Domain Reputation:**
+   - [ ] Verify trust_score updates when content approved
+   - [ ] Verify trust_score decreases when content rejected
+   - [ ] Check total_approved and total_rejected counters
 
-2. Moderation Service → User Service
-   GET /api/roles/check?required=moderator
-   Authorization: Bearer <clerk-jwt> ← Forwarded!
+4. **Error Handling:**
+   - [ ] Try operations without authentication → expect 401
+   - [ ] Try operations as non-moderator user → expect 403
+   - [ ] Verify error messages are helpful in logs
 
-3. User Service
-   - Extracts userId from JWT
-   - Checks user's role in database
-   - Returns { hasAccess: true, role: 'moderator' }
+## Restart Instructions
 
-4. Moderation Service
-   - Validates hasAccess === true
-   - Allows request to proceed
-```
-
-### User Service Endpoint
-```typescript
-GET /api/roles/check?required=moderator
-Headers: Authorization: Bearer <jwt>
-
-Response (200):
-{
-  "userId": "user_xxx",
-  "role": "moderator",
-  "hasAccess": true,
-  "requiredRole": "moderator"
-}
-
-Response (403):
-{
-  "error": "User not found"
-}
-```
-
-## Testing
-
-### 1. Build the service
 ```powershell
-cd apis/moderation-service
-npm run build
-# ✅ SUCCESS
-```
+# Navigate to root directory
+cd G:\code\@wizeworks\stumbleable
 
-### 2. Restart services
-```powershell
-# Stop current dev server (Ctrl+C)
+# Stop all services (Ctrl+C if running)
+
+# Restart all services
 npm run dev
 ```
 
-### 3. Test the fix
-1. Navigate to http://localhost:3000/admin/moderation
-2. Should now load without "Failed to check user role" error
-3. Check logs - should see "Role check passed" message
+Or restart just the moderation service:
 
-### Expected Logs
-```
-moderation [10:30:00 UTC] INFO: Role check passed
-moderation     userId: "user_33PGhUbW2lsixmS9EZC5VkKvAs6"
-moderation     role: "moderator"
+```powershell
+cd G:\code\@wizeworks\stumbleable\apis\moderation-service
+npm run dev
 ```
 
-## Files Changed
-- `apis/moderation-service/src/middleware/auth.ts`
-  - Fixed query parameter name
-  - Added Authorization header forwarding
-  - Improved error handling and logging
-  - Fixed response property name (`hasAccess` not `hasRole`)
+## Files Modified
 
-## Verification Checklist
-- [x] TypeScript compiles successfully
-- [ ] Moderation service starts without errors
-- [ ] `/admin/moderation` page loads successfully
-- [ ] User with moderator role can access dashboard
-- [ ] User without moderator role gets 403 error
-- [ ] Error logs show helpful messages (not empty objects)
+### Code Changes:
+- `apis/moderation-service/src/routes/moderation.ts` - Added user ID conversion for all review/resolve endpoints
+- `apis/moderation-service/src/lib/repository.ts` - Already had correct column names
 
-## Related Documentation
-- User Service: `apis/user-service/src/routes/roles.ts`
-- Moderation Service: `apis/moderation-service/src/middleware/auth.ts`
-- Role Check Endpoint: `GET /api/roles/check?required={role}`
+### Database Migrations:
+- `database/migrations/014_fix_domain_reputation_trigger.sql` - Fixed trigger column references
+- `database/migrations/015_complete_domain_reputation_schema.sql` - Completed schema migration
 
----
+### Environment:
+- `apis/moderation-service/.env` - Already has Clerk configuration
 
-**Status**: ✅ Fixed - Ready to test  
-**Date**: October 2, 2025
+## Next Steps
+
+1. **Restart the moderation service** to ensure Clerk plugin is loaded
+2. **Test the moderation queue** - approve/reject content
+3. **Test content reports** - resolve/dismiss reports
+4. **Verify domain reputation** updates correctly
+
+The 401 Unauthorized error should be resolved once the service restarts with proper Clerk initialization.
