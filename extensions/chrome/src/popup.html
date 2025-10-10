@@ -5,90 +5,131 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Stumbleable</title>
   <link rel="stylesheet" href="popup.css">
-  <script src="https://kit.fontawesome.com/4ab91c6683.js" crossorigin="anonymous"></script>
 </head>
 <body>
   <div class="container">
     <!-- Header -->
     <div class="header">
-      <img src="icons/icon48.png" alt="Stumbleable" class="logo">
-      <h1 class="title">Stumbleable</h1>
+      <div class="header-left">
+        <img src="icons/icon48.png" alt="Stumbleable" class="logo">
+        <h1 class="title">stumbleable</h1>
+      </div>
+      <div id="user-badge" class="user-badge hidden">
+        <img src="icons/check-circle.svg" alt="Authenticated" class="icon">
+      </div>
     </div>
 
     <!-- Loading State -->
     <div id="loading" class="loading hidden">
       <div class="spinner"></div>
-      <p>Loading discovery...</p>
-    </div>
-
-    <!-- Error State -->
-    <div id="error" class="error hidden">
-      <p class="error-message"></p>
-      <button id="retry-btn" class="btn btn-secondary">Retry</button>
+      <p id="loading-message">Loading...</p>
     </div>
 
     <!-- Login Prompt -->
     <div id="login-prompt" class="login-prompt hidden">
-      <p>Sign in to start stumbling!</p>
-      <button id="login-btn" class="btn btn-primary">Sign In</button>
+      <img src="icons/lock.svg" alt="" class="icon icon-large" style="color: #FF4D6D; opacity: 0.8;">
+      <p>Sign in to unlock the full<br>Stumbleable experience</p>
+      <button id="login-btn" class="btn btn-primary">
+        <img src="icons/login.svg" alt="" class="icon">
+        Sign In with Stumbleable
+      </button>
+      <p class="hint">Browse without signing in using the button below</p>
     </div>
 
-    <!-- Discovery Card -->
-    <div id="discovery-card" class="discovery-card hidden">
-      <div class="card-image">
-        <img id="card-img" src="" alt="">
+    <!-- Main Content (Authenticated) -->
+    <div id="main-content" class="main-content hidden">
+      <!-- Quick Stats -->
+      <div id="quick-stats" class="quick-stats">
+        <div class="stat">
+          <img src="icons/bookmark.svg" alt="" class="icon">
+          <span id="saved-count">--</span>
+          <span class="stat-label">Saved</span>
+        </div>
+        <div class="stat">
+          <img src="icons/send.svg" alt="" class="icon">
+          <span id="submitted-count">--</span>
+          <span class="stat-label">Submitted</span>
+        </div>
       </div>
-      <div class="card-content">
-        <div class="card-domain" id="card-domain"></div>
-        <h2 class="card-title" id="card-title"></h2>
-        <p class="card-description" id="card-description"></p>
-        <div class="card-topics" id="card-topics"></div>
+
+      <!-- Page Status -->
+      <div id="page-status" class="page-status hidden">
+        <img src="icons/info.svg" alt="" class="icon">
+        <span id="page-status-message"></span>
       </div>
-      <div class="card-actions">
-        <button id="skip-btn" class="btn btn-circle" title="Skip (↓)">
-          <i class="fa-solid fa-chevron-down"></i>
+
+      <!-- Primary Action -->
+      <div class="primary-action">
+        <button id="stumble-btn" class="btn btn-stumble">
+          <img src="icons/icon48.png" alt="" class="stumble-icon">
+          <span>Start Stumbling</span>
+          <span class="keyboard-hint">⌘+⇧+S</span>
         </button>
-        <button id="like-btn" class="btn btn-circle" title="Like (↑)">
-          <i class="fa-solid fa-chevron-up"></i>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="quick-actions">
+        <button id="submit-current" class="action-btn" title="Submit current page">
+          <img src="icons/send.svg" alt="" class="icon">
+          <span>Submit This Page</span>
         </button>
-        <button id="save-btn" class="btn btn-circle" title="Save (S)">
-          <i class="fa-solid fa-bookmark"></i>
+        <button id="save-current" class="action-btn" title="Save current page">
+          <img src="icons/bookmark.svg" alt="" class="icon">
+          <span>Save This Page</span>
         </button>
-        <button id="visit-btn" class="btn btn-primary">Visit</button>
+      </div>
+
+      <!-- Secondary Links -->
+      <div class="secondary-links">
+        <a href="#" id="open-saved" class="link">
+          <img src="icons/bookmark.svg" alt="" class="icon"> View Saved
+        </a>
+        <a href="#" id="open-dashboard" class="link">
+          <img src="icons/chart-line.svg" alt="" class="icon"> Dashboard
+        </a>
+        <a href="#" id="open-settings" class="link">
+          <img src="icons/gear.svg" alt="" class="icon"> Settings
+        </a>
       </div>
     </div>
 
-    <!-- Wildness Control -->
-    <div class="wildness-control">
-      <label for="wildness-slider" class="wildness-label">
-        <span>Wildness</span>
-        <span id="wildness-value" class="wildness-value">50</span>
-      </label>
-      <input
-        type="range"
-        id="wildness-slider"
-        min="0"
-        max="100"
-        value="50"
-        class="wildness-slider"
-      >
-      <div class="wildness-labels">
-        <span>Familiar</span>
-        <span>Adventurous</span>
-      </div>
+    <!-- Success/Error Toast -->
+    <div id="toast" class="toast hidden">
+      <img id="toast-icon" src="icons/check-circle.svg" alt="" class="icon">
+      <span id="toast-message">Success!</span>
     </div>
 
     <!-- Footer -->
     <div class="footer">
-      <button id="stumble-btn" class="btn btn-stumble">
-        <img src="icons/icon48.png" alt="" class="stumble-icon">
-        Stumble
-      </button>
       <div class="footer-links">
-        <a href="#" id="submit-current" class="link">Submit This Page</a>
-        <a href="#" id="save-current" class="link">Save This Page</a>
-        <a href="http://localhost:3000/stumble" target="_blank" class="link">Open App</a>
+        <a href="#" id="shortcuts-help" class="link" title="Keyboard shortcuts">
+          <img src="icons/keyboard.svg" alt="" class="icon">
+        </a>
+        <a href="#" id="about-link" class="link">About</a>
+        <a href="#" id="sign-out" class="link hidden">Sign Out</a>
       </div>
+    </div>
+  </div>
+
+  <!-- Keyboard Shortcuts Modal -->
+  <div id="shortcuts-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Keyboard Shortcuts</h3>
+      <div class="shortcuts-list">
+        <div class="shortcut-item">
+          <kbd>Ctrl+Shift+S</kbd>
+          <span>Open Stumble Page</span>
+        </div>
+        <div class="shortcut-item">
+          <kbd>Ctrl+Shift+U</kbd>
+          <span>Submit Current Page</span>
+        </div>
+        <div class="shortcut-item">
+          <kbd>Ctrl+Shift+D</kbd>
+          <span>Save Current Page</span>
+        </div>
+      </div>
+      <button id="close-modal" class="btn btn-secondary">Close</button>
     </div>
   </div>
 

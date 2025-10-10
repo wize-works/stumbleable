@@ -6,7 +6,8 @@ const assets = [
     { src: 'manifest.json', dest: 'dist/manifest.json' },
     { src: 'src/popup.html', dest: 'dist/popup.html' },
     { src: 'src/popup.css', dest: 'dist/popup.css' },
-    { src: 'icons', dest: 'dist/icons', isDir: true }
+    { src: 'icons', dest: 'dist/icons', isDir: true },
+    { src: 'src/icons', dest: 'dist/icons', isDir: true }
 ];
 
 console.log('📦 Copying assets to dist folder...\n');

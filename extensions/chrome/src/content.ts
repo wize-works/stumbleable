@@ -1,6 +1,49 @@
 // Content script for Stumbleable Chrome Extension
 // Injected into all pages to enable keyboard shortcuts and page interaction
 
+// Listen for messages from web pages (like our auth callback)
+window.addEventListener('message', (event) => {
+    // Only accept messages from our own domains
+    const allowedOrigins = [
+        'http://localhost:3000',
+        'https://stumbleable.com'
+    ];
+
+    if (!allowedOrigins.includes(event.origin)) {
+        return;
+    }
+
+    // Check if this is a Stumbleable auth message
+    if (event.data && event.data.type === 'STUMBLEABLE_AUTH') {
+        console.log('Content script received auth message');
+
+        // Forward the auth data to the background script
+        chrome.runtime.sendMessage({
+            action: 'handleAuthCallback',
+            data: event.data
+        }, (response) => {
+            if (response && response.success) {
+                console.log('Auth successfully sent to background script');
+
+                // Notify the page that auth was successful
+                window.postMessage({
+                    type: 'STUMBLEABLE_AUTH_RESPONSE',
+                    success: true
+                }, event.origin);
+            } else {
+                console.error('Failed to send auth to background script');
+
+                // Notify the page of failure
+                window.postMessage({
+                    type: 'STUMBLEABLE_AUTH_RESPONSE',
+                    success: false,
+                    error: response?.error || 'Unknown error'
+                }, event.origin);
+            }
+        });
+    }
+});
+
 // Listen for keyboard shortcuts
 document.addEventListener('keydown', (e) => {
     // Check if user is typing in an input field

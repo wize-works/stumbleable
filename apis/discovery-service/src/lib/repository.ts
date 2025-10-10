@@ -342,6 +342,8 @@ export class DiscoveryRepository {
      * Get trending content for specified time window
      */
     async getTrendingContent(timeWindow: 'hour' | 'day' | 'week' = 'day', limit: number = 10): Promise<EnhancedDiscovery[]> {
+        // Get the most recent trending items regardless of time window
+        // This ensures we always have content to show on the landing page
         const { data, error } = await supabase
             .from('trending_content')
             .select(`
@@ -371,11 +373,11 @@ export class DiscoveryRepository {
                         engagement_rate
                     )
                 ),
-                trending_score
+                trending_score,
+                calculated_at
             `)
-            .eq('time_window', timeWindow)
-            .gte('calculated_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) // Last 24 hours
-            .order('trending_score', { ascending: false })
+            .order('calculated_at', { ascending: false }) // Most recently calculated first
+            .order('trending_score', { ascending: false }) // Then by trending score
             .limit(limit);
 
         if (error) {

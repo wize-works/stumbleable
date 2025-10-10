@@ -1,344 +1,264 @@
 // Popup script for Stumbleable Chrome Extension
-// Handles the popup UI and user interactions
-
-interface Discovery {
-    id: string;
-    url: string;
-    title: string;
-    description?: string;
-    image_url?: string;
-    domain: string;
-    topics?: string[];
-    rationale?: string;
-}
+// Simplified: Focus on quick actions, not loading discoveries
 
 interface UserData {
     userId?: string;
     authToken?: string;
-    wildness?: number;
+    email?: string;
+    username?: string;
 }
 
-let currentDiscovery: Discovery | null = null;
 let userData: UserData = {};
+let currentTab: chrome.tabs.Tab | null = null;
+
+const PORTAL_URL = 'http://localhost:3000';
 
 // Initialize popup
 document.addEventListener('DOMContentLoaded', async () => {
+    await loadCurrentTab();
     await loadUserData();
     setupEventListeners();
-    setupKeyboardShortcuts();
+    setupAuthListener();
 
     if (userData.userId) {
-        await loadNextDiscovery();
+        showMainContent();
+        await loadUserStats();
+        await checkPageStatus();
     } else {
         showLoginPrompt();
     }
 });
+
+// Load current active tab
+async function loadCurrentTab() {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    currentTab = tab || null;
+}
+
+// Listen for auth state changes
+function setupAuthListener() {
+    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+        if (request.action === 'authStateChanged') {
+            console.log('Auth state changed, reloading popup...');
+            loadUserData().then(() => {
+                if (userData.userId) {
+                    showMainContent();
+                    loadUserStats();
+                    checkPageStatus();
+                }
+            });
+        }
+    });
+}
 
 // Load user data from storage
 async function loadUserData() {
     const response = await chrome.runtime.sendMessage({ action: 'getUserData' });
     if (response.success) {
         userData = response.data;
-
-        // Update wildness slider
-        const wildnessSlider = document.getElementById('wildness-slider') as HTMLInputElement;
-        const wildnessValue = document.getElementById('wildness-value') as HTMLElement;
-        if (wildnessSlider && wildnessValue) {
-            wildnessSlider.value = String(userData.wildness || 50);
-            wildnessValue.textContent = String(userData.wildness || 50);
-        }
     }
 }
 
 // Setup event listeners
 function setupEventListeners() {
-    // Stumble button
-    const stumbleBtn = document.getElementById('stumble-btn');
-    stumbleBtn?.addEventListener('click', handleStumble);
+    // Primary action - Open stumble page
+    document.getElementById('stumble-btn')?.addEventListener('click', () => {
+        chrome.tabs.create({ url: `${PORTAL_URL}/stumble` });
+    });
 
-    // Action buttons
-    document.getElementById('like-btn')?.addEventListener('click', () => handleFeedback('up'));
-    document.getElementById('skip-btn')?.addEventListener('click', () => handleFeedback('skip'));
-    document.getElementById('save-btn')?.addEventListener('click', handleSave);
-    document.getElementById('visit-btn')?.addEventListener('click', handleVisit);
-
-    // Wildness slider
-    const wildnessSlider = document.getElementById('wildness-slider') as HTMLInputElement;
-    wildnessSlider?.addEventListener('input', handleWildnessChange);
-
-    // Footer links
+    // Quick actions
     document.getElementById('submit-current')?.addEventListener('click', handleSubmitCurrent);
     document.getElementById('save-current')?.addEventListener('click', handleSaveCurrent);
 
+    // Secondary links
+    document.getElementById('open-saved')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        chrome.tabs.create({ url: `${PORTAL_URL}/saved` });
+    });
+
+    document.getElementById('open-dashboard')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        chrome.tabs.create({ url: `${PORTAL_URL}/dashboard` });
+    });
+
+    document.getElementById('open-settings')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        chrome.tabs.create({ url: `${PORTAL_URL}/dashboard/preferences` });
+    });
+
     // Login button
     document.getElementById('login-btn')?.addEventListener('click', () => {
-        chrome.tabs.create({ url: 'http://localhost:3000/sign-in' });
+        chrome.tabs.create({ url: `${PORTAL_URL}/extension-auth` });
     });
 
-    // Retry button
-    document.getElementById('retry-btn')?.addEventListener('click', handleStumble);
-}
+    // Sign out button
+    document.getElementById('sign-out')?.addEventListener('click', handleSignOut);
 
-// Setup keyboard shortcuts
-function setupKeyboardShortcuts() {
-    document.addEventListener('keydown', (e) => {
-        if (e.target instanceof HTMLInputElement) return; // Ignore when typing in inputs
+    // Keyboard shortcuts help
+    document.getElementById('shortcuts-help')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById('shortcuts-modal')?.classList.remove('hidden');
+    });
 
-        switch (e.key) {
-            case ' ':
-            case 'Enter':
-                e.preventDefault();
-                handleStumble();
-                break;
-            case 'ArrowUp':
-                e.preventDefault();
-                handleFeedback('up');
-                break;
-            case 'ArrowDown':
-                e.preventDefault();
-                handleFeedback('skip');
-                break;
-            case 's':
-            case 'S':
-                e.preventDefault();
-                handleSave();
-                break;
-            case 'v':
-            case 'V':
-                e.preventDefault();
-                handleVisit();
-                break;
-        }
+    document.getElementById('close-modal')?.addEventListener('click', () => {
+        document.getElementById('shortcuts-modal')?.classList.add('hidden');
+    });
+
+    // About link
+    document.getElementById('about-link')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        chrome.tabs.create({ url: `${PORTAL_URL}/about` });
     });
 }
 
-// Handle stumble action
-async function handleStumble() {
-    if (currentDiscovery) {
-        await handleFeedback('next');
-    } else {
-        await loadNextDiscovery();
-    }
-}
-
-// Load next discovery
-async function loadNextDiscovery() {
-    showLoading();
-
-    const response = await chrome.runtime.sendMessage({
-        action: 'getNextDiscovery',
-        data: { wildness: userData.wildness }
-    });
-
-    if (response.success) {
-        currentDiscovery = response.discovery;
-        if (currentDiscovery) {
-            displayDiscovery(currentDiscovery);
-        }
-    } else {
-        showError(response.error || 'Failed to load discovery');
-    }
-}
-
-// Display discovery in UI
-function displayDiscovery(discovery: Discovery) {
-    hideAll();
-
-    const card = document.getElementById('discovery-card');
-    if (!card) return;
-
-    // Update image
-    const img = document.getElementById('card-img') as HTMLImageElement;
-    if (img) {
-        img.src = discovery.image_url || 'icons/placeholder.png';
-        img.alt = discovery.title;
+// Submit current page
+async function handleSubmitCurrent() {
+    if (!currentTab?.url || !userData.userId) {
+        showToast('Please sign in to submit content', 'error');
+        return;
     }
 
-    // Update domain
-    const domain = document.getElementById('card-domain');
-    if (domain) {
-        domain.textContent = discovery.domain;
+    // Validate URL
+    if (!currentTab.url.startsWith('http://') && !currentTab.url.startsWith('https://')) {
+        showToast('Cannot submit browser pages (must be http:// or https://)', 'error');
+        return;
     }
 
-    // Update title
-    const title = document.getElementById('card-title');
-    if (title) {
-        title.textContent = discovery.title;
-    }
+    showLoading('Submitting page...');
 
-    // Update description
-    const description = document.getElementById('card-description');
-    if (description) {
-        description.textContent = discovery.description || '';
-    }
-
-    // Update topics
-    const topicsContainer = document.getElementById('card-topics');
-    if (topicsContainer && discovery.topics) {
-        topicsContainer.innerHTML = '';
-        discovery.topics.slice(0, 3).forEach(topic => {
-            const chip = document.createElement('span');
-            chip.className = 'topic-chip';
-            chip.textContent = topic;
-            topicsContainer.appendChild(chip);
+    try {
+        const response = await chrome.runtime.sendMessage({
+            action: 'submitContent',
+            data: {
+                url: currentTab.url,
+                title: currentTab.title || 'Untitled'
+            }
         });
-    }
 
-    card.classList.remove('hidden');
-}
+        hideLoading();
 
-// Handle feedback
-async function handleFeedback(feedback: string) {
-    if (!currentDiscovery) return;
-
-    const response = await chrome.runtime.sendMessage({
-        action: 'recordFeedback',
-        data: {
-            discoveryId: currentDiscovery.id,
-            feedback
-        }
-    });
-
-    if (response.success) {
-        // Load next discovery
-        await loadNextDiscovery();
-    }
-}
-
-// Handle save
-async function handleSave() {
-    if (!currentDiscovery) return;
-
-    showLoading();
-
-    const response = await chrome.runtime.sendMessage({
-        action: 'saveContent',
-        data: {
-            url: currentDiscovery.url,
-            title: currentDiscovery.title
-        }
-    });
-
-    if (response.success) {
-        showSuccess('Saved!');
-        setTimeout(() => {
-            displayDiscovery(currentDiscovery!);
-        }, 1000);
-    } else {
-        showError('Failed to save');
-    }
-}
-
-// Handle visit
-function handleVisit() {
-    if (!currentDiscovery) return;
-    chrome.tabs.create({ url: currentDiscovery.url });
-}
-
-// Handle wildness change
-async function handleWildnessChange(e: Event) {
-    const slider = e.target as HTMLInputElement;
-    const value = parseInt(slider.value);
-
-    const wildnessValue = document.getElementById('wildness-value');
-    if (wildnessValue) {
-        wildnessValue.textContent = String(value);
-    }
-
-    // Update storage and sync with server
-    await chrome.runtime.sendMessage({
-        action: 'updateWildness',
-        data: { wildness: value }
-    });
-
-    userData.wildness = value;
-}
-
-// Handle submit current page
-async function handleSubmitCurrent(e: Event) {
-    e.preventDefault();
-
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tab || !tab.url || !tab.title) return;
-
-    showLoading();
-
-    const response = await chrome.runtime.sendMessage({
-        action: 'submitContent',
-        data: {
-            url: tab.url,
-            title: tab.title
-        }
-    });
-
-    if (response.success) {
-        showSuccess('Submitted!');
-        setTimeout(() => {
-            if (currentDiscovery) {
-                displayDiscovery(currentDiscovery);
+        if (response.success) {
+            if (response.status === 'pending_review') {
+                showToast('Submitted for review! 🎉', 'success');
             } else {
-                hideAll();
+                showToast('Page submitted successfully! 🎉', 'success');
             }
-        }, 1000);
-    } else {
-        showError('Failed to submit');
+            await loadUserStats(); // Refresh stats
+        } else {
+            showToast(response.error || 'Failed to submit page', 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        console.error('Submit error:', error);
+        showToast('Failed to submit page', 'error');
     }
 }
 
-// Handle save current page
-async function handleSaveCurrent(e: Event) {
-    e.preventDefault();
+// Save current page
+async function handleSaveCurrent() {
+    if (!currentTab?.url || !userData.userId) {
+        showToast('Please sign in to save content', 'error');
+        return;
+    }
 
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tab || !tab.url || !tab.title) return;
+    showLoading('Saving page...');
 
-    showLoading();
+    try {
+        const response = await chrome.runtime.sendMessage({
+            action: 'saveContent',
+            data: {
+                url: currentTab.url,
+                title: currentTab.title
+            }
+        });
 
-    const response = await chrome.runtime.sendMessage({
-        action: 'saveContent',
-        data: {
-            url: tab.url,
-            title: tab.title
+        hideLoading();
+
+        if (response.success) {
+            showToast('Page saved successfully!', 'success');
+            await loadUserStats(); // Refresh stats
+        } else {
+            showToast(response.error || 'Failed to save page', 'error');
         }
-    });
+    } catch (error) {
+        hideLoading();
+        showToast('Failed to save page', 'error');
+    }
+}
+
+// Sign out
+async function handleSignOut() {
+    showLoading('Signing out...');
+
+    const response = await chrome.runtime.sendMessage({ action: 'signOut' });
+
+    hideLoading();
 
     if (response.success) {
-        showSuccess('Saved!');
-        setTimeout(() => {
-            if (currentDiscovery) {
-                displayDiscovery(currentDiscovery);
-            } else {
-                hideAll();
+        userData = {};
+        showLoginPrompt();
+        showToast('Signed out successfully', 'success');
+    }
+}
+
+// Load user stats
+async function loadUserStats() {
+    const savedCountEl = document.getElementById('saved-count');
+    const submittedCountEl = document.getElementById('submitted-count');
+
+    // Show loading state
+    if (savedCountEl) savedCountEl.textContent = '...';
+    if (submittedCountEl) submittedCountEl.textContent = '...';
+
+    try {
+        const response = await chrome.runtime.sendMessage({ action: 'getUserStats' });
+
+        if (response.success && response.data) {
+            if (savedCountEl) {
+                savedCountEl.textContent = response.data.savedCount.toString();
             }
-        }, 1000);
-    } else {
-        showError('Failed to save');
+            if (submittedCountEl) {
+                submittedCountEl.textContent = response.data.submittedCount.toString();
+            }
+        } else {
+            // On error, show 0 instead of ...
+            if (savedCountEl) savedCountEl.textContent = '0';
+            if (submittedCountEl) submittedCountEl.textContent = '0';
+        }
+    } catch (error) {
+        console.error('Error loading user stats:', error);
+        // On error, show 0 instead of ...
+        if (savedCountEl) savedCountEl.textContent = '0';
+        if (submittedCountEl) submittedCountEl.textContent = '0';
     }
 }
 
-// UI State Helpers
-function showLoading() {
-    hideAll();
-    document.getElementById('loading')?.classList.remove('hidden');
+// Check if current page is already in Stumbleable
+async function checkPageStatus() {
+    if (!currentTab?.url) return;
+
+    // TODO: Implement API call to check if page exists in Stumbleable
+    // const response = await chrome.runtime.sendMessage({ 
+    //     action: 'checkPageStatus',
+    //     data: { url: currentTab.url }
+    // });
+    // 
+    // if (response.success && response.data.exists) {
+    //     const statusDiv = document.getElementById('page-status');
+    //     const statusMsg = document.getElementById('page-status-message');
+    //     if (statusDiv && statusMsg) {
+    //         statusMsg.textContent = 'This page is already in Stumbleable';
+    //         statusDiv.classList.remove('hidden');
+    //     }
+    // }
 }
 
-function showError(message: string) {
+// UI State Management
+function showMainContent() {
     hideAll();
-    const error = document.getElementById('error');
-    const errorMessage = document.querySelector('.error-message');
-    if (error && errorMessage) {
-        errorMessage.textContent = message;
-        error.classList.remove('hidden');
-    }
-}
-
-function showSuccess(message: string) {
-    hideAll();
-    const loading = document.getElementById('loading');
-    if (loading) {
-        loading.querySelector('p')!.textContent = message;
-        loading.classList.remove('hidden');
-    }
+    document.getElementById('main-content')?.classList.remove('hidden');
+    document.getElementById('user-badge')?.classList.remove('hidden');
+    document.getElementById('sign-out')?.classList.remove('hidden');
 }
 
 function showLoginPrompt() {
@@ -346,9 +266,44 @@ function showLoginPrompt() {
     document.getElementById('login-prompt')?.classList.remove('hidden');
 }
 
-function hideAll() {
+function showLoading(message: string = 'Loading...') {
+    document.getElementById('loading-message')!.textContent = message;
+    document.getElementById('loading')?.classList.remove('hidden');
+}
+
+function hideLoading() {
     document.getElementById('loading')?.classList.add('hidden');
-    document.getElementById('error')?.classList.add('hidden');
+}
+
+function hideAll() {
     document.getElementById('login-prompt')?.classList.add('hidden');
-    document.getElementById('discovery-card')?.classList.add('hidden');
+    document.getElementById('main-content')?.classList.add('hidden');
+    document.getElementById('loading')?.classList.add('hidden');
+    document.getElementById('user-badge')?.classList.add('hidden');
+    document.getElementById('sign-out')?.classList.add('hidden');
+}
+
+// Toast notifications
+function showToast(message: string, type: 'success' | 'error' = 'success') {
+    const toast = document.getElementById('toast');
+    const toastIcon = document.getElementById('toast-icon') as HTMLImageElement | null;
+    const toastMessage = document.getElementById('toast-message');
+
+    if (!toast || !toastIcon || !toastMessage) return;
+
+    toastMessage.textContent = message;
+
+    if (type === 'success') {
+        toastIcon.src = 'icons/check-circle.svg';
+        toast.style.backgroundColor = 'var(--success-color, #10b981)';
+    } else {
+        toastIcon.src = 'icons/times-circle.svg';
+        toast.style.backgroundColor = 'var(--error-color, #ef4444)';
+    }
+
+    toast.classList.remove('hidden');
+
+    setTimeout(() => {
+        toast.classList.add('hidden');
+    }, 3000);
 }
