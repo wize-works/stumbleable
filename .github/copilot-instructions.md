@@ -51,6 +51,29 @@ stumbleable/
 │       ├── next.config.js
 │       ├── package.json
 │       └── tsconfig.json
+├── mobile/
+│   └── expo/                        # React Native/Expo mobile app
+│       ├── app/                    # Expo Router file-based routing
+│       │   ├── (tabs)/             # Tab navigation (stumble, saved, lists, settings)
+│       │   ├── (auth)/             # Authentication screens
+│       │   ├── discovery/[id].tsx  # Discovery detail
+│       │   ├── _layout.tsx         # Root layout with Clerk
+│       │   └── +not-found.tsx      # 404 screen
+│       ├── components/             # Mobile-optimized components
+│       │   ├── StumbleCard.tsx     # Discovery card for mobile
+│       │   ├── ReactionBar.tsx     # Mobile reaction buttons
+│       │   ├── WildnessSlider.tsx  # Touch-friendly slider
+│       │   └── TabBar.tsx          # Custom tab navigation
+│       ├── lib/
+│       │   ├── api-client.ts       # Same API services integration
+│       │   ├── auth.ts             # Clerk Expo authentication
+│       │   ├── haptics.ts          # Tactile feedback
+│       │   └── notifications.ts    # Push notifications
+│       ├── hooks/                  # Mobile-specific hooks
+│       ├── constants/              # Colors, layout, config
+│       ├── app.config.ts           # Expo configuration
+│       ├── package.json
+│       └── tsconfig.json
 ├── apis/
 │   ├── discovery-service/          # Discovery & content algorithms (port 7001)
 │   │   ├── src/
@@ -205,13 +228,21 @@ apis/new-service/
 
 ## 🧰 Tech & Constraints
 
-### Frontend
+### Web Frontend (ui/portal)
 - **Next.js 15 (App Router)** + **TypeScript (strict)**
 - **Clerk** for authentication and user management
 - **Tailwind CSS** with **CSS variables**; keep theme tokens in `app/styles/*.css`
 - **DaisyUI utilities OK**, but **do not** rely on Tailwind theme config; use our CSS files for light/dark.
 - **Icons:** Font Awesome classes like `fa-solid fa-duotone fa-icon` or `fa-brands fa-facebook`
 - **Accessibility:** Keyboard-first, visible focus, ARIA where appropriate.
+
+### Mobile Frontend (mobile/expo)
+- **React Native** with **Expo SDK 50+** + **TypeScript (strict)**
+- **Expo Router** for file-based navigation
+- **Clerk Expo SDK** for authentication (same user accounts as web)
+- **React Native Reanimated & Gesture Handler** for smooth interactions
+- **Expo native modules** (Haptics, Notifications, WebBrowser, Sharing)
+- **Platform-specific design** following iOS HIG and Material Design patterns
 
 ### Backend Services
 - **Fastify** for all API services (lightweight, fast, TypeScript-friendly)
