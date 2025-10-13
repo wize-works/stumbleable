@@ -1,4 +1,5 @@
 import { CrawlerJob, CrawlerSource } from '../types';
+import { RedditLinkExtractor } from './reddit-extractor';
 import { RobotsService } from './robots';
 import { RSSService } from './rss';
 import { SitemapService } from './sitemap';
@@ -16,6 +17,7 @@ export class CrawlerEngine {
     private robotsService: RobotsService;
     private rssService: RSSService;
     private sitemapService: SitemapService;
+    private redditExtractor: RedditLinkExtractor;
     private activeCrawls = new Set<string>();
     private domainDelays = new Map<string, number>();
 
@@ -23,6 +25,7 @@ export class CrawlerEngine {
         this.robotsService = new RobotsService();
         this.rssService = new RSSService();
         this.sitemapService = new SitemapService();
+        this.redditExtractor = new RedditLinkExtractor();
     }
 
     /**
@@ -145,6 +148,24 @@ export class CrawlerEngine {
      * Crawl RSS feed
      */
     private async crawlRSS(source: CrawlerSource): Promise<Array<{ url: string; title?: string; description?: string }>> {
+        // Check if this is a Reddit RSS feed with link extraction enabled
+        if (source.extract_links && source.url.includes('reddit.com')) {
+            console.log(`🔗 Using Reddit link extraction for ${source.name}`);
+
+            // Use Reddit extractor to get external links instead of Reddit post URLs
+            const extractedLinks = await this.redditExtractor.extractLinksFromFeed(source.url, source.id);
+
+            console.log(`✅ Extracted ${extractedLinks.length} external links from Reddit RSS`);
+
+            // Return the extracted external URLs (these will be processed by the discovery service)
+            return extractedLinks.map(link => ({
+                url: link.extractedUrl,
+                title: link.title,
+                description: `External link from ${link.subreddit}: ${link.extractionContext.postTitle}`
+            }));
+        }
+
+        // Regular RSS processing for non-Reddit feeds
         const items = await this.rssService.parseFeed(source.url);
 
         return items

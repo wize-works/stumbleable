@@ -52,7 +52,7 @@ stumbleable/
 │       ├── package.json
 │       └── tsconfig.json
 ├── mobile/
-│   └── expo/                        # React Native/Expo mobile app
+│   └── stumbleable-app/             # React Native/Expo mobile app
 │       ├── app/                    # Expo Router file-based routing
 │       │   ├── (tabs)/             # Tab navigation (stumble, saved, lists, settings)
 │       │   ├── (auth)/             # Authentication screens
@@ -236,7 +236,7 @@ apis/new-service/
 - **Icons:** Font Awesome classes like `fa-solid fa-duotone fa-icon` or `fa-brands fa-facebook`
 - **Accessibility:** Keyboard-first, visible focus, ARIA where appropriate.
 
-### Mobile Frontend (mobile/expo)
+### Mobile Frontend (mobile/stumbleable-app)
 - **React Native** with **Expo SDK 50+** + **TypeScript (strict)**
 - **Expo Router** for file-based navigation
 - **Clerk Expo SDK** for authentication (same user accounts as web)

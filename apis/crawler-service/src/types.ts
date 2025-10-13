@@ -17,6 +17,9 @@ export interface CrawlerSource {
     metadata?: Record<string, any>;
     created_at?: string;
     updated_at?: string;
+    extract_links?: boolean; // New: enable link extraction for RSS feeds
+    last_extraction?: string; // New: timestamp of last link extraction  
+    reddit_subreddit?: string; // New: subreddit name for Reddit RSS feeds
 }
 
 export interface CrawlerJob {
@@ -55,6 +58,26 @@ export interface SitemapItem {
     lastmod?: string;
     changefreq?: string;
     priority?: number;
+}
+
+export interface ExtractedLink {
+    id: string;
+    source_id: string;
+    original_url: string;        // The Reddit post URL that contained this link
+    extracted_url: string;       // The external link extracted from the post
+    title: string;
+    subreddit: string;
+    extraction_context: {        // Reddit post context
+        postTitle: string;
+        postDescription?: string;
+        postAuthor?: string;
+        postDate?: string;
+    };
+    status: 'pending' | 'processed' | 'failed' | 'duplicate';
+    priority: number;            // 1-10, higher = more important
+    error_message?: string;
+    created_at: string;
+    processed_at?: string;
 }
 
 // Discovery Service types

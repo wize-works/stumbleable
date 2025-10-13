@@ -1866,6 +1866,9 @@ export interface CrawlerSource {
     updated_at: string;
     last_crawled_at?: string;
     next_crawl_at?: string;
+    extract_links?: boolean; // New: enable link extraction for RSS feeds
+    last_extraction?: string; // New: timestamp of last link extraction
+    reddit_subreddit?: string; // New: subreddit name for Reddit RSS feeds
 }
 
 export interface CrawlerJob {
@@ -2167,6 +2170,152 @@ export class CrawlerAPI {
         }>(
             `${CRAWLER_API}/admin/batch-history`,
             {},
+            token
+        );
+        return response;
+    }
+
+    // Reddit Link Extraction Methods
+
+    /**
+     * Add a Reddit RSS source with link extraction
+     */
+    static async addRedditSource(data: {
+        subreddit: string;
+        extractLinks?: boolean;
+        crawlFrequencyHours?: number;
+        topics?: string[];
+        enabled?: boolean;
+    }, token: string): Promise<{
+        source: CrawlerSource;
+        extractedLinks?: number;
+        message?: string;
+        warning?: string;
+    }> {
+        const response = await apiRequest<{
+            source: CrawlerSource;
+            extracted_links?: number;
+            message?: string;
+            warning?: string;
+        }>(
+            `${CRAWLER_API}/sources/reddit`,
+            {
+                method: 'POST',
+                body: JSON.stringify({
+                    subreddit: data.subreddit,
+                    extract_links: data.extractLinks ?? true,
+                    crawl_frequency_hours: data.crawlFrequencyHours ?? 24,
+                    topics: data.topics || [data.subreddit],
+                    enabled: data.enabled ?? true
+                }),
+            },
+            token
+        );
+
+        return {
+            source: response.source,
+            extractedLinks: response.extracted_links,
+            message: response.message,
+            warning: response.warning
+        };
+    }
+
+    /**
+     * Manually trigger link extraction for a Reddit source
+     */
+    static async extractLinksFromSource(sourceId: string, token: string): Promise<{
+        success: boolean;
+        extracted: number;
+        message: string;
+    }> {
+        const response = await apiRequest<{
+            success: boolean;
+            extracted: number;
+            message: string;
+        }>(
+            `${CRAWLER_API}/sources/${sourceId}/extract-links`,
+            {
+                method: 'POST',
+            },
+            token
+        );
+        return response;
+    }
+
+    /**
+     * Get extracted links queue
+     */
+    static async getExtractedLinks(filters?: {
+        status?: 'pending' | 'processed' | 'failed' | 'duplicate';
+        limit?: number;
+        subreddit?: string;
+    }, token?: string): Promise<{
+        links: Array<{
+            id: string;
+            original_url: string;
+            extracted_url: string;
+            title: string;
+            subreddit: string;
+            extraction_context: any;
+            status: 'pending' | 'processed' | 'failed' | 'duplicate';
+            priority: number;
+            created_at: string;
+            processed_at?: string;
+            crawler_sources: {
+                name: string;
+                url: string;
+            };
+        }>;
+        count: number;
+    }> {
+        const params = new URLSearchParams();
+        if (filters?.status) params.append('status', filters.status);
+        if (filters?.limit) params.append('limit', filters.limit.toString());
+        if (filters?.subreddit) params.append('subreddit', filters.subreddit);
+
+        const url = `${CRAWLER_API}/extracted-links${params.toString() ? '?' + params.toString() : ''}`;
+
+        const response = await apiRequest<{
+            links: Array<{
+                id: string;
+                original_url: string;
+                extracted_url: string;
+                title: string;
+                subreddit: string;
+                extraction_context: any;
+                status: 'pending' | 'processed' | 'failed' | 'duplicate';
+                priority: number;
+                created_at: string;
+                processed_at?: string;
+                crawler_sources: {
+                    name: string;
+                    url: string;
+                };
+            }>;
+            count: number;
+        }>(url, {}, token);
+
+        return response;
+    }
+
+    /**
+     * Mark extracted link as processed
+     */
+    static async markExtractedLinkAsProcessed(
+        linkId: string,
+        status: 'processed' | 'failed' | 'duplicate',
+        errorMessage?: string,
+        token?: string
+    ): Promise<{ success: boolean }> {
+        const response = await apiRequest<{ success: boolean }>(
+            `${CRAWLER_API}/extracted-links/${linkId}`,
+            {
+                method: 'PATCH',
+                body: JSON.stringify({
+                    status,
+                    error_message: errorMessage
+                }),
+            },
             token
         );
         return response;
