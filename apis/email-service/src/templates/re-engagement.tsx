@@ -142,7 +142,7 @@ export function ReEngagementEmail({
 
             <Hr style={hr} />
 
-            <Heading style={h2}>What's New on Stumbleable</Heading>
+            <Heading style={h2}>How Stumbleable Works</Heading>
 
             <Section style={updatesList}>
                 <table width="100%" cellPadding="0" cellSpacing="0" style={updateItem}>
@@ -151,30 +151,30 @@ export function ReEngagementEmail({
                             <Text style={updateEmoji}>🎯</Text>
                         </td>
                         <td>
-                            <Text style={updateTitle}>Improved Discovery Algorithm</Text>
-                            <Text style={updateDescription}>We've fine-tuned the wildness controls for even better content matching.</Text>
+                            <Text style={updateTitle}>Smart Discovery Algorithm</Text>
+                            <Text style={updateDescription}>Fine-tune your wildness controls to balance between familiar topics and surprising discoveries.</Text>
                         </td>
                     </tr>
                 </table>
                 <table width="100%" cellPadding="0" cellSpacing="0" style={updateItem}>
                     <tr>
                         <td width="40" style={updateIconCell}>
-                            <Text style={updateEmoji}>📊</Text>
+                            <Text style={updateEmoji}>�</Text>
                         </td>
                         <td>
-                            <Text style={updateTitle}>Creator Analytics</Text>
-                            <Text style={updateDescription}>Submit content and track how the community engages with your discoveries.</Text>
+                            <Text style={updateTitle}>Save & Organize</Text>
+                            <Text style={updateDescription}>Bookmark the discoveries that resonate with you and revisit them anytime.</Text>
                         </td>
                     </tr>
                 </table>
                 <table width="100%" cellPadding="0" cellSpacing="0" style={updateItem}>
                     <tr>
                         <td width="40" style={updateIconCell}>
-                            <Text style={updateEmoji}>🎨</Text>
+                            <Text style={updateEmoji}>🚀</Text>
                         </td>
                         <td>
-                            <Text style={updateTitle}>Custom Lists</Text>
-                            <Text style={updateDescription}>Organize your saved discoveries into collections by theme or interest.</Text>
+                            <Text style={updateTitle}>One Click, One Discovery</Text>
+                            <Text style={updateDescription}>No infinite feeds, no algorithms to game—just pure serendipity at your own pace.</Text>
                         </td>
                     </tr>
                 </table>
