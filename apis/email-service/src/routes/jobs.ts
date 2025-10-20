@@ -139,6 +139,7 @@ export default async function jobRoutes(fastify: FastifyInstance) {
                         're-engagement',
                         user.email,
                         {
+                            email: user.email,
                             fullName: user.full_name,
                             daysSinceActivity: user.days_since_activity,
                             lastActivityAt: user.last_stumble_at,

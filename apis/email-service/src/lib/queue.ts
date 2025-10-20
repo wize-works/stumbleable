@@ -317,9 +317,34 @@ export class EmailQueue {
         console.log(`      📝 Rendering ${emailType} template...`);
 
         try {
+            // Enrich template data for specific email types
+            let enrichedData = { ...templateData };
+
+            // For re-engagement emails, fetch trending discoveries
+            if (emailType === 're-engagement') {
+                console.log(`      ⏳ Fetching trending discoveries for re-engagement...`);
+                const { data: discoveries, error } = await supabase.rpc('get_trending_for_reengagement', {
+                    limit_count: 5
+                });
+
+                if (error) {
+                    console.error(`      ❌ Failed to fetch trending discoveries:`, error);
+                    enrichedData.discoveries = [];
+                } else {
+                    console.log(`      ✓ Found ${discoveries?.length || 0} trending discoveries`);
+                    enrichedData.discoveries = discoveries || [];
+                }
+
+                // Map field names to what template expects
+                enrichedData.firstName = templateData.fullName?.split(' ')[0] || 'there';
+                enrichedData.daysSinceLastVisit = templateData.daysSinceActivity || 7;
+                enrichedData.totalSavedCount = templateData.totalSavedCount || 0;
+                enrichedData.email = templateData.email || '';
+            }
+
             // Add common template data
             const fullData = {
-                ...templateData,
+                ...enrichedData,
                 frontendUrl: FRONTEND_URL,
                 unsubscribeUrl: UNSUBSCRIBE_URL,
             } as any; // Cast to any since templateData contains the required props
