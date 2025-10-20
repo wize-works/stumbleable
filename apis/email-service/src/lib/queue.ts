@@ -323,16 +323,48 @@ export class EmailQueue {
             // For re-engagement emails, fetch trending discoveries
             if (emailType === 're-engagement') {
                 console.log(`      ⏳ Fetching trending discoveries for re-engagement...`);
-                const { data: discoveries, error } = await supabase.rpc('get_trending_for_reengagement', {
+                const { data: trendingDiscoveries, error: trendingError } = await supabase.rpc('get_trending_for_reengagement', {
                     limit_count: 5
                 });
 
-                if (error) {
-                    console.error(`      ❌ Failed to fetch trending discoveries:`, error);
+                if (trendingError) {
+                    console.error(`      ❌ Failed to fetch trending discoveries:`, trendingError);
                     enrichedData.discoveries = [];
+                } else if (!trendingDiscoveries || trendingDiscoveries.length === 0) {
+                    // No trending content, fall back to recent
+                    console.log(`      ⚠️  No trending discoveries found, falling back to recent content...`);
+                    const { data: recentDiscoveries, error: recentError } = await supabase.rpc('get_recent_for_reengagement', {
+                        limit_count: 5
+                    });
+
+                    if (recentError) {
+                        console.error(`      ❌ Failed to fetch recent discoveries:`, recentError);
+                        enrichedData.discoveries = [];
+                    } else {
+                        console.log(`      ✓ Found ${recentDiscoveries?.length || 0} recent discoveries`);
+                        enrichedData.discoveries = recentDiscoveries || [];
+                    }
                 } else {
-                    console.log(`      ✓ Found ${discoveries?.length || 0} trending discoveries`);
-                    enrichedData.discoveries = discoveries || [];
+                    // Check if any have engagement
+                    const hasEngagement = trendingDiscoveries.some((d: any) => d.like_count > 0 || d.save_count > 0);
+
+                    if (!hasEngagement) {
+                        console.log(`      ⚠️  Trending content has no engagement, fetching recent content instead...`);
+                        const { data: recentDiscoveries, error: recentError } = await supabase.rpc('get_recent_for_reengagement', {
+                            limit_count: 5
+                        });
+
+                        if (!recentError && recentDiscoveries && recentDiscoveries.length > 0) {
+                            console.log(`      ✓ Using ${recentDiscoveries.length} recent discoveries instead`);
+                            enrichedData.discoveries = recentDiscoveries;
+                        } else {
+                            console.log(`      ✓ Using ${trendingDiscoveries.length} trending discoveries (no engagement yet)`);
+                            enrichedData.discoveries = trendingDiscoveries;
+                        }
+                    } else {
+                        console.log(`      ✓ Found ${trendingDiscoveries.length} trending discoveries with engagement`);
+                        enrichedData.discoveries = trendingDiscoveries;
+                    }
                 }
 
                 // Map field names to what template expects
