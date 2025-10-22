@@ -25,6 +25,7 @@ const CreateSourceSchema = z.object({
 
 const UpdateSourceSchema = z.object({
     name: z.string().min(1).max(255).optional(),
+    type: z.enum(['rss', 'sitemap', 'web']).optional(),
     url: z.string().url().refine((url) => {
         try {
             const urlObj = new URL(url);
