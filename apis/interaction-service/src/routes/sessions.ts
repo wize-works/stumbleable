@@ -98,10 +98,10 @@ export async function sessionRoutes(fastify: FastifyInstance) {
      * POST /sessions/update
      */
     fastify.post('/sessions/update', async (request, reply) => {
-        const body = UpdateSessionSchema.parse(request.body);
-        const { sessionId, action } = body;
-
         try {
+            const body = UpdateSessionSchema.parse(request.body);
+            const { sessionId, action } = body;
+
             // Update session counters directly in table
             // Direct operations provide better error handling than RPC for simple counter updates
 
@@ -113,7 +113,7 @@ export async function sessionRoutes(fastify: FastifyInstance) {
                 .single();
 
             if (currentSessionError || !currentSession) {
-                fastify.log.error({ error: currentSessionError }, 'Failed to fetch current session for update');
+                fastify.log.error({ error: currentSessionError, sessionId }, 'Failed to fetch current session for update');
                 return reply.status(500).send({ error: 'Failed to update session' });
             }
 
@@ -128,7 +128,7 @@ export async function sessionRoutes(fastify: FastifyInstance) {
                 .eq('id', sessionId);
 
             if (error) {
-                fastify.log.error({ error }, 'Failed to update session');
+                fastify.log.error({ error, sessionId }, 'Failed to update session');
                 return reply.status(500).send({ error: 'Failed to update session' });
             }
 
@@ -140,7 +140,7 @@ export async function sessionRoutes(fastify: FastifyInstance) {
                 .single();
 
             if (sessionDataError || !sessionData) {
-                fastify.log.error({ error: sessionDataError }, 'Failed to fetch updated session');
+                fastify.log.error({ error: sessionDataError, sessionId }, 'Failed to fetch updated session');
                 return reply.status(500).send({ error: 'Failed to fetch session data' });
             }
 
@@ -152,7 +152,16 @@ export async function sessionRoutes(fastify: FastifyInstance) {
             });
 
         } catch (error) {
-            fastify.log.error({ error }, 'Error updating session');
+            fastify.log.error({ error, body: request.body }, 'Error updating session');
+
+            // Check if it's a Zod validation error
+            if (error instanceof Error && error.name === 'ZodError') {
+                return reply.status(400).send({
+                    error: 'Invalid request body',
+                    details: error.message
+                });
+            }
+
             return reply.status(500).send({ error: 'Internal server error' });
         }
     });
@@ -162,10 +171,65 @@ export async function sessionRoutes(fastify: FastifyInstance) {
      * POST /sessions/end
      */
     fastify.post('/sessions/end', async (request, reply) => {
-        const body = EndSessionSchema.parse(request.body);
-        const { sessionId } = body;
-
         try {
+            // Log the incoming request for debugging
+            fastify.log.info({ body: request.body }, 'Session end request received');
+
+            // Check if body exists
+            if (!request.body || typeof request.body !== 'object') {
+                fastify.log.error({ body: request.body }, 'Invalid request body');
+                return reply.status(400).send({ error: 'Request body is required' });
+            }
+
+            const body = EndSessionSchema.parse(request.body);
+            const { sessionId } = body;
+
+            // Check if session exists first
+            const { data: existingSession, error: fetchError } = await supabase
+                .from('user_sessions')
+                .select('id, session_end')
+                .eq('id', sessionId)
+                .single();
+
+            if (fetchError || !existingSession) {
+                fastify.log.warn({ sessionId, error: fetchError }, 'Session not found or already ended');
+                // Return success even if session doesn't exist (idempotent operation)
+                return reply.send({
+                    success: true,
+                    sessionDuration: 0,
+                    totalDiscoveries: 0,
+                    totalInteractions: 0,
+                    message: 'Session not found or already ended'
+                });
+            }
+
+            // If session already has an end time, return existing data
+            if (existingSession.session_end) {
+                fastify.log.info({ sessionId }, 'Session already ended, returning existing data');
+
+                const { data: sessionData } = await supabase
+                    .from('user_sessions')
+                    .select('*')
+                    .eq('id', sessionId)
+                    .single();
+
+                if (sessionData) {
+                    const startTime = new Date(sessionData.session_start);
+                    const endTime = new Date(sessionData.session_end);
+                    const durationMs = endTime.getTime() - startTime.getTime();
+                    const durationMinutes = Math.round(durationMs / (1000 * 60));
+
+                    return reply.send({
+                        success: true,
+                        sessionDuration: durationMinutes,
+                        totalDiscoveries: sessionData.discoveries_count,
+                        totalInteractions: sessionData.interactions_count,
+                        message: 'Session was already ended'
+                    });
+                }
+            }
+
+            // Update session end time
             const { data, error } = await supabase
                 .from('user_sessions')
                 .update({
@@ -176,7 +240,7 @@ export async function sessionRoutes(fastify: FastifyInstance) {
                 .single();
 
             if (error || !data) {
-                fastify.log.error({ error }, 'Failed to end session');
+                fastify.log.error({ error, sessionId }, 'Failed to end session');
                 return reply.status(500).send({ error: 'Failed to end session' });
             }
 
@@ -201,7 +265,16 @@ export async function sessionRoutes(fastify: FastifyInstance) {
             });
 
         } catch (error) {
-            fastify.log.error({ error }, 'Error ending session');
+            fastify.log.error({ error, body: request.body }, 'Error ending session');
+
+            // Check if it's a Zod validation error
+            if (error instanceof Error && error.name === 'ZodError') {
+                return reply.status(400).send({
+                    error: 'Invalid request body',
+                    details: error.message
+                });
+            }
+
             return reply.status(500).send({ error: 'Internal server error' });
         }
     });

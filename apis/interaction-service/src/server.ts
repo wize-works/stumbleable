@@ -62,6 +62,18 @@ async function buildApp() {
         }
     });
 
+    // Handle text/plain for beacon requests (navigator.sendBeacon sends as text/plain)
+    fastify.addContentTypeParser('text/plain', { parseAs: 'string' }, (req, body, done) => {
+        try {
+            // Beacon requests send JSON as text/plain, so parse it
+            const json = body === '' ? {} : JSON.parse(body as string);
+            done(null, json);
+        } catch (err: any) {
+            err.statusCode = 400;
+            done(err, undefined);
+        }
+    });
+
     // Rate limiting - MUST be registered before routes
     await fastify.register(fastifyRateLimit, {
         max: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
@@ -141,13 +153,29 @@ async function buildApp() {
 
     // Security headers
     await fastify.register(fastifyHelmet, {
-        contentSecurityPolicy: false // Allow for development
+        contentSecurityPolicy: false, // Allow for development
+        crossOriginResourcePolicy: false // Allow cross-origin requests
     });
 
-    // CORS
+    // CORS - Must be configured properly for beacon requests
     await fastify.register(fastifyCors, {
         origin: (process.env.ALLOWED_ORIGINS || 'http://localhost:3000').split(','),
-        credentials: true
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+        exposedHeaders: ['Content-Length', 'X-Request-Id'],
+        maxAge: 86400 // 24 hours preflight cache
+    });
+
+    // Ensure CORS headers are set on all responses (including errors)
+    fastify.addHook('onSend', async (request, reply) => {
+        const origin = request.headers.origin;
+        const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000').split(',');
+
+        if (origin && allowedOrigins.includes(origin)) {
+            reply.header('Access-Control-Allow-Origin', origin);
+            reply.header('Access-Control-Allow-Credentials', 'true');
+        }
     });
 
     // Register routes

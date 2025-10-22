@@ -275,10 +275,12 @@ export function useSessionTracking(): UseSessionTrackingReturn {
             if (sessionIdRef.current) {
                 // Use beacon API for reliable session ending on page unload
                 if (navigator.sendBeacon) {
+                    // Send as Blob with application/json content type
                     const data = JSON.stringify({
                         sessionId: sessionIdRef.current
                     });
-                    navigator.sendBeacon(`${INTERACTION_API}/sessions/end`, data);
+                    const blob = new Blob([data], { type: 'application/json' });
+                    navigator.sendBeacon(`${INTERACTION_API}/sessions/end`, blob);
                 } else {
                     // Fallback for browsers without beacon support
                     fetch(`${INTERACTION_API}/sessions/end`, {
