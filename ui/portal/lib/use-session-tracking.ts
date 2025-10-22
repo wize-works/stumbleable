@@ -37,12 +37,20 @@ export function useSessionTracking(): UseSessionTrackingReturn {
     // Refs to prevent stale closures in effect cleanup
     const sessionIdRef = useRef<string | null>(null);
     const userIdRef = useRef<string | null>(null);
+    const sessionStartedRef = useRef(false); // Track if session start has been initiated
 
     /**
      * Start a new session for the authenticated user
      */
     const startSession = useCallback(async (userId: string) => {
+        // Prevent duplicate session starts
+        if (sessionStartedRef.current) {
+            console.log('Session start already in progress, skipping...');
+            return;
+        }
+
         try {
+            sessionStartedRef.current = true;
             setIsLoading(true);
             setError(null);
 
@@ -90,10 +98,12 @@ export function useSessionTracking(): UseSessionTrackingReturn {
             const errorMessage = err instanceof Error ? err.message : 'Failed to start session';
             setError(errorMessage);
             console.error('Session tracking error:', err);
+            // Reset the flag on error so user can retry
+            sessionStartedRef.current = false;
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [getToken]); // ← FIX: Add getToken to dependencies
 
     /**
      * Update session with discovery activity
@@ -193,6 +203,9 @@ export function useSessionTracking(): UseSessionTrackingReturn {
                 isActive: false,
             } : null);
 
+            // Reset session started flag so a new session can be created
+            sessionStartedRef.current = false;
+
             console.log('Session ended:', {
                 duration: data.sessionDuration,
                 discoveries: data.totalDiscoveries,
@@ -219,6 +232,9 @@ export function useSessionTracking(): UseSessionTrackingReturn {
     useEffect(() => {
         return () => {
             if (sessionIdRef.current) {
+                // Reset session started flag on unmount
+                sessionStartedRef.current = false;
+
                 // End session on cleanup
                 fetch(`${INTERACTION_API}/sessions/end`, {
                     method: 'POST',

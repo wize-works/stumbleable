@@ -86,11 +86,11 @@ export default function NotFound() {
                 <div className="mt-12 pt-8 border-t border-base-300">
                     <p className="text-base-content/60 mb-4">Or try one of these:</p>
                     <div className="flex flex-wrap gap-3 justify-center">
-                        <Link href="/saved" className="link link-hover">
+                        <Link href="/dashboard/saved" className="link link-hover">
                             <i className="fa-solid fa-duotone fa-bookmark mr-1"></i>
                             Saved Items
                         </Link>
-                        <Link href="/lists" className="link link-hover">
+                        <Link href="/dashboard/lists" className="link link-hover">
                             <i className="fa-solid fa-duotone fa-list mr-1"></i>
                             My Lists
                         </Link>

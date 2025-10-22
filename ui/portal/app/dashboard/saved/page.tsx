@@ -168,7 +168,7 @@ export default function SavedPage() {
                     </p>
                 </div>
 
-                <div className="grid gap-6 max-w-4xl mx-auto">
+                <div className="grid gap-6">
                     {savedDiscoveries.map((discovery) => (
                         <DiscoveryCard
                             key={discovery.id}

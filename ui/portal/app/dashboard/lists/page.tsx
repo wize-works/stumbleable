@@ -333,7 +333,7 @@ function ListCard({
     };
 
     return (
-        <Link href={`/lists/${list.id}`}>
+        <Link href={`/dashboard/lists/${list.id}`}>
             <div className="card bg-base-200 hover:bg-base-300 shadow-lg hover:shadow-xl transition-all cursor-pointer h-full">
                 <div className="card-body">
                     <div className="flex items-start justify-between">
