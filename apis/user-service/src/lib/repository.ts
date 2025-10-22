@@ -29,7 +29,7 @@ export class UserRepository {
         const preferences = user.user_preferences?.[0];
 
         return {
-            id: user.id, // Return internal database UUID, not Clerk user ID
+            id: user.clerk_user_id, // Return Clerk user ID, not internal database UUID
             email: user.email,
             preferredTopics: preferences?.preferred_topics || ['technology', 'culture', 'science'],
             wildness: preferences?.wildness || 50,
@@ -82,7 +82,7 @@ export class UserRepository {
         }
 
         return {
-            id: newUser.id, // Return internal database UUID, not Clerk user ID
+            id: clerkUserId, // Return Clerk user ID, not internal database UUID
             email: userData?.email,
             preferredTopics: userData?.preferredTopics || ['technology', 'culture', 'science'],
             wildness: userData?.wildness ?? 35,
