@@ -14,6 +14,13 @@ export class CrawlerScheduler {
     }
 
     /**
+     * Signal cancellation for a running crawl
+     */
+    signalCancellation(sourceId: string): void {
+        this.engine.requestCancellation(sourceId);
+    }
+
+    /**
      * Start the scheduler
      */
     start() {

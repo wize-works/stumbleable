@@ -1888,15 +1888,40 @@ export interface CrawlerJob {
  */
 export class CrawlerAPI {
     /**
-     * Get all crawler sources
+     * Get all crawler sources with pagination
      */
-    static async getSources(token: string): Promise<CrawlerSource[]> {
-        const response = await apiRequest<{ sources: CrawlerSource[] }>(
-            `${CRAWLER_API}/sources`,
+    static async getSources(token: string, options?: {
+        page?: number;
+        limit?: number;
+        enabled?: boolean;
+    }): Promise<{
+        sources: CrawlerSource[];
+        pagination: {
+            page: number;
+            limit: number;
+            total: number;
+            totalPages: number;
+        };
+    }> {
+        const params = new URLSearchParams();
+        if (options?.page) params.append('page', options.page.toString());
+        if (options?.limit) params.append('limit', options.limit.toString());
+        if (options?.enabled !== undefined) params.append('enabled', options.enabled.toString());
+
+        const response = await apiRequest<{
+            sources: CrawlerSource[];
+            pagination: {
+                page: number;
+                limit: number;
+                total: number;
+                totalPages: number;
+            };
+        }>(
+            `${CRAWLER_API}/sources${params.toString() ? '?' + params.toString() : ''}`,
             {},
             token
         );
-        return response.sources;
+        return response;
     }
 
     /**
@@ -1987,15 +2012,42 @@ export class CrawlerAPI {
     }
 
     /**
-     * Get all crawler jobs
+     * Get all crawler jobs with pagination
      */
-    static async getJobs(token: string): Promise<CrawlerJob[]> {
-        const response = await apiRequest<{ jobs: CrawlerJob[] }>(
-            `${CRAWLER_API}/jobs`,
+    static async getJobs(token: string, options?: {
+        page?: number;
+        limit?: number;
+        sourceId?: string;
+        status?: 'pending' | 'running' | 'completed' | 'failed';
+    }): Promise<{
+        jobs: CrawlerJob[];
+        pagination: {
+            page: number;
+            limit: number;
+            total: number;
+            totalPages: number;
+        };
+    }> {
+        const params = new URLSearchParams();
+        if (options?.page) params.append('page', options.page.toString());
+        if (options?.limit) params.append('limit', options.limit.toString());
+        if (options?.sourceId) params.append('source_id', options.sourceId);
+        if (options?.status) params.append('status', options.status);
+
+        const response = await apiRequest<{
+            jobs: CrawlerJob[];
+            pagination: {
+                page: number;
+                limit: number;
+                total: number;
+                totalPages: number;
+            };
+        }>(
+            `${CRAWLER_API}/jobs${params.toString() ? '?' + params.toString() : ''}`,
             {},
             token
         );
-        return response.jobs;
+        return response;
     }
 
     /**
@@ -2020,6 +2072,52 @@ export class CrawlerAPI {
             token
         );
         return response.job;
+    }
+
+    /**
+     * Get crawl history for a specific job
+     */
+    static async getJobHistory(jobId: string, token: string, limit: number = 100): Promise<Array<{
+        id: string;
+        job_id: string;
+        source_id: string;
+        url: string;
+        title?: string;
+        discovered_at: string;
+        submitted: boolean;
+        error_message?: string;
+    }>> {
+        const response = await apiRequest<{
+            history: Array<{
+                id: string;
+                job_id: string;
+                source_id: string;
+                url: string;
+                title?: string;
+                discovered_at: string;
+                submitted: boolean;
+                error_message?: string;
+            }>;
+        }>(
+            `${CRAWLER_API}/jobs/${jobId}/history?limit=${limit}`,
+            {},
+            token
+        );
+        return response.history;
+    }
+
+    /**
+     * Cancel a running crawler job
+     */
+    static async cancelJob(jobId: string, token: string): Promise<{ success: boolean; message: string }> {
+        const response = await apiRequest<{ success: boolean; message: string }>(
+            `${CRAWLER_API}/jobs/${jobId}/cancel`,
+            {
+                method: 'POST',
+            },
+            token
+        );
+        return response;
     }
 
     /**

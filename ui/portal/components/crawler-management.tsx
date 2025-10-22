@@ -4,6 +4,8 @@ import { useToaster } from '@/components/toaster';
 import { CrawlerAPI, UserAPI } from '@/lib/api-client';
 import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
+import JobDetailModal from './job-detail-modal';
+import Pagination from './pagination';
 
 interface CrawlerSource {
     id: string;
@@ -60,6 +62,26 @@ export default function CrawlerManagement() {
     const [showAddForm, setShowAddForm] = useState(false);
     const [editingSource, setEditingSource] = useState<CrawlerSource | null>(null);
     const [availableTopics, setAvailableTopics] = useState<Topic[]>([]);
+    const [selectedJob, setSelectedJob] = useState<CrawlerJob | null>(null);
+
+    // Pagination state
+    const [sourcesPage, setSourcesPage] = useState(1);
+    const [sourcesLimit] = useState(10);
+    const [sourcesPagination, setSourcesPagination] = useState({
+        page: 1,
+        limit: 10,
+        total: 0,
+        totalPages: 0
+    });
+
+    const [jobsPage, setJobsPage] = useState(1);
+    const [jobsLimit] = useState(10);
+    const [jobsPagination, setJobsPagination] = useState({
+        page: 1,
+        limit: 10,
+        total: 0,
+        totalPages: 0
+    });
 
     // Form state
     const [formData, setFormData] = useState({
@@ -74,7 +96,7 @@ export default function CrawlerManagement() {
     useEffect(() => {
         loadData();
         loadTopics();
-    }, []);
+    }, [sourcesPage, jobsPage]);
 
     const loadData = async () => {
         try {
@@ -85,13 +107,18 @@ export default function CrawlerManagement() {
                 return;
             }
 
-            const [sourcesData, jobsData, statusData] = await Promise.all([
-                CrawlerAPI.getSources(token),
-                CrawlerAPI.getJobs(token),
+            const [sourcesResponse, jobsResponse, statusData] = await Promise.all([
+                CrawlerAPI.getSources(token, { page: sourcesPage, limit: sourcesLimit }),
+                CrawlerAPI.getJobs(token, { page: jobsPage, limit: jobsLimit }),
                 CrawlerAPI.getEnhancementStatus(token)
             ]);
-            setSources(sourcesData);
-            setJobs(jobsData);
+
+            setSources(sourcesResponse.sources);
+            setSourcesPagination(sourcesResponse.pagination);
+
+            setJobs(jobsResponse.jobs);
+            setJobsPagination(jobsResponse.pagination);
+
             setEnhancementStatus(statusData);
         } catch (error) {
             console.error('Error loading crawler data:', error);
@@ -717,6 +744,17 @@ export default function CrawlerManagement() {
                                     ))}
                                 </tbody>
                             </table>
+
+                            {/* Sources Pagination */}
+                            {sourcesPagination && (
+                                <Pagination
+                                    currentPage={sourcesPagination.page}
+                                    totalPages={sourcesPagination.totalPages}
+                                    total={sourcesPagination.total}
+                                    limit={sourcesPagination.limit}
+                                    onPageChange={setSourcesPage}
+                                />
+                            )}
                         </div>
                     )}
                 </div>
@@ -743,13 +781,14 @@ export default function CrawlerManagement() {
                                         <th>Submitted</th>
                                         <th>Failed</th>
                                         <th>Duration</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {jobs.slice(0, 10).map((job) => {
+                                    {jobs.map((job) => {
                                         const source = sources.find(s => s.id === job.source_id);
                                         return (
-                                            <tr key={job.id}>
+                                            <tr key={job.id} className="hover:bg-base-200 cursor-pointer" onClick={() => setSelectedJob(job)}>
                                                 <td className="font-medium">
                                                     {source ? source.name : 'Unknown Source'}
                                                 </td>
@@ -780,15 +819,45 @@ export default function CrawlerManagement() {
                                                         : 'Running...'
                                                     }
                                                 </td>
+                                                <td onClick={(e) => e.stopPropagation()}>
+                                                    <button
+                                                        onClick={() => setSelectedJob(job)}
+                                                        className="btn btn-sm btn-ghost"
+                                                        title="View Details"
+                                                    >
+                                                        <i className="fa-solid fa-duotone fa-eye"></i>
+                                                    </button>
+                                                </td>
                                             </tr>
                                         );
                                     })}
                                 </tbody>
                             </table>
+
+                            {/* Jobs Pagination */}
+                            {jobsPagination && (
+                                <Pagination
+                                    currentPage={jobsPagination.page}
+                                    totalPages={jobsPagination.totalPages}
+                                    total={jobsPagination.total}
+                                    limit={jobsPagination.limit}
+                                    onPageChange={setJobsPage}
+                                />
+                            )}
                         </div>
                     )}
                 </div>
             </div>
+
+            {/* Job Detail Modal */}
+            {selectedJob && (
+                <JobDetailModal
+                    job={selectedJob}
+                    source={sources.find(s => s.id === selectedJob.source_id)}
+                    onClose={() => setSelectedJob(null)}
+                    onJobUpdated={loadData}
+                />
+            )}
         </div>
     );
 }

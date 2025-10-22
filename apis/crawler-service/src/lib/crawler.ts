@@ -20,12 +20,28 @@ export class CrawlerEngine {
     private redditExtractor: RedditLinkExtractor;
     private activeCrawls = new Set<string>();
     private domainDelays = new Map<string, number>();
+    private cancellationRequests = new Set<string>();
 
     constructor() {
         this.robotsService = new RobotsService();
         this.rssService = new RSSService();
         this.sitemapService = new SitemapService();
         this.redditExtractor = new RedditLinkExtractor();
+    }
+
+    /**
+     * Request cancellation of a crawl
+     */
+    requestCancellation(sourceId: string): void {
+        this.cancellationRequests.add(sourceId);
+        console.log(`Cancellation requested for source: ${sourceId}`);
+    }
+
+    /**
+     * Check if cancellation has been requested
+     */
+    private isCancelled(sourceId: string): boolean {
+        return this.cancellationRequests.has(sourceId);
     }
 
     /**
@@ -66,6 +82,11 @@ export class CrawlerEngine {
         try {
             let items: Array<{ url: string; title?: string; description?: string }> = [];
 
+            // Check for cancellation before starting
+            if (this.isCancelled(source.id)) {
+                throw new Error('Crawl cancelled before start');
+            }
+
             // Crawl based on source type
             switch (source.type) {
                 case 'rss':
@@ -79,6 +100,11 @@ export class CrawlerEngine {
                     break;
             }
 
+            // Check for cancellation after crawling
+            if (this.isCancelled(source.id)) {
+                throw new Error('Crawl cancelled during crawling');
+            }
+
             console.log(`Found ${items.length} items from ${source.name}`);
 
             // Update job with found items
@@ -86,6 +112,11 @@ export class CrawlerEngine {
                 .from('crawler_jobs')
                 .update({ items_found: items.length })
                 .eq('id', job.id);
+
+            // Check for cancellation before submitting
+            if (this.isCancelled(source.id)) {
+                throw new Error('Crawl cancelled before submission');
+            }
 
             // Submit items to discovery service
             const results = await this.submitItems(source, job.id, items);
@@ -122,6 +153,7 @@ export class CrawlerEngine {
                 .eq('id', source.id);
 
             this.activeCrawls.delete(source.id);
+            this.cancellationRequests.delete(source.id);
 
             return { ...job, status: 'completed', items_found: items.length, items_submitted: results.submitted, items_failed: results.failed };
 
@@ -139,6 +171,7 @@ export class CrawlerEngine {
                 .eq('id', job.id);
 
             this.activeCrawls.delete(source.id);
+            this.cancellationRequests.delete(source.id);
 
             throw error;
         }

@@ -46,22 +46,62 @@ const UpdateSourceSchema = z.object({
  */
 export async function sourceRoutes(fastify: FastifyInstance) {
 
-    // Get all sources (admin only)
+    // Get all sources (admin only) with pagination
     fastify.get('/sources', {
         preHandler: requireAdmin
     }, async (request, reply) => {
+        const query = z.object({
+            page: z.coerce.number().min(1).default(1),
+            limit: z.coerce.number().min(1).max(100).default(20),
+            enabled: z.enum(['true', 'false']).optional()
+        }).parse(request.query);
+
         try {
-            const { data, error } = await supabase
+            const offset = (query.page - 1) * query.limit;
+
+            // Get total count
+            let countQuery = supabase
+                .from('crawler_sources')
+                .select('*', { count: 'exact', head: true });
+
+            if (query.enabled !== undefined) {
+                countQuery = countQuery.eq('enabled', query.enabled === 'true');
+            }
+
+            const { count, error: countError } = await countQuery;
+
+            if (countError) {
+                fastify.log.error(countError, 'Error counting sources');
+                return reply.status(500).send({ error: 'Failed to count sources' });
+            }
+
+            // Get paginated data
+            let dataQuery = supabase
                 .from('crawler_sources')
                 .select('*')
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: false })
+                .range(offset, offset + query.limit - 1);
+
+            if (query.enabled !== undefined) {
+                dataQuery = dataQuery.eq('enabled', query.enabled === 'true');
+            }
+
+            const { data, error } = await dataQuery;
 
             if (error) {
                 fastify.log.error(error, 'Error fetching sources');
                 return reply.status(500).send({ error: 'Failed to fetch sources' });
             }
 
-            return reply.send({ sources: data || [] });
+            return reply.send({
+                sources: data || [],
+                pagination: {
+                    page: query.page,
+                    limit: query.limit,
+                    total: count || 0,
+                    totalPages: Math.ceil((count || 0) / query.limit)
+                }
+            });
         } catch (error) {
             fastify.log.error(error, 'Error in GET /sources');
             return reply.status(500).send({ error: 'Internal server error' });
