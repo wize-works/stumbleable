@@ -2,9 +2,27 @@ import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { supabase } from '../lib/supabase';
 
+/**
+ * Helper to resolve Clerk user ID to internal user UUID
+ */
+async function resolveUserId(clerkUserId: string): Promise<string | null> {
+    const { data, error } = await supabase
+        .from('users')
+        .select('id')
+        .eq('clerk_user_id', clerkUserId)
+        .single();
+
+    if (error || !data) {
+        console.error('Failed to resolve user ID:', clerkUserId, error);
+        return null;
+    }
+
+    return data.id;
+}
+
 // Validation schemas  
 const StartSessionSchema = z.object({
-    userId: z.string().uuid() // Expect internal user UUID from frontend (resolved via user service)
+    userId: z.string().min(1) // Accept Clerk user ID (will be resolved to UUID internally)
 });
 
 const UpdateSessionSchema = z.object({
@@ -31,14 +49,21 @@ export async function sessionRoutes(fastify: FastifyInstance) {
 
         // Validate request body
         const body = StartSessionSchema.parse(request.body);
-        const { userId } = body;
+        const { userId: clerkUserId } = body;
 
         try {
-            // Create session with internal user UUID (resolved by frontend via user service)
+            // Resolve Clerk user ID to internal UUID
+            const userId = await resolveUserId(clerkUserId);
+            if (!userId) {
+                fastify.log.error({ clerkUserId }, 'User not found in database');
+                return reply.status(404).send({ error: 'User not found' });
+            }
+
+            // Create session with internal user UUID
             const { data, error } = await supabase
                 .from('user_sessions')
                 .insert({
-                    user_id: userId, // Now expects internal user UUID
+                    user_id: userId, // Internal database UUID
                     session_start: new Date().toISOString(),
                     interactions_count: 0,
                     discoveries_count: 0
@@ -50,6 +75,12 @@ export async function sessionRoutes(fastify: FastifyInstance) {
                 fastify.log.error({ error }, 'Failed to create session');
                 return reply.status(500).send({ error: 'Failed to start session' });
             }
+
+            fastify.log.info({
+                clerkUserId,
+                userId,
+                sessionId: data.id
+            }, 'Session started successfully');
 
             return reply.send({
                 sessionId: data.id,

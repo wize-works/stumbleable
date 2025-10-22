@@ -1,6 +1,5 @@
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { UserAPI } from './api-client';
 
 // Use environment variable for Interaction API URL
 const INTERACTION_API_URL = process.env.NEXT_PUBLIC_INTERACTION_API_URL || 'http://localhost:7002';
@@ -42,7 +41,7 @@ export function useSessionTracking(): UseSessionTrackingReturn {
     /**
      * Start a new session for the authenticated user
      */
-    const startSession = useCallback(async (userId: string) => {
+    const startSession = useCallback(async (clerkUserId: string) => {
         // Prevent duplicate session starts
         if (sessionStartedRef.current) {
             console.log('Session start already in progress, skipping...');
@@ -54,31 +53,23 @@ export function useSessionTracking(): UseSessionTrackingReturn {
             setIsLoading(true);
             setError(null);
 
-            console.log('Starting session for Clerk user:', userId);
-            const token = await getToken();
-            if (!token) {
-                throw new Error('Authentication token not available');
-            }
+            console.log('Starting session for Clerk user:', clerkUserId);
 
-            // Get user profile to get internal user ID
-            const userProfile = await UserAPI.getUser(userId, token);
-            userIdRef.current = userProfile.id;
-
-            console.log('Got user profile:', userProfile.id, 'for session start');
-
-            // Start session tracking
+            // Start session tracking with Clerk user ID
+            // The interaction service will resolve it to internal UUID
             const response = await fetch(`${INTERACTION_API}/sessions/start`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    userId: userProfile.id
+                    userId: clerkUserId
                 }),
             });
 
             if (!response.ok) {
-                throw new Error('Failed to start session');
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Failed to start session');
             }
 
             const data = await response.json();
@@ -93,6 +84,9 @@ export function useSessionTracking(): UseSessionTrackingReturn {
 
             setSession(newSession);
             sessionIdRef.current = data.sessionId;
+            userIdRef.current = clerkUserId;
+
+            console.log('Session started successfully:', data.sessionId);
 
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to start session';
@@ -103,7 +97,7 @@ export function useSessionTracking(): UseSessionTrackingReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [getToken]); // ← FIX: Add getToken to dependencies
+    }, []); // ← FIX: Add getToken to dependencies
 
     /**
      * Update session with discovery activity
