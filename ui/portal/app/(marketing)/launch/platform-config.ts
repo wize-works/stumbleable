@@ -173,6 +173,33 @@ export const platforms: Record<string, PlatformConfig> = {
             description: 'Follow Stumbleable\'s indie hacker journey. Learn how we built a modern StumbleUpon alternative and the lessons we learned along the way.',
             keywords: ['indie hackers project', 'build in public', 'startup journey', 'web discovery startup', 'stumbleable indie hackers']
         }
+    },
+
+    'alternativeto': {
+        name: 'AlternativeTo',
+        slug: 'alternativeto',
+        displayName: 'AlternativeTo.net',
+        launchDate: 'October 2025',
+        url: 'https://alternativeto.net/software/stumbleable/',
+        description: 'Featured on AlternativeTo as the best modern alternative to StumbleUpon. Join thousands who switched from Mix, Pocket, and other discovery tools to rediscover the joy of serendipity.',
+        tagline: 'The StumbleUpon Alternative Everyone Is Switching To',
+        color: '#2563EB',
+        icon: 'fa-solid fa-arrow-right-arrow-left',
+        badge: '🔄',
+        stats: [
+            { label: 'Likes', value: '300+' },
+            { label: 'Rating', value: '4.7/5.0' },
+            { label: 'Category', value: 'Top Alternative' }
+        ],
+        cta: {
+            primary: 'Try Stumbleable Free',
+            secondary: 'View on AlternativeTo'
+        },
+        seo: {
+            title: 'Stumbleable - Best StumbleUpon Alternative | AlternativeTo',
+            description: 'Looking for a StumbleUpon alternative? Stumbleable brings back the joy of web discovery. Featured on AlternativeTo as the top alternative to Mix, Pocket, and StumbleUpon.',
+            keywords: ['stumbleupon alternative', 'alternativeto', 'mix alternative', 'pocket alternative', 'web discovery tool', 'stumbleable vs stumbleupon']
+        }
     }
 };
 
