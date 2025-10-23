@@ -1097,7 +1097,34 @@ export class DiscoveryRepository {
     }
 
     /**
-     * Get discoveries filtered by topic with pagination
+     * Apply domain diversity to a list of content items
+     * Limits items per domain to ensure variety (max 3 per domain by default)
+     */
+    private applyDomainDiversity(
+        items: any[],
+        limit: number,
+        maxPerDomain: number = 3
+    ): any[] {
+        const domainCounts = new Map<string, number>();
+        const result: any[] = [];
+
+        for (const item of items) {
+            if (result.length >= limit) break;
+
+            const domain = item.domain;
+            const currentCount = domainCounts.get(domain) || 0;
+
+            if (currentCount < maxPerDomain) {
+                result.push(item);
+                domainCounts.set(domain, currentCount + 1);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Get discoveries filtered by topic with pagination and domain diversity
      */
     async getDiscoveriesByTopic(
         topic: string,
@@ -1112,76 +1139,109 @@ export class DiscoveryRepository {
                 .select('id', { count: 'exact', head: true })
                 .eq('is_active', true)
                 .contains('topics', [topic])
-                .not('metadata_scraped_at', 'is', null); // Only content that has been crawled
+                .not('metadata_scraped_at', 'is', null);
 
             if (countError) {
                 console.error('Error counting discoveries by topic:', countError);
                 return { discoveries: [], total: 0 };
             }
 
-            // Build query for fetching content (only crawled items with metadata)
-            let query = supabase
-                .from('content')
-                .select(`
-                    id,
-                    url,
-                    title,
-                    description,
-                    image_url,
-                    image_storage_path,
-                    favicon_url,
-                    domain,
-                    topics,
-                    reading_time_minutes,
-                    created_at,
-                    quality_score,
-                    freshness_score,
-                    base_score,
-                    popularity_score,
-                    is_active,
-                    allows_framing,
-                    content_topics(
-                        topics(name),
-                        confidence_score
-                    ),
-                    content_metrics(
-                        views_count,
-                        likes_count,
-                        saves_count,
-                        shares_count,
-                        skip_count,
-                        engagement_rate
-                    )
-                `)
-                .eq('is_active', true)
-                .contains('topics', [topic])
-                .not('metadata_scraped_at', 'is', null); // Only content that has been crawled
-
-            // Apply sorting
+            // Determine sort column
+            let sortColumn = 'created_at';
+            let sortOrder = 'DESC';
             switch (sortBy) {
-                case 'recent':
-                    query = query.order('created_at', { ascending: false });
-                    break;
                 case 'popular':
-                    query = query.order('popularity_score', { ascending: false });
+                    sortColumn = 'popularity_score';
                     break;
                 case 'quality':
-                    query = query.order('quality_score', { ascending: false });
+                    sortColumn = 'quality_score';
                     break;
             }
 
-            // Apply pagination
-            query = query.range(offset, offset + limit - 1);
+            // Use a CTE with ROW_NUMBER to limit items per domain
+            // This allows us to get diverse results while fetching many items
+            const { data: rpcData, error: rpcError } = await supabase.rpc('get_diverse_discoveries_by_topic', {
+                p_topic: topic,
+                p_limit: limit,
+                p_offset: offset,
+                p_sort_column: sortColumn,
+                p_sort_order: sortOrder,
+                p_max_per_domain: 3
+            });
 
-            const { data, error } = await query;
+            if (rpcError) {
+                console.error('Error fetching diverse discoveries by topic:', rpcError);
+                console.log('RPC function not available, using simple diversity filter');
+                // Fallback to fetching more and filtering in-memory
+                const fetchLimit = Math.max(limit * 10, 200); // Fetch 10x or at least 200
 
-            if (error) {
-                console.error('Error fetching discoveries by topic:', error);
-                return { discoveries: [], total: 0 };
+                let query = supabase
+                    .from('content')
+                    .select(`
+                        id,
+                        url,
+                        title,
+                        description,
+                        image_url,
+                        image_storage_path,
+                        favicon_url,
+                        domain,
+                        topics,
+                        reading_time_minutes,
+                        created_at,
+                        quality_score,
+                        freshness_score,
+                        base_score,
+                        popularity_score,
+                        is_active,
+                        allows_framing,
+                        content_topics(
+                            topics(name),
+                            confidence_score
+                        ),
+                        content_metrics(
+                            views_count,
+                            likes_count,
+                            saves_count,
+                            shares_count,
+                            skip_count,
+                            engagement_rate
+                        )
+                    `)
+                    .eq('is_active', true)
+                    .contains('topics', [topic])
+                    .not('metadata_scraped_at', 'is', null);
+
+                // Apply sorting
+                switch (sortBy) {
+                    case 'recent':
+                        query = query.order('created_at', { ascending: false });
+                        break;
+                    case 'popular':
+                        query = query.order('popularity_score', { ascending: false });
+                        break;
+                    case 'quality':
+                        query = query.order('quality_score', { ascending: false });
+                        break;
+                }
+
+                query = query.range(offset, offset + fetchLimit - 1);
+                const { data: fallbackData, error: fallbackError } = await query;
+
+                if (fallbackError) {
+                    console.error('Error in fallback query:', fallbackError);
+                    return { discoveries: [], total: 0 };
+                }
+
+                const diverseData = this.applyDomainDiversity(fallbackData || [], limit);
+                return {
+                    discoveries: this.transformContentData(diverseData),
+                    total: totalCount || 0
+                };
             }
 
             return {
-                discoveries: this.transformContentData(data || []),
+                discoveries: this.transformContentData(rpcData || []),
                 total: totalCount || 0
             };
         } catch (error) {
@@ -1199,66 +1259,95 @@ export class DiscoveryRepository {
         sortBy: 'recent' | 'popular' | 'quality' = 'recent'
     ): Promise<EnhancedDiscovery[]> {
         try {
-            let query = supabase
-                .from('content')
-                .select(`
-                    id,
-                    url,
-                    title,
-                    description,
-                    image_url,
-                    image_storage_path,
-                    favicon_url,
-                    domain,
-                    topics,
-                    reading_time_minutes,
-                    created_at,
-                    quality_score,
-                    freshness_score,
-                    base_score,
-                    popularity_score,
-                    is_active,
-                    allows_framing,
-                    content_topics(
-                        topics(name),
-                        confidence_score
-                    ),
-                    content_metrics(
-                        views_count,
-                        likes_count,
-                        saves_count,
-                        shares_count,
-                        skip_count,
-                        engagement_rate
-                    )
-                `)
-                .eq('is_active', true)
-                .not('metadata_scraped_at', 'is', null); // Only content that has been crawled
-
-            // Apply sorting
+            // Determine sort column
+            let sortColumn = 'created_at';
+            let sortOrder = 'DESC';
             switch (sortBy) {
-                case 'recent':
-                    query = query.order('created_at', { ascending: false });
-                    break;
                 case 'popular':
-                    query = query.order('popularity_score', { ascending: false });
+                    sortColumn = 'popularity_score';
                     break;
                 case 'quality':
-                    query = query.order('quality_score', { ascending: false });
+                    sortColumn = 'quality_score';
                     break;
             }
 
-            // Apply pagination
-            query = query.range(offset, offset + limit - 1);
+            // Use RPC function for diverse results
+            const { data: rpcData, error: rpcError } = await supabase.rpc('get_diverse_discoveries', {
+                p_limit: limit,
+                p_offset: offset,
+                p_sort_column: sortColumn,
+                p_sort_order: sortOrder,
+                p_max_per_domain: 3
+            });
 
-            const { data, error } = await query;
+            if (rpcError) {
+                console.error('Error fetching diverse discoveries:', rpcError);
+                console.log('RPC function not available, using simple diversity filter');
+                // Fallback to fetching more and filtering in-memory
+                const fetchLimit = Math.max(limit * 10, 200);
 
-            if (error) {
-                console.error('Error fetching discoveries with pagination:', error);
-                return [];
+                let query = supabase
+                    .from('content')
+                    .select(`
+                        id,
+                        url,
+                        title,
+                        description,
+                        image_url,
+                        image_storage_path,
+                        favicon_url,
+                        domain,
+                        topics,
+                        reading_time_minutes,
+                        created_at,
+                        quality_score,
+                        freshness_score,
+                        base_score,
+                        popularity_score,
+                        is_active,
+                        allows_framing,
+                        content_topics(
+                            topics(name),
+                            confidence_score
+                        ),
+                        content_metrics(
+                            views_count,
+                            likes_count,
+                            saves_count,
+                            shares_count,
+                            skip_count,
+                            engagement_rate
+                        )
+                    `)
+                    .eq('is_active', true)
+                    .not('metadata_scraped_at', 'is', null);
+
+                // Apply sorting
+                switch (sortBy) {
+                    case 'recent':
+                        query = query.order('created_at', { ascending: false });
+                        break;
+                    case 'popular':
+                        query = query.order('popularity_score', { ascending: false });
+                        break;
+                    case 'quality':
+                        query = query.order('quality_score', { ascending: false });
+                        break;
+                }
+
+                query = query.range(offset, offset + fetchLimit - 1);
+                const { data: fallbackData, error: fallbackError } = await query;
+
+                if (fallbackError) {
+                    console.error('Error in fallback query:', fallbackError);
+                    return [];
+                }
+
+                const diverseData = this.applyDomainDiversity(fallbackData || [], limit);
+                return this.transformContentData(diverseData);
             }
 
-            return this.transformContentData(data || []);
+            return this.transformContentData(rpcData || []);
         } catch (error) {
             console.error('Error in getDiscoveriesWithPagination:', error);
             return [];
