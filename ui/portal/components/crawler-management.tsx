@@ -58,7 +58,8 @@ export default function CrawlerManagement() {
     const [jobs, setJobs] = useState<CrawlerJob[]>([]);
     const [enhancementStatus, setEnhancementStatus] = useState<EnhancementStatus | null>(null);
     const [enhancementRunning, setEnhancementRunning] = useState(false);
-    const [loading, setLoading] = useState(true);
+    const [sourcesLoading, setSourcesLoading] = useState(true);
+    const [jobsLoading, setJobsLoading] = useState(true);
     const [showAddForm, setShowAddForm] = useState(false);
     const [editingSource, setEditingSource] = useState<CrawlerSource | null>(null);
     const [availableTopics, setAvailableTopics] = useState<Topic[]>([]);
@@ -103,9 +104,19 @@ export default function CrawlerManagement() {
     });
 
     useEffect(() => {
-        loadData();
         loadTopics();
-    }, [sourcesPage, jobsPage, sourcesSearch, sourcesSortBy, sourcesSortOrder, jobsSearch, jobsSortBy, jobsSortOrder]);
+        loadEnhancementStatus();
+    }, []);
+
+    // Load sources when sources parameters change
+    useEffect(() => {
+        loadSources();
+    }, [sourcesPage, sourcesSearch, sourcesSortBy, sourcesSortOrder]);
+
+    // Load jobs when jobs parameters change
+    useEffect(() => {
+        loadJobs();
+    }, [jobsPage, jobsSearch, jobsSortBy, jobsSortOrder]);
 
     // Handle column header click for sorting
     const handleSourcesSort = (column: typeof sourcesSortBy) => {
@@ -138,47 +149,82 @@ export default function CrawlerManagement() {
             : <i className="fa-solid fa-duotone fa-sort-down text-primary ml-2" />;
     };
 
-    const loadData = async () => {
+    const loadSources = async () => {
         try {
-            setLoading(true);
+            setSourcesLoading(true);
             const token = await getToken();
             if (!token) {
                 showToast('Authentication required', 'error');
                 return;
             }
 
-            const [sourcesResponse, jobsResponse, statusData] = await Promise.all([
-                CrawlerAPI.getSources(token, {
-                    page: sourcesPage,
-                    limit: sourcesLimit,
-                    search: sourcesSearch || undefined,
-                    sortBy: sourcesSortBy || undefined,
-                    sortOrder: sourcesSortOrder
-                }),
-                CrawlerAPI.getJobs(token, {
-                    page: jobsPage,
-                    limit: jobsLimit,
-                    search: jobsSearch || undefined,
-                    sortBy: jobsSortBy || undefined,
-                    sortOrder: jobsSortOrder
-                }),
-                CrawlerAPI.getEnhancementStatus(token)
-            ]);
+            const sourcesResponse = await CrawlerAPI.getSources(token, {
+                page: sourcesPage,
+                limit: sourcesLimit,
+                search: sourcesSearch || undefined,
+                sortBy: sourcesSortBy || undefined,
+                sortOrder: sourcesSortOrder
+            });
 
             setSources(sourcesResponse.sources);
             setSourcesPagination(sourcesResponse.pagination);
+        } catch (error) {
+            console.error('Error loading sources:', error);
+            showToast('Failed to load sources', 'error');
+        } finally {
+            setSourcesLoading(false);
+        }
+    };
+
+    const loadJobs = async () => {
+        try {
+            setJobsLoading(true);
+            const token = await getToken();
+            if (!token) {
+                showToast('Authentication required', 'error');
+                return;
+            }
+
+            const jobsResponse = await CrawlerAPI.getJobs(token, {
+                page: jobsPage,
+                limit: jobsLimit,
+                search: jobsSearch || undefined,
+                sortBy: jobsSortBy || undefined,
+                sortOrder: jobsSortOrder
+            });
 
             setJobs(jobsResponse.jobs);
             setJobsPagination(jobsResponse.pagination);
-
-            setEnhancementStatus(statusData);
         } catch (error) {
-            console.error('Error loading crawler data:', error);
-            showToast('Failed to load crawler data', 'error');
+            console.error('Error loading jobs:', error);
+            showToast('Failed to load jobs', 'error');
         } finally {
-            setLoading(false);
+            setJobsLoading(false);
         }
     };
+
+    const loadEnhancementStatus = async () => {
+        try {
+            const token = await getToken();
+            if (!token) {
+                showToast('Authentication required', 'error');
+                return;
+            }
+
+            const statusData = await CrawlerAPI.getEnhancementStatus(token);
+            setEnhancementStatus(statusData);
+        } catch (error) {
+            console.error('Error loading enhancement status:', error);
+            showToast('Failed to load enhancement status', 'error');
+        }
+    };
+
+    const loadAllData = () => {
+        loadSources();
+        loadJobs();
+        loadEnhancementStatus();
+    };
+
 
     const loadTopics = async () => {
         try {
@@ -217,7 +263,7 @@ export default function CrawlerManagement() {
             }
 
             resetForm();
-            loadData();
+            loadSources();
         } catch (error) {
             console.error('Error saving source:', error);
             showToast('Failed to save source', 'error');
@@ -262,7 +308,7 @@ export default function CrawlerManagement() {
 
             await CrawlerAPI.deleteSource(sourceId, token);
             showToast('Source deleted successfully', 'success');
-            loadData();
+            loadSources();
         } catch (error) {
             console.error('Error deleting source:', error);
             showToast('Failed to delete source', 'error');
@@ -279,7 +325,7 @@ export default function CrawlerManagement() {
 
             await CrawlerAPI.updateSource(source.id, { enabled: !source.enabled }, token);
             showToast(`Source ${source.enabled ? 'disabled' : 'enabled'}`, 'success');
-            loadData();
+            loadSources();
         } catch (error) {
             console.error('Error toggling source:', error);
             showToast('Failed to update source', 'error');
@@ -296,7 +342,7 @@ export default function CrawlerManagement() {
 
             await CrawlerAPI.triggerCrawl(sourceId, token);
             showToast('Manual crawl started', 'success');
-            loadData(); // Refresh to show new job
+            loadJobs(); // Refresh to show new job
         } catch (error) {
             console.error('Error triggering crawl:', error);
             showToast('Failed to start crawl', 'error');
@@ -322,7 +368,7 @@ export default function CrawlerManagement() {
                 `Enhanced ${result.enhanced} of ${result.processed} items`,
                 result.enhanced > 0 ? 'success' : 'info'
             );
-            loadData(); // Refresh status
+            loadEnhancementStatus(); // Refresh status
         } catch (error) {
             console.error('Error enhancing metadata:', error);
             showToast('Failed to enhance metadata', 'error');
@@ -330,17 +376,6 @@ export default function CrawlerManagement() {
             setEnhancementRunning(false);
         }
     };
-
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                    <p className="text-base-content/60">Loading crawler data...</p>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div className="space-y-8">
@@ -715,7 +750,14 @@ export default function CrawlerManagement() {
                         </div>
                     </div>
 
-                    {sources.length === 0 ? (
+                    {sourcesLoading ? (
+                        <div className="flex items-center justify-center py-12">
+                            <div className="text-center">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                                <p className="text-base-content/60">Loading sources...</p>
+                            </div>
+                        </div>
+                    ) : sources.length === 0 ? (
                         <div className="text-center py-8">
                             <i className="fa-solid fa-duotone fa-rss text-4xl text-base-content/30 mb-4" />
                             <p className="text-base-content/60">No content sources configured</p>
@@ -915,7 +957,14 @@ export default function CrawlerManagement() {
                         </div>
                     </div>
 
-                    {jobs.length === 0 ? (
+                    {jobsLoading ? (
+                        <div className="flex items-center justify-center py-12">
+                            <div className="text-center">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                                <p className="text-base-content/60">Loading jobs...</p>
+                            </div>
+                        </div>
+                    ) : jobs.length === 0 ? (
                         <div className="text-center py-4">
                             <p className="text-base-content/60">No crawl jobs yet</p>
                         </div>
@@ -1037,7 +1086,7 @@ export default function CrawlerManagement() {
                     job={selectedJob}
                     source={sources.find(s => s.id === selectedJob.source_id)}
                     onClose={() => setSelectedJob(null)}
-                    onJobUpdated={loadData}
+                    onJobUpdated={loadAllData}
                 />
             )}
         </div>
