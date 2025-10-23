@@ -16,6 +16,7 @@ const authenticatedNavigation = [
 ];
 
 const publicNavigation = [
+    { name: 'Demo', href: '/demo', icon: 'fa-play' },
     { name: 'Explore', href: '/explore', icon: 'fa-compass' },
 ];
 

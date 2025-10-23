@@ -90,6 +90,12 @@ export function Footer() {
                         <h3 className="font-semibold text-base-content mb-4">Product</h3>
                         <ul className="space-y-2">
                             <li>
+                                <Link href="/demo" className="text-sm text-base-content/60 hover:text-primary transition-colors flex items-center gap-1.5">
+                                    <i className="fa-solid fa-duotone fa-play text-xs"></i>
+                                    Demo
+                                </Link>
+                            </li>
+                            <li>
                                 <Link href="/features" className="text-sm text-base-content/60 hover:text-primary transition-colors">
                                     Features
                                 </Link>

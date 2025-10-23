@@ -69,6 +69,13 @@ export default function Home() {
                                     Start Stumbling
                                 </Link>
                                 <Link
+                                    href="/demo"
+                                    className="btn btn-secondary btn-lg text-lg px-8 gap-2 hover:shadow-secondary/30 transform hover:scale-105 transition-all duration-300"
+                                >
+                                    <i className="fa-solid fa-duotone fa-play"></i>
+                                    Watch Demo
+                                </Link>
+                                <Link
                                     href="/about"
                                     className="btn btn-ghost btn-lg text-lg px-8 gap-2 hover:bg-base-200"
                                 >
