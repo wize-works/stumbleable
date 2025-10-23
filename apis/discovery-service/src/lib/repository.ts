@@ -1106,19 +1106,20 @@ export class DiscoveryRepository {
         sortBy: 'recent' | 'popular' | 'quality' = 'recent'
     ): Promise<{ discoveries: EnhancedDiscovery[]; total: number }> {
         try {
-            // First, count total matching content
+            // First, count total matching content (only crawled items with metadata)
             const { count: totalCount, error: countError } = await supabase
                 .from('content')
                 .select('id', { count: 'exact', head: true })
                 .eq('is_active', true)
-                .contains('topics', [topic]);
+                .contains('topics', [topic])
+                .not('metadata_scraped_at', 'is', null); // Only content that has been crawled
 
             if (countError) {
                 console.error('Error counting discoveries by topic:', countError);
                 return { discoveries: [], total: 0 };
             }
 
-            // Build query for fetching content
+            // Build query for fetching content (only crawled items with metadata)
             let query = supabase
                 .from('content')
                 .select(`
@@ -1153,7 +1154,8 @@ export class DiscoveryRepository {
                     )
                 `)
                 .eq('is_active', true)
-                .contains('topics', [topic]);
+                .contains('topics', [topic])
+                .not('metadata_scraped_at', 'is', null); // Only content that has been crawled
 
             // Apply sorting
             switch (sortBy) {
@@ -1230,7 +1232,8 @@ export class DiscoveryRepository {
                         engagement_rate
                     )
                 `)
-                .eq('is_active', true);
+                .eq('is_active', true)
+                .not('metadata_scraped_at', 'is', null); // Only content that has been crawled
 
             // Apply sorting
             switch (sortBy) {
@@ -1270,7 +1273,8 @@ export class DiscoveryRepository {
             const { count, error } = await supabase
                 .from('content')
                 .select('*', { count: 'exact', head: true })
-                .eq('is_active', true);
+                .eq('is_active', true)
+                .not('metadata_scraped_at', 'is', null); // Only content that has been crawled
 
             if (error) {
                 console.error('Error counting total discoveries:', error);
