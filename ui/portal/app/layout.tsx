@@ -166,6 +166,25 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                             `,
                         }}
                     />
+
+                    {/* Google Analytics */}
+                    <Script
+                        src="https://www.googletagmanager.com/gtag/js?id=G-2Q4MHBM68L"
+                        strategy="afterInteractive"
+                    />
+                    <Script
+                        id="google-analytics"
+                        strategy="afterInteractive"
+                        dangerouslySetInnerHTML={{
+                            __html: `
+                                window.dataLayer = window.dataLayer || [];
+                                function gtag(){dataLayer.push(arguments);}
+                                gtag('js', new Date());
+                                gtag('config', 'G-2Q4MHBM68L');
+                            `,
+                        }}
+                    />
+
                 </body>
             </html>
         </ClerkProvider>
