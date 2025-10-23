@@ -23,7 +23,10 @@ export async function jobRoutes(fastify: FastifyInstance) {
             source_id: z.string().uuid().optional(),
             status: z.enum(['pending', 'running', 'completed', 'failed']).optional(),
             page: z.coerce.number().min(1).default(1),
-            limit: z.coerce.number().min(1).max(100).default(20)
+            limit: z.coerce.number().min(1).max(100).default(20),
+            search: z.string().optional(),
+            sortBy: z.enum(['started_at', 'status', 'items_found', 'items_submitted', 'completed_at']).optional(),
+            sortOrder: z.enum(['asc', 'desc']).default('desc')
         }).parse(request.query);
 
         try {
@@ -32,7 +35,7 @@ export async function jobRoutes(fastify: FastifyInstance) {
             // Build count query
             let countQuery = supabase
                 .from('crawler_jobs')
-                .select('*', { count: 'exact', head: true });
+                .select('*, crawler_sources!inner(name)', { count: 'exact', head: true });
 
             if (query.source_id) {
                 countQuery = countQuery.eq('source_id', query.source_id);
@@ -40,6 +43,12 @@ export async function jobRoutes(fastify: FastifyInstance) {
 
             if (query.status) {
                 countQuery = countQuery.eq('status', query.status);
+            }
+
+            // Apply search filter to count (search in job ID and status, and source name via join)
+            if (query.search) {
+                const searchLower = query.search.toLowerCase();
+                countQuery = countQuery.or(`id.ilike.%${searchLower}%,status.ilike.%${searchLower}%,crawler_sources.name.ilike.%${searchLower}%`);
             }
 
             const { count, error: countError } = await countQuery;
@@ -52,9 +61,7 @@ export async function jobRoutes(fastify: FastifyInstance) {
             // Build data query
             let dbQuery = supabase
                 .from('crawler_jobs')
-                .select('*, crawler_sources(name, type, url)')
-                .order('created_at', { ascending: false })
-                .range(offset, offset + query.limit - 1);
+                .select('*, crawler_sources!inner(name, type, url)');
 
             if (query.source_id) {
                 dbQuery = dbQuery.eq('source_id', query.source_id);
@@ -63,6 +70,20 @@ export async function jobRoutes(fastify: FastifyInstance) {
             if (query.status) {
                 dbQuery = dbQuery.eq('status', query.status);
             }
+
+            // Apply search filter
+            if (query.search) {
+                const searchLower = query.search.toLowerCase();
+                dbQuery = dbQuery.or(`id.ilike.%${searchLower}%,status.ilike.%${searchLower}%,crawler_sources.name.ilike.%${searchLower}%`);
+            }
+
+            // Apply sorting
+            const sortBy = query.sortBy || 'started_at';
+            const ascending = query.sortOrder === 'asc';
+            dbQuery = dbQuery.order(sortBy, { ascending, nullsFirst: !ascending });
+
+            // Apply pagination
+            dbQuery = dbQuery.range(offset, offset + query.limit - 1);
 
             const { data, error } = await dbQuery;
 

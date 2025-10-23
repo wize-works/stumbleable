@@ -53,7 +53,10 @@ export async function sourceRoutes(fastify: FastifyInstance) {
         const query = z.object({
             page: z.coerce.number().min(1).default(1),
             limit: z.coerce.number().min(1).max(100).default(20),
-            enabled: z.enum(['true', 'false']).optional()
+            enabled: z.enum(['true', 'false']).optional(),
+            search: z.string().optional(),
+            sortBy: z.enum(['name', 'type', 'domain', 'last_crawled_at', 'created_at']).optional(),
+            sortOrder: z.enum(['asc', 'desc']).default('desc')
         }).parse(request.query);
 
         try {
@@ -68,6 +71,12 @@ export async function sourceRoutes(fastify: FastifyInstance) {
                 countQuery = countQuery.eq('enabled', query.enabled === 'true');
             }
 
+            // Apply search filter to count
+            if (query.search) {
+                const searchLower = query.search.toLowerCase();
+                countQuery = countQuery.or(`name.ilike.%${searchLower}%,type.ilike.%${searchLower}%,domain.ilike.%${searchLower}%,url.ilike.%${searchLower}%`);
+            }
+
             const { count, error: countError } = await countQuery;
 
             if (countError) {
@@ -78,13 +87,25 @@ export async function sourceRoutes(fastify: FastifyInstance) {
             // Get paginated data
             let dataQuery = supabase
                 .from('crawler_sources')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .range(offset, offset + query.limit - 1);
+                .select('*');
 
             if (query.enabled !== undefined) {
                 dataQuery = dataQuery.eq('enabled', query.enabled === 'true');
             }
+
+            // Apply search filter
+            if (query.search) {
+                const searchLower = query.search.toLowerCase();
+                dataQuery = dataQuery.or(`name.ilike.%${searchLower}%,type.ilike.%${searchLower}%,domain.ilike.%${searchLower}%,url.ilike.%${searchLower}%`);
+            }
+
+            // Apply sorting
+            const sortBy = query.sortBy || 'created_at';
+            const ascending = query.sortOrder === 'asc';
+            dataQuery = dataQuery.order(sortBy, { ascending, nullsFirst: !ascending });
+
+            // Apply pagination
+            dataQuery = dataQuery.range(offset, offset + query.limit - 1);
 
             const { data, error } = await dataQuery;
 

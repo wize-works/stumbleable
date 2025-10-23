@@ -105,77 +105,7 @@ export default function CrawlerManagement() {
     useEffect(() => {
         loadData();
         loadTopics();
-    }, [sourcesPage, jobsPage]);
-
-    // Filter and sort sources
-    const filteredAndSortedSources = [...sources]
-        .filter(source => {
-            if (!sourcesSearch) return true;
-            const searchLower = sourcesSearch.toLowerCase();
-            return (
-                source.name.toLowerCase().includes(searchLower) ||
-                source.type.toLowerCase().includes(searchLower) ||
-                source.domain.toLowerCase().includes(searchLower) ||
-                source.topics.some(topic => topic.toLowerCase().includes(searchLower))
-            );
-        })
-        .sort((a, b) => {
-            if (!sourcesSortBy) return 0;
-
-            let aVal: any = a[sourcesSortBy];
-            let bVal: any = b[sourcesSortBy];
-
-            // Handle date sorting
-            if (sourcesSortBy === 'last_crawled_at') {
-                aVal = aVal ? new Date(aVal).getTime() : 0;
-                bVal = bVal ? new Date(bVal).getTime() : 0;
-            }
-
-            // Handle string sorting
-            if (typeof aVal === 'string') {
-                aVal = aVal.toLowerCase();
-                bVal = bVal.toLowerCase();
-            }
-
-            if (aVal < bVal) return sourcesSortOrder === 'asc' ? -1 : 1;
-            if (aVal > bVal) return sourcesSortOrder === 'asc' ? 1 : -1;
-            return 0;
-        });
-
-    // Filter and sort jobs
-    const filteredAndSortedJobs = [...jobs]
-        .filter(job => {
-            if (!jobsSearch) return true;
-            const searchLower = jobsSearch.toLowerCase();
-            const source = sources.find(s => s.id === job.source_id);
-            return (
-                (source?.name || '').toLowerCase().includes(searchLower) ||
-                job.status.toLowerCase().includes(searchLower) ||
-                job.id.toLowerCase().includes(searchLower)
-            );
-        })
-        .sort((a, b) => {
-            if (!jobsSortBy) return 0;
-
-            let aVal: any = a[jobsSortBy];
-            let bVal: any = b[jobsSortBy];
-
-            // Handle date sorting
-            if (jobsSortBy === 'started_at') {
-                aVal = new Date(aVal).getTime();
-                bVal = new Date(bVal).getTime();
-            }
-
-            // Handle string sorting
-            if (typeof aVal === 'string') {
-                aVal = aVal.toLowerCase();
-                bVal = bVal.toLowerCase();
-            }
-
-            if (aVal < bVal) return jobsSortOrder === 'asc' ? -1 : 1;
-            if (aVal > bVal) return jobsSortOrder === 'asc' ? 1 : -1;
-            return 0;
-        });
+    }, [sourcesPage, jobsPage, sourcesSearch, sourcesSortBy, sourcesSortOrder, jobsSearch, jobsSortBy, jobsSortOrder]);
 
     // Handle column header click for sorting
     const handleSourcesSort = (column: typeof sourcesSortBy) => {
@@ -218,8 +148,20 @@ export default function CrawlerManagement() {
             }
 
             const [sourcesResponse, jobsResponse, statusData] = await Promise.all([
-                CrawlerAPI.getSources(token, { page: sourcesPage, limit: sourcesLimit }),
-                CrawlerAPI.getJobs(token, { page: jobsPage, limit: jobsLimit }),
+                CrawlerAPI.getSources(token, {
+                    page: sourcesPage,
+                    limit: sourcesLimit,
+                    search: sourcesSearch || undefined,
+                    sortBy: sourcesSortBy || undefined,
+                    sortOrder: sourcesSortOrder
+                }),
+                CrawlerAPI.getJobs(token, {
+                    page: jobsPage,
+                    limit: jobsLimit,
+                    search: jobsSearch || undefined,
+                    sortBy: jobsSortBy || undefined,
+                    sortOrder: jobsSortOrder
+                }),
                 CrawlerAPI.getEnhancementStatus(token)
             ]);
 
@@ -829,14 +771,14 @@ export default function CrawlerManagement() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredAndSortedSources.length === 0 ? (
+                                    {sources.length === 0 ? (
                                         <tr>
                                             <td colSpan={8} className="text-center py-8">
                                                 <p className="text-base-content/60">No sources match your search</p>
                                             </td>
                                         </tr>
                                     ) : (
-                                        filteredAndSortedSources.map((source) => (
+                                        sources.map((source) => (
                                             <tr key={source.id}>
                                                 <td className="font-medium">{source.name}</td>
                                                 <td>
@@ -939,11 +881,11 @@ export default function CrawlerManagement() {
                 </div>
             </div>
 
-            {/* Recent Jobs */}
+            {/* Crawl Jobs */}
             <div className="card bg-base-100 shadow-xl">
                 <div className="card-body">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
-                        <h2 className="card-title">Recent Crawl Jobs ({jobsPagination.total})</h2>
+                        <h2 className="card-title">Crawl Jobs ({jobsPagination.total})</h2>
 
                         {/* Jobs Search */}
                         <div className="form-control w-full md:w-auto">
@@ -1017,14 +959,14 @@ export default function CrawlerManagement() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredAndSortedJobs.length === 0 ? (
+                                    {jobs.length === 0 ? (
                                         <tr>
                                             <td colSpan={8} className="text-center py-8">
                                                 <p className="text-base-content/60">No jobs match your search</p>
                                             </td>
                                         </tr>
                                     ) : (
-                                        filteredAndSortedJobs.map((job) => {
+                                        jobs.map((job) => {
                                             const source = sources.find(s => s.id === job.source_id);
                                             return (
                                                 <tr key={job.id} className="hover:bg-base-200 cursor-pointer" onClick={() => setSelectedJob(job)}>

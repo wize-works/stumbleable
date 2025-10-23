@@ -1894,6 +1894,9 @@ export class CrawlerAPI {
         page?: number;
         limit?: number;
         enabled?: boolean;
+        search?: string;
+        sortBy?: 'name' | 'type' | 'domain' | 'last_crawled_at' | 'created_at';
+        sortOrder?: 'asc' | 'desc';
     }): Promise<{
         sources: CrawlerSource[];
         pagination: {
@@ -1907,6 +1910,9 @@ export class CrawlerAPI {
         if (options?.page) params.append('page', options.page.toString());
         if (options?.limit) params.append('limit', options.limit.toString());
         if (options?.enabled !== undefined) params.append('enabled', options.enabled.toString());
+        if (options?.search) params.append('search', options.search);
+        if (options?.sortBy) params.append('sortBy', options.sortBy);
+        if (options?.sortOrder) params.append('sortOrder', options.sortOrder);
 
         const response = await apiRequest<{
             sources: CrawlerSource[];
@@ -2019,6 +2025,9 @@ export class CrawlerAPI {
         limit?: number;
         sourceId?: string;
         status?: 'pending' | 'running' | 'completed' | 'failed';
+        search?: string;
+        sortBy?: 'started_at' | 'status' | 'items_found' | 'items_submitted' | 'completed_at';
+        sortOrder?: 'asc' | 'desc';
     }): Promise<{
         jobs: CrawlerJob[];
         pagination: {
@@ -2033,6 +2042,9 @@ export class CrawlerAPI {
         if (options?.limit) params.append('limit', options.limit.toString());
         if (options?.sourceId) params.append('source_id', options.sourceId);
         if (options?.status) params.append('status', options.status);
+        if (options?.search) params.append('search', options.search);
+        if (options?.sortBy) params.append('sortBy', options.sortBy);
+        if (options?.sortOrder) params.append('sortOrder', options.sortOrder);
 
         const response = await apiRequest<{
             jobs: CrawlerJob[];

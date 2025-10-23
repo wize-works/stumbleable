@@ -196,18 +196,18 @@ export class CrawlerEngine {
                 title: link.title,
                 description: `External link from ${link.subreddit}: ${link.extractionContext.postTitle}`
             }));
+        } else {
+            // Regular RSS processing for non-Reddit feeds
+            const items = await this.rssService.parseFeed(source.url);
+
+            return items
+                .filter(item => item.link) // Filter out items without URLs
+                .map(item => ({
+                    url: item.link!,
+                    title: item.title,
+                    description: item.description
+                }));
         }
-
-        // Regular RSS processing for non-Reddit feeds
-        const items = await this.rssService.parseFeed(source.url);
-
-        return items
-            .filter(item => item.link) // Filter out items without URLs
-            .map(item => ({
-                url: item.link!,
-                title: item.title,
-                description: item.description
-            }));
     }
 
     /**
