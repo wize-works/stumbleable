@@ -32,6 +32,9 @@ export class CrawlerScheduler {
         console.log('Starting crawler scheduler...');
         this.isRunning = true;
 
+        // Clean up any orphaned running jobs from previous service runs
+        this.cleanupOrphanedJobs();
+
         // Run every 15 minutes to check for sources due for crawling
         const task = cron.schedule('*/15 * * * *', async () => {
             console.log('Checking for sources due for crawling...');
@@ -54,6 +57,51 @@ export class CrawlerScheduler {
         this.tasks.clear();
         this.isRunning = false;
         console.log('✓ Crawler scheduler stopped');
+    }
+
+    /**
+     * Clean up orphaned running jobs from previous service runs
+     */
+    private async cleanupOrphanedJobs() {
+        try {
+            const { supabase } = await import('./supabase');
+
+            // Find all jobs that are still marked as "running"
+            const { data: orphanedJobs, error } = await supabase
+                .from('crawler_jobs')
+                .select('id, source_id, started_at')
+                .eq('status', 'running');
+
+            if (error) {
+                console.error('Error checking for orphaned jobs:', error);
+                return;
+            }
+
+            if (!orphanedJobs || orphanedJobs.length === 0) {
+                console.log('✓ No orphaned jobs found');
+                return;
+            }
+
+            console.log(`Found ${orphanedJobs.length} orphaned job(s) from previous runs, marking as failed...`);
+
+            // Mark all orphaned jobs as failed
+            const { error: updateError } = await supabase
+                .from('crawler_jobs')
+                .update({
+                    status: 'failed',
+                    completed_at: new Date().toISOString(),
+                    error_message: 'Job interrupted by service restart'
+                })
+                .eq('status', 'running');
+
+            if (updateError) {
+                console.error('Error cleaning up orphaned jobs:', updateError);
+            } else {
+                console.log(`✓ Cleaned up ${orphanedJobs.length} orphaned job(s)`);
+            }
+        } catch (error) {
+            console.error('Error in cleanupOrphanedJobs:', error);
+        }
     }
 
     /**

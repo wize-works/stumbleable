@@ -48,9 +48,39 @@ export class CrawlerEngine {
      * Crawl a source and discover content
      */
     async crawlSource(source: CrawlerSource): Promise<CrawlerJob> {
-        // Check if already crawling
+        // Check if already crawling in memory
         if (this.activeCrawls.has(source.id)) {
             throw new Error(`Source ${source.id} is already being crawled`);
+        }
+
+        // Check for existing running jobs in database (critical for service restarts)
+        const { data: existingJobs, error: checkError } = await supabase
+            .from('crawler_jobs')
+            .select('*')
+            .eq('source_id', source.id)
+            .eq('status', 'running')
+            .order('created_at', { ascending: false });
+
+        if (checkError) {
+            console.error('Error checking for existing jobs:', checkError);
+        }
+
+        if (existingJobs && existingJobs.length > 0) {
+            console.log(`Found ${existingJobs.length} existing running job(s) for source ${source.id}`);
+
+            // Mark stale jobs as failed (they can't actually be running if we're here)
+            // This happens when the service restarts while jobs were in progress
+            for (const staleJob of existingJobs) {
+                console.log(`Marking stale job ${staleJob.id} as failed (service restarted)`);
+                await supabase
+                    .from('crawler_jobs')
+                    .update({
+                        status: 'failed',
+                        completed_at: new Date().toISOString(),
+                        error_message: 'Job interrupted by service restart'
+                    })
+                    .eq('id', staleJob.id);
+            }
         }
 
         // Check concurrent limit
@@ -60,7 +90,7 @@ export class CrawlerEngine {
 
         this.activeCrawls.add(source.id);
 
-        // Create job
+        // Create new job
         const { data: job, error: jobError } = await supabase
             .from('crawler_jobs')
             .insert({
