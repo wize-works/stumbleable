@@ -1,7 +1,11 @@
 import { MetadataRoute } from 'next';
+import { getAllPlatformSlugs } from './(marketing)/launch/platform-config';
 
 export default function sitemap(): MetadataRoute.Sitemap {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://stumbleable.com';
+
+    // Get all launch platform slugs dynamically
+    const platformSlugs = getAllPlatformSlugs();
 
     return [
         // Homepage
@@ -18,6 +22,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
             changeFrequency: 'daily',
             priority: 0.9,
         },
+        // Launch Platform Pages (High Priority for SEO & Conversions)
+        {
+            url: `${baseUrl}/launch`,
+            lastModified: new Date(),
+            changeFrequency: 'weekly',
+            priority: 0.9,
+        },
+        ...platformSlugs.map((slug) => ({
+            url: `${baseUrl}/launch/${slug}`,
+            lastModified: new Date(),
+            changeFrequency: 'weekly' as const,
+            priority: 0.85,
+        })),
         {
             url: `${baseUrl}/submit`,
             lastModified: new Date(),
