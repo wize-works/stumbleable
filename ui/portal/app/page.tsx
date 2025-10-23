@@ -17,9 +17,11 @@ export default function Home() {
     useEffect(() => {
         async function fetchFeatured() {
             try {
-                // Fetch top 3 trending discoveries for the landing page
+                // Fetch trending discoveries and randomize for fresh experience on each page load
                 const discoveries = await DiscoveryAPI.getTrending();
-                setFeaturedDiscoveries(discoveries.slice(0, 3));
+                // Shuffle the array to show random discoveries each time
+                const shuffled = [...discoveries].sort(() => Math.random() - 0.5);
+                setFeaturedDiscoveries(shuffled.slice(0, 3));
             } catch (err) {
                 console.error('Error fetching featured discoveries:', err);
                 // Keep empty array on error - will show fallback
