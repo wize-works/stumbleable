@@ -340,6 +340,7 @@ export class DiscoveryRepository {
 
     /**
      * Get trending content for specified time window
+     * Only returns content with images for better landing page display
      */
     async getTrendingContent(timeWindow: 'hour' | 'day' | 'week' = 'day', limit: number = 10): Promise<EnhancedDiscovery[]> {
         // Get the most recent trending items regardless of time window
@@ -376,6 +377,7 @@ export class DiscoveryRepository {
                 trending_score,
                 calculated_at
             `)
+            .not('content.image_url', 'is', null) // Filter: only content with images
             .order('calculated_at', { ascending: false }) // Most recently calculated first
             .order('trending_score', { ascending: false }) // Then by trending score
             .limit(limit);

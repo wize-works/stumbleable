@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { ManageCookiesButton } from './manage-cookies-button';
 import Logo from './ui/logo';
@@ -83,6 +84,21 @@ export function Footer() {
                                 <i className="fa-brands fa-reddit text-lg"></i>
                             </a>
                         </div>
+                        {/* ProductHunt Badge */}
+                        <a
+                            href="https://www.producthunt.com/products/stumbleable?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-stumbleable"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-block mt-2"
+                        >
+                            <Image
+                                src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1022563&theme=light"
+                                alt="stumbleable - Rediscover the magic of web discovery! | Product Hunt"
+                                width={250}
+                                height={54}
+                                unoptimized
+                            />
+                        </a>
                     </div>
 
                     {/* Product Column */}

@@ -41,8 +41,9 @@ export const trendingDiscoveryRoute: FastifyPluginAsync = async (fastify) => {
                     const allDiscoveries = await repository.getAllDiscoveries();
                     const now = new Date();
 
-                    // Calculate trending scores for all content
+                    // Calculate trending scores for all content with images
                     const scoredContent = allDiscoveries
+                        .filter(discovery => discovery.image) // Filter: only content with images
                         .map(discovery => {
                             const createdAt = new Date(discovery.createdAt || now);
                             const ageDays = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24);

@@ -83,6 +83,15 @@ export default function CrawlerManagement() {
         totalPages: 0
     });
 
+    // Search and sorting state
+    const [sourcesSearch, setSourcesSearch] = useState('');
+    const [sourcesSortBy, setSourcesSortBy] = useState<'name' | 'type' | 'domain' | 'last_crawled_at' | null>(null);
+    const [sourcesSortOrder, setSourcesSortOrder] = useState<'asc' | 'desc'>('asc');
+
+    const [jobsSearch, setJobsSearch] = useState('');
+    const [jobsSortBy, setJobsSortBy] = useState<'started_at' | 'status' | 'items_found' | null>('started_at');
+    const [jobsSortOrder, setJobsSortOrder] = useState<'asc' | 'desc'>('desc');
+
     // Form state
     const [formData, setFormData] = useState({
         name: '',
@@ -97,6 +106,107 @@ export default function CrawlerManagement() {
         loadData();
         loadTopics();
     }, [sourcesPage, jobsPage]);
+
+    // Filter and sort sources
+    const filteredAndSortedSources = [...sources]
+        .filter(source => {
+            if (!sourcesSearch) return true;
+            const searchLower = sourcesSearch.toLowerCase();
+            return (
+                source.name.toLowerCase().includes(searchLower) ||
+                source.type.toLowerCase().includes(searchLower) ||
+                source.domain.toLowerCase().includes(searchLower) ||
+                source.topics.some(topic => topic.toLowerCase().includes(searchLower))
+            );
+        })
+        .sort((a, b) => {
+            if (!sourcesSortBy) return 0;
+
+            let aVal: any = a[sourcesSortBy];
+            let bVal: any = b[sourcesSortBy];
+
+            // Handle date sorting
+            if (sourcesSortBy === 'last_crawled_at') {
+                aVal = aVal ? new Date(aVal).getTime() : 0;
+                bVal = bVal ? new Date(bVal).getTime() : 0;
+            }
+
+            // Handle string sorting
+            if (typeof aVal === 'string') {
+                aVal = aVal.toLowerCase();
+                bVal = bVal.toLowerCase();
+            }
+
+            if (aVal < bVal) return sourcesSortOrder === 'asc' ? -1 : 1;
+            if (aVal > bVal) return sourcesSortOrder === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+    // Filter and sort jobs
+    const filteredAndSortedJobs = [...jobs]
+        .filter(job => {
+            if (!jobsSearch) return true;
+            const searchLower = jobsSearch.toLowerCase();
+            const source = sources.find(s => s.id === job.source_id);
+            return (
+                (source?.name || '').toLowerCase().includes(searchLower) ||
+                job.status.toLowerCase().includes(searchLower) ||
+                job.id.toLowerCase().includes(searchLower)
+            );
+        })
+        .sort((a, b) => {
+            if (!jobsSortBy) return 0;
+
+            let aVal: any = a[jobsSortBy];
+            let bVal: any = b[jobsSortBy];
+
+            // Handle date sorting
+            if (jobsSortBy === 'started_at') {
+                aVal = new Date(aVal).getTime();
+                bVal = new Date(bVal).getTime();
+            }
+
+            // Handle string sorting
+            if (typeof aVal === 'string') {
+                aVal = aVal.toLowerCase();
+                bVal = bVal.toLowerCase();
+            }
+
+            if (aVal < bVal) return jobsSortOrder === 'asc' ? -1 : 1;
+            if (aVal > bVal) return jobsSortOrder === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+    // Handle column header click for sorting
+    const handleSourcesSort = (column: typeof sourcesSortBy) => {
+        if (sourcesSortBy === column) {
+            setSourcesSortOrder(sourcesSortOrder === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSourcesSortBy(column);
+            setSourcesSortOrder('asc');
+        }
+    };
+
+    const handleJobsSort = (column: typeof jobsSortBy) => {
+        if (jobsSortBy === column) {
+            setJobsSortOrder(jobsSortOrder === 'asc' ? 'desc' : 'asc');
+        } else {
+            setJobsSortBy(column);
+            setJobsSortOrder('asc');
+        }
+    };
+
+    // Sort indicator component
+    const SortIndicator = ({ column, currentSort, currentOrder }: {
+        column: string,
+        currentSort: string | null,
+        currentOrder: 'asc' | 'desc'
+    }) => {
+        if (column !== currentSort) return <i className="fa-solid fa-duotone fa-sort text-base-content/30 ml-2" />;
+        return currentOrder === 'asc'
+            ? <i className="fa-solid fa-duotone fa-sort-up text-primary ml-2" />
+            : <i className="fa-solid fa-duotone fa-sort-down text-primary ml-2" />;
+    };
 
     const loadData = async () => {
         try {
@@ -632,7 +742,36 @@ export default function CrawlerManagement() {
             {/* Sources List */}
             <div className="card bg-base-100 shadow-xl">
                 <div className="card-body">
-                    <h2 className="card-title mb-4">Content Sources ({sources.length})</h2>
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                        <h2 className="card-title">Content Sources ({sourcesPagination.total})</h2>
+
+                        {/* Sources Search */}
+                        <div className="form-control w-full md:w-auto">
+                            <div className="input-group">
+                                <input
+                                    type="text"
+                                    placeholder="Search sources..."
+                                    className="input input-bordered w-full md:w-64"
+                                    value={sourcesSearch}
+                                    onChange={(e) => {
+                                        setSourcesSearch(e.target.value);
+                                        setSourcesPage(1); // Reset to first page on search
+                                    }}
+                                />
+                                {sourcesSearch && (
+                                    <button
+                                        className="btn btn-square"
+                                        onClick={() => setSourcesSearch('')}
+                                    >
+                                        <i className="fa-solid fa-duotone fa-times" />
+                                    </button>
+                                )}
+                                <span className="btn btn-square btn-ghost pointer-events-none">
+                                    <i className="fa-solid fa-duotone fa-search" />
+                                </span>
+                            </div>
+                        </div>
+                    </div>
 
                     {sources.length === 0 ? (
                         <div className="text-center py-8">
@@ -647,101 +786,141 @@ export default function CrawlerManagement() {
                             <table className="table table-zebra">
                                 <thead>
                                     <tr>
-                                        <th>Name</th>
-                                        <th>Type</th>
-                                        <th>URL</th>
+                                        <th
+                                            className="cursor-pointer select-none hover:bg-base-200"
+                                            onClick={() => handleSourcesSort('name')}
+                                        >
+                                            <div className="flex items-center">
+                                                Name
+                                                <SortIndicator column="name" currentSort={sourcesSortBy} currentOrder={sourcesSortOrder} />
+                                            </div>
+                                        </th>
+                                        <th
+                                            className="cursor-pointer select-none hover:bg-base-200"
+                                            onClick={() => handleSourcesSort('type')}
+                                        >
+                                            <div className="flex items-center">
+                                                Type
+                                                <SortIndicator column="type" currentSort={sourcesSortBy} currentOrder={sourcesSortOrder} />
+                                            </div>
+                                        </th>
+                                        <th
+                                            className="cursor-pointer select-none hover:bg-base-200"
+                                            onClick={() => handleSourcesSort('domain')}
+                                        >
+                                            <div className="flex items-center">
+                                                URL
+                                                <SortIndicator column="domain" currentSort={sourcesSortBy} currentOrder={sourcesSortOrder} />
+                                            </div>
+                                        </th>
                                         <th>Frequency</th>
                                         <th>Topics</th>
                                         <th>Status</th>
-                                        <th>Last Crawled</th>
+                                        <th
+                                            className="cursor-pointer select-none hover:bg-base-200"
+                                            onClick={() => handleSourcesSort('last_crawled_at')}
+                                        >
+                                            <div className="flex items-center">
+                                                Last Crawled
+                                                <SortIndicator column="last_crawled_at" currentSort={sourcesSortBy} currentOrder={sourcesSortOrder} />
+                                            </div>
+                                        </th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {sources.map((source) => (
-                                        <tr key={source.id}>
-                                            <td className="font-medium">{source.name}</td>
-                                            <td>
-                                                <div className="badge badge-outline">
-                                                    {source.type.toUpperCase()}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <a
-                                                    href={source.url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="link link-primary "
-                                                >
-                                                    {source.domain}
-                                                </a>
-                                            </td>
-                                            <td>{source.crawl_frequency_hours}h</td>
-                                            <td>
-                                                <div className="flex flex-wrap gap-1">
-                                                    {source.topics.slice(0, 2).map((topic) => (
-                                                        <div key={topic} className="badge badge-ghost badge-sm">
-                                                            {topic}
-                                                        </div>
-                                                    ))}
-                                                    {source.topics.length > 2 && (
-                                                        <div className="badge badge-ghost badge-sm">
-                                                            +{source.topics.length - 2}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div
-                                                    className={`badge ${source.enabled ? 'badge-success' : 'badge-error'
-                                                        }`}
-                                                >
-                                                    {source.enabled ? 'Enabled' : 'Disabled'}
-                                                </div>
-                                            </td>
-                                            <td className="">
-                                                {source.last_crawled_at
-                                                    ? new Date(source.last_crawled_at).toLocaleDateString()
-                                                    : 'Never'
-                                                }
-                                            </td>
-                                            <td>
-                                                <div className="flex gap-2">
-                                                    <button
-                                                        onClick={() => handleEdit(source)}
-                                                        className="btn btn-ghost btn-sm"
-                                                        title="Edit"
-                                                    >
-                                                        <i className="fa-solid fa-duotone fa-edit" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleTriggerCrawl(source.id)}
-                                                        className="btn btn-primary btn-sm"
-                                                        title="Start Manual Crawl"
-                                                        disabled={!source.enabled}
-                                                    >
-                                                        <i className="fa-solid fa-duotone fa-play" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleToggleEnabled(source)}
-                                                        className={`btn btn-sm ${source.enabled ? 'btn-warning' : 'btn-success'
-                                                            }`}
-                                                        title={source.enabled ? 'Disable' : 'Enable'}
-                                                    >
-                                                        <i className={`fa-solid fa-duotone ${source.enabled ? 'fa-pause' : 'fa-play'
-                                                            }`} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(source.id)}
-                                                        className="btn btn-error btn-sm"
-                                                        title="Delete"
-                                                    >
-                                                        <i className="fa-solid fa-duotone fa-trash" />
-                                                    </button>
-                                                </div>
+                                    {filteredAndSortedSources.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={8} className="text-center py-8">
+                                                <p className="text-base-content/60">No sources match your search</p>
                                             </td>
                                         </tr>
-                                    ))}
+                                    ) : (
+                                        filteredAndSortedSources.map((source) => (
+                                            <tr key={source.id}>
+                                                <td className="font-medium">{source.name}</td>
+                                                <td>
+                                                    <div className="badge badge-outline">
+                                                        {source.type.toUpperCase()}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <a
+                                                        href={source.url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="link link-primary "
+                                                    >
+                                                        {source.domain}
+                                                    </a>
+                                                </td>
+                                                <td>{source.crawl_frequency_hours}h</td>
+                                                <td>
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {source.topics.slice(0, 2).map((topic) => (
+                                                            <div key={topic} className="badge badge-ghost badge-sm">
+                                                                {topic}
+                                                            </div>
+                                                        ))}
+                                                        {source.topics.length > 2 && (
+                                                            <div className="badge badge-ghost badge-sm">
+                                                                +{source.topics.length - 2}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div
+                                                        className={`badge ${source.enabled ? 'badge-success' : 'badge-error'
+                                                            }`}
+                                                    >
+                                                        {source.enabled ? 'Enabled' : 'Disabled'}
+                                                    </div>
+                                                </td>
+                                                <td className="">
+                                                    {source.last_crawled_at
+                                                        ? new Date(source.last_crawled_at).toLocaleDateString()
+                                                        : 'Never'
+                                                    }
+                                                </td>
+                                                <td>
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            onClick={() => handleEdit(source)}
+                                                            className="btn btn-ghost btn-sm"
+                                                            title="Edit"
+                                                        >
+                                                            <i className="fa-solid fa-duotone fa-edit" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleTriggerCrawl(source.id)}
+                                                            className="btn btn-primary btn-sm"
+                                                            title="Start Manual Crawl"
+                                                            disabled={!source.enabled}
+                                                        >
+                                                            <i className="fa-solid fa-duotone fa-play" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleToggleEnabled(source)}
+                                                            className={`btn btn-sm ${source.enabled ? 'btn-warning' : 'btn-success'
+                                                                }`}
+                                                            title={source.enabled ? 'Disable' : 'Enable'}
+                                                        >
+                                                            <i className={`fa-solid fa-duotone ${source.enabled ? 'fa-pause' : 'fa-play'
+                                                                }`} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(source.id)}
+                                                            className="btn btn-error btn-sm"
+                                                            title="Delete"
+                                                        >
+                                                            <i className="fa-solid fa-duotone fa-trash" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
                                 </tbody>
                             </table>
 
@@ -763,7 +942,36 @@ export default function CrawlerManagement() {
             {/* Recent Jobs */}
             <div className="card bg-base-100 shadow-xl">
                 <div className="card-body">
-                    <h2 className="card-title mb-4">Recent Crawl Jobs</h2>
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                        <h2 className="card-title">Recent Crawl Jobs ({jobsPagination.total})</h2>
+
+                        {/* Jobs Search */}
+                        <div className="form-control w-full md:w-auto">
+                            <div className="input-group">
+                                <input
+                                    type="text"
+                                    placeholder="Search jobs..."
+                                    className="input input-bordered w-full md:w-64"
+                                    value={jobsSearch}
+                                    onChange={(e) => {
+                                        setJobsSearch(e.target.value);
+                                        setJobsPage(1); // Reset to first page on search
+                                    }}
+                                />
+                                {jobsSearch && (
+                                    <button
+                                        className="btn btn-square"
+                                        onClick={() => setJobsSearch('')}
+                                    >
+                                        <i className="fa-solid fa-duotone fa-times" />
+                                    </button>
+                                )}
+                                <span className="btn btn-square btn-ghost pointer-events-none">
+                                    <i className="fa-solid fa-duotone fa-search" />
+                                </span>
+                            </div>
+                        </div>
+                    </div>
 
                     {jobs.length === 0 ? (
                         <div className="text-center py-4">
@@ -775,9 +983,33 @@ export default function CrawlerManagement() {
                                 <thead>
                                     <tr>
                                         <th>Source</th>
-                                        <th>Started</th>
-                                        <th>Status</th>
-                                        <th>Found</th>
+                                        <th
+                                            className="cursor-pointer select-none hover:bg-base-200"
+                                            onClick={() => handleJobsSort('started_at')}
+                                        >
+                                            <div className="flex items-center">
+                                                Started
+                                                <SortIndicator column="started_at" currentSort={jobsSortBy} currentOrder={jobsSortOrder} />
+                                            </div>
+                                        </th>
+                                        <th
+                                            className="cursor-pointer select-none hover:bg-base-200"
+                                            onClick={() => handleJobsSort('status')}
+                                        >
+                                            <div className="flex items-center">
+                                                Status
+                                                <SortIndicator column="status" currentSort={jobsSortBy} currentOrder={jobsSortOrder} />
+                                            </div>
+                                        </th>
+                                        <th
+                                            className="cursor-pointer select-none hover:bg-base-200"
+                                            onClick={() => handleJobsSort('items_found')}
+                                        >
+                                            <div className="flex items-center">
+                                                Found
+                                                <SortIndicator column="items_found" currentSort={jobsSortBy} currentOrder={jobsSortOrder} />
+                                            </div>
+                                        </th>
                                         <th>Submitted</th>
                                         <th>Failed</th>
                                         <th>Duration</th>
@@ -785,52 +1017,60 @@ export default function CrawlerManagement() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {jobs.map((job) => {
-                                        const source = sources.find(s => s.id === job.source_id);
-                                        return (
-                                            <tr key={job.id} className="hover:bg-base-200 cursor-pointer" onClick={() => setSelectedJob(job)}>
-                                                <td className="font-medium">
-                                                    {source ? source.name : 'Unknown Source'}
-                                                </td>
-                                                <td className="">
-                                                    {new Date(job.started_at).toLocaleString()}
-                                                </td>
-                                                <td>
-                                                    <div
-                                                        className={`badge ${job.status === 'completed'
-                                                            ? 'badge-success'
-                                                            : job.status === 'failed'
-                                                                ? 'badge-error'
-                                                                : 'badge-warning'
-                                                            }`}
-                                                    >
-                                                        {job.status}
-                                                    </div>
-                                                </td>
-                                                <td>{job.items_found}</td>
-                                                <td>{job.items_submitted}</td>
-                                                <td>{job.items_failed}</td>
-                                                <td className="">
-                                                    {job.completed_at
-                                                        ? `${Math.round(
-                                                            (new Date(job.completed_at).getTime() -
-                                                                new Date(job.started_at).getTime()) / 1000
-                                                        )}s`
-                                                        : 'Running...'
-                                                    }
-                                                </td>
-                                                <td onClick={(e) => e.stopPropagation()}>
-                                                    <button
-                                                        onClick={() => setSelectedJob(job)}
-                                                        className="btn btn-sm btn-ghost"
-                                                        title="View Details"
-                                                    >
-                                                        <i className="fa-solid fa-duotone fa-eye"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
+                                    {filteredAndSortedJobs.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={8} className="text-center py-8">
+                                                <p className="text-base-content/60">No jobs match your search</p>
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        filteredAndSortedJobs.map((job) => {
+                                            const source = sources.find(s => s.id === job.source_id);
+                                            return (
+                                                <tr key={job.id} className="hover:bg-base-200 cursor-pointer" onClick={() => setSelectedJob(job)}>
+                                                    <td className="font-medium">
+                                                        {source ? source.name : 'Unknown Source'}
+                                                    </td>
+                                                    <td className="">
+                                                        {new Date(job.started_at).toLocaleString()}
+                                                    </td>
+                                                    <td>
+                                                        <div
+                                                            className={`badge ${job.status === 'completed'
+                                                                ? 'badge-success'
+                                                                : job.status === 'failed'
+                                                                    ? 'badge-error'
+                                                                    : 'badge-warning'
+                                                                }`}
+                                                        >
+                                                            {job.status}
+                                                        </div>
+                                                    </td>
+                                                    <td>{job.items_found}</td>
+                                                    <td>{job.items_submitted}</td>
+                                                    <td>{job.items_failed}</td>
+                                                    <td className="">
+                                                        {job.completed_at
+                                                            ? `${Math.round(
+                                                                (new Date(job.completed_at).getTime() -
+                                                                    new Date(job.started_at).getTime()) / 1000
+                                                            )}s`
+                                                            : 'Running...'
+                                                        }
+                                                    </td>
+                                                    <td onClick={(e) => e.stopPropagation()}>
+                                                        <button
+                                                            onClick={() => setSelectedJob(job)}
+                                                            className="btn btn-sm btn-ghost"
+                                                            title="View Details"
+                                                        >
+                                                            <i className="fa-solid fa-duotone fa-eye"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
+                                    )}
                                 </tbody>
                             </table>
 

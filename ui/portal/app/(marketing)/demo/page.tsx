@@ -266,8 +266,8 @@ export default function DemoPage() {
                                 </div>
                             </div>
 
-                            <i className="fa-solid fa-duotone fa-arrow-right text-2xl text-base-content/30 hidden md:block"></i>
-                            <i className="fa-solid fa-duotone fa-arrow-down text-2xl text-base-content/30 md:hidden"></i>
+                            <span className='hidden md:block'><i className="fa-solid fa-duotone fa-arrow-right text-2xl text-base-content/30"></i></span>
+                            <span className='block md:hidden'><i className="fa-solid fa-duotone fa-arrow-down text-2xl text-base-content/30"></i></span>
 
                             <div className="flex items-center gap-4">
                                 <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center text-white font-bold text-2xl shadow-lg">
@@ -279,8 +279,8 @@ export default function DemoPage() {
                                 </div>
                             </div>
 
-                            <i className="fa-solid fa-duotone fa-arrow-right text-2xl text-base-content/30 hidden md:block"></i>
-                            <i className="fa-solid fa-duotone fa-arrow-down text-2xl text-base-content/30 md:hidden"></i>
+                            <span className='hidden md:block'><i className="fa-solid fa-duotone fa-arrow-right text-2xl text-base-content/30"></i></span>
+                            <span className='block md:hidden'><i className="fa-solid fa-duotone fa-arrow-down text-2xl text-base-content/30"></i></span>
 
                             <div className="flex items-center gap-4">
                                 <div className="w-16 h-16 rounded-full bg-accent flex items-center justify-center text-white font-bold text-2xl shadow-lg">
@@ -295,8 +295,34 @@ export default function DemoPage() {
                     </div>
                 </section>
 
+                {/* CTA Section */}
+                <section className="py-20 px-4">
+                    <div className="max-w-4xl mx-auto text-center">
+                        <h2 className="text-4xl md:text-5xl font-bold text-base-content mb-6">
+                            Ready to Start Your Discovery Journey?
+                        </h2>
+                        <p className="text-xl text-base-content/70 mb-8">
+                            Join thousands of curious minds exploring the best content on the web.
+                            Sign up free—no credit card required.
+                        </p>
+                        <div className="flex gap-4 justify-center flex-wrap">
+                            <a href="/sign-up" className="btn btn-primary btn-lg">
+                                <i className="fa-solid fa-duotone fa-rocket mr-2"></i>
+                                Start Stumbling Free
+                            </a>
+                            <a href="/how-it-works" className="btn btn-outline btn-lg">
+                                <i className="fa-solid fa-duotone fa-circle-question mr-2"></i>
+                                Learn How It Works
+                            </a>
+                        </div>
+                        <p className="text-sm text-base-content/60 mt-6">
+                            Free forever. No credit card required. Start discovering in 60 seconds.
+                        </p>
+                    </div>
+                </section>
+
                 {/* Social Proof */}
-                <section className="py-16 px-4">
+                {/* <section className="py-16 px-4">
                     <div className="max-w-6xl mx-auto">
                         <h2 className="text-4xl font-bold text-center text-base-content mb-12">
                             Join Thousands of Happy Discoverers
@@ -385,7 +411,7 @@ export default function DemoPage() {
                             </div>
                         </div>
                     </div>
-                </section>
+                </section> */}
 
                 {/* Stats */}
                 <section className="py-16 px-4 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
@@ -408,32 +434,6 @@ export default function DemoPage() {
                                 <p className="text-base-content/70">Satisfaction Rate</p>
                             </div>
                         </div>
-                    </div>
-                </section>
-
-                {/* CTA Section */}
-                <section className="py-20 px-4">
-                    <div className="max-w-4xl mx-auto text-center">
-                        <h2 className="text-4xl md:text-5xl font-bold text-base-content mb-6">
-                            Ready to Start Your Discovery Journey?
-                        </h2>
-                        <p className="text-xl text-base-content/70 mb-8">
-                            Join thousands of curious minds exploring the best content on the web.
-                            Sign up free—no credit card required.
-                        </p>
-                        <div className="flex gap-4 justify-center flex-wrap">
-                            <a href="/sign-up" className="btn btn-primary btn-lg">
-                                <i className="fa-solid fa-duotone fa-rocket mr-2"></i>
-                                Start Stumbling Free
-                            </a>
-                            <a href="/how-it-works" className="btn btn-outline btn-lg">
-                                <i className="fa-solid fa-duotone fa-circle-question mr-2"></i>
-                                Learn How It Works
-                            </a>
-                        </div>
-                        <p className="text-sm text-base-content/60 mt-6">
-                            Free forever. No credit card required. Start discovering in 60 seconds.
-                        </p>
                     </div>
                 </section>
             </div>
