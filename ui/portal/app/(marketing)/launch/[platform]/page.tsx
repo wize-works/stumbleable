@@ -116,9 +116,9 @@ export default async function LaunchPage({ params }: LaunchPageProps) {
                 {/* Platform Badge */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-base-200 shadow-lg mb-6">
-                        <span className="text-3xl" aria-label={platform.displayName}>
-                            {platform.badge}
-                        </span>
+                        {platform.badgeIcon && (
+                            <i className={`${platform.badgeIcon} text-3xl`} style={{ color: platform.color }}></i>
+                        )}
                         <span className="font-semibold text-base-content">
                             Featured on {platform.displayName}
                         </span>

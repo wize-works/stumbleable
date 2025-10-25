@@ -17,7 +17,7 @@ export interface PlatformConfig {
     tagline: string;
     color: string;
     icon: string;
-    badge?: string;
+    badgeIcon?: string;
     stats?: {
         label: string;
         value: string;
@@ -50,7 +50,7 @@ export const platforms: Record<string, PlatformConfig> = {
         tagline: 'Launched on Product Hunt - Join the Discovery Revolution',
         color: '#DA552F',
         icon: 'fa-brands fa-product-hunt',
-        badge: '🚀',
+        badgeIcon: 'fa-solid fa-duotone fa-rocket-launch',
         stats: [
             { label: 'Upvotes', value: '500+' },
             { label: 'Comments', value: '100+' },
@@ -77,7 +77,7 @@ export const platforms: Record<string, PlatformConfig> = {
         tagline: 'Featured on LaunchingNext - The Future of Discovery',
         color: '#6366F1',
         icon: 'fa-solid fa-rocket',
-        badge: '🌟',
+        badgeIcon: 'fa-solid fa-duotone fa-sparkles',
         stats: [
             { label: 'Followers', value: '200+' },
             { label: 'Featured', value: 'Upcoming Launch' },
@@ -104,7 +104,7 @@ export const platforms: Record<string, PlatformConfig> = {
         tagline: 'Early Access on BetaList - Be Among the First',
         color: '#10B981',
         icon: 'fa-solid fa-flask',
-        badge: '🧪',
+        badgeIcon: 'fa-solid fa-duotone fa-flask-vial',
         stats: [
             { label: 'Beta Users', value: '500+' },
             { label: 'Status', value: 'Public Beta' },
@@ -131,7 +131,7 @@ export const platforms: Record<string, PlatformConfig> = {
         tagline: 'Show HN: Stumbleable - StumbleUpon for Modern Web',
         color: '#FF6600',
         icon: 'fa-brands fa-hacker-news',
-        badge: '💻',
+        badgeIcon: 'fa-solid fa-duotone fa-laptop-code',
         stats: [
             { label: 'Points', value: '150+' },
             { label: 'Comments', value: '75+' },
@@ -158,7 +158,7 @@ export const platforms: Record<string, PlatformConfig> = {
         tagline: 'Building with Indie Hackers - Our Journey',
         color: '#0E2439',
         icon: 'fa-solid fa-code',
-        badge: '🛠️',
+        badgeIcon: 'fa-solid fa-duotone fa-hammer',
         stats: [
             { label: 'Followers', value: '100+' },
             { label: 'Posts', value: '10+' },
@@ -185,7 +185,7 @@ export const platforms: Record<string, PlatformConfig> = {
         tagline: 'The StumbleUpon Alternative Everyone Is Switching To',
         color: '#2563EB',
         icon: 'fa-solid fa-arrow-right-arrow-left',
-        badge: '🔄',
+        badgeIcon: 'fa-solid fa-duotone fa-repeat',
         stats: [
             { label: 'Likes', value: '300+' },
             { label: 'Rating', value: '4.7/5.0' },
@@ -199,6 +199,33 @@ export const platforms: Record<string, PlatformConfig> = {
             title: 'Stumbleable - Best StumbleUpon Alternative | AlternativeTo',
             description: 'Looking for a StumbleUpon alternative? Stumbleable brings back the joy of web discovery. Featured on AlternativeTo as the top alternative to Mix, Pocket, and StumbleUpon.',
             keywords: ['stumbleupon alternative', 'alternativeto', 'mix alternative', 'pocket alternative', 'web discovery tool', 'stumbleable vs stumbleupon']
+        }
+    },
+
+    'proofstories': {
+        name: 'ProofStories',
+        slug: 'proofstories',
+        displayName: 'ProofStories.io',
+        launchDate: 'October 2025',
+        url: 'https://proofstories.io/stories/stumbleable',
+        description: 'Featured on ProofStories showcasing real stories from users who rediscovered the joy of web exploration. See how Stumbleable is bringing back serendipity for curious minds worldwide.',
+        tagline: 'Real Stories from Discovery Enthusiasts',
+        color: '#8B5CF6',
+        icon: 'fa-solid fa-book-open',
+        badgeIcon: 'fa-solid fa-duotone fa-book-bookmark',
+        stats: [
+            { label: 'Stories', value: '50+' },
+            { label: 'Readers', value: '1,000+' },
+            { label: 'Category', value: 'Productivity' }
+        ],
+        cta: {
+            primary: 'Start Your Discovery Journey',
+            secondary: 'Read Our Stories'
+        },
+        seo: {
+            title: 'Stumbleable on ProofStories | Real User Discovery Stories',
+            description: 'Read real stories from Stumbleable users on ProofStories. Discover how people are rediscovering the web, breaking free from algorithms, and finding amazing content.',
+            keywords: ['proofstories', 'user testimonials', 'stumbleable stories', 'web discovery reviews', 'customer success stories', 'stumbleable reviews']
         }
     }
 };
