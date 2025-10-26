@@ -551,10 +551,19 @@ async function extractMetadata(url: string): Promise<ExtractedMetadata> {
             const frameAncestorsMatch = csp.match(/frame-ancestors\s+([^;]+)/);
             if (frameAncestorsMatch) {
                 const value = frameAncestorsMatch[1].trim();
-                // 'none' or 'self' blocks framing from external sites
+                // Check if frame-ancestors blocks external framing
+                // Blocks if: 'none', 'self', or specific domains/wildcards without scheme
                 if (value === "'none'" || value === "'self'") {
                     allowsFraming = false;
                     console.log(`[${url}] CSP frame-ancestors: ${value} - blocks framing`);
+                } else if (value === '*') {
+                    // Bare * means allow from anywhere - do nothing, stays true
+                    console.log(`[${url}] CSP frame-ancestors: ${value} - allows framing from anywhere`);
+                } else if (!value.includes('https:') && !value.includes('http:')) {
+                    // If no scheme specified (https:/http:), it's domain-restricted and blocks us
+                    // Examples: *.translate.goog, example.com, *.example.com
+                    allowsFraming = false;
+                    console.log(`[${url}] CSP frame-ancestors: ${value} - blocks framing (domain-restricted)`);
                 }
             }
         }

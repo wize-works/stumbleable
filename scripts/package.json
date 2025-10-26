@@ -1,0 +1,13 @@
+{
+    "name": "stumbleable-scripts",
+    "version": "1.0.0",
+    "type": "module",
+    "description": "Utility scripts for Stumbleable",
+    "scripts": {
+        "fix-framing": "node fix-allows-framing.js"
+    },
+    "dependencies": {
+        "@supabase/supabase-js": "^2.45.4",
+        "dotenv": "^16.4.5"
+    }
+}
