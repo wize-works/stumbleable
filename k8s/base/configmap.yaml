@@ -17,6 +17,7 @@ data:
   MODERATION_PORT: "7005"
   EMAIL_PORT: "7006"
   SCHEDULER_PORT: "7007"
+  CONTENT_PORT: "7008"
   
   # Internal service URLs (for server-side calls)
   DISCOVERY_API_URL: "http://discovery-service:8080"
@@ -26,6 +27,7 @@ data:
   MODERATION_API_URL: "http://moderation-service:8080"
   EMAIL_API_URL: "http://email-service:8080"
   SCHEDULER_API_URL: "http://scheduler-service:8080"
+  CONTENT_API_URL: "http://content-service:8080"
   
   # Public API URLs (for client-side calls)
   # These point to api.stumbleable.com subdomain with service-specific paths
@@ -38,6 +40,7 @@ data:
   NEXT_PUBLIC_MODERATION_API_URL: "https://api.stumbleable.com/moderation"
   NEXT_PUBLIC_EMAIL_API_URL: "https://api.stumbleable.com/email"
   NEXT_PUBLIC_SCHEDULER_API_URL: "https://api.stumbleable.com/scheduler"
+  NEXT_PUBLIC_CONTENT_API_URL: "https://api.stumbleable.com/content"
   
   # Frontend URL (for CORS and email links)
   FRONTEND_URL: "https://stumbleable.com"

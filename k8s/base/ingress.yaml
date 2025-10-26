@@ -179,3 +179,12 @@ spec:
             name: scheduler-service
             port:
               number: 8080
+      
+      # Content Service
+      - path: /content(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: content-service
+            port:
+              number: 8080

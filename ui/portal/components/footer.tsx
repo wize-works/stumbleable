@@ -99,8 +99,15 @@ export function Footer() {
                                 unoptimized
                             />
                         </a>
-                        <a href="https://www.proofstories.io/directory/products/stumbleable/" target="_blank" rel="noopener" style={{ height: "60px;" }}>
-                            <Image src="https://www.proofstories.io/directory/badges/l/stumbleable.svg" alt="stumbleable badge" style={{ height: "60px;" }} />
+                        <a href="https://www.proofstories.io/directory/products/stumbleable/" target="_blank" rel="noopener" style={{ height: "60px" }}>
+                            <Image
+                                src="https://www.proofstories.io/directory/badges/l/stumbleable.svg"
+                                alt="stumbleable badge"
+                                width={240}
+                                height={60}
+                                style={{ height: "60px" }}
+                                unoptimized
+                            />
                         </a>
                     </div>
 

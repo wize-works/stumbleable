@@ -14,6 +14,10 @@ on:
                     - interaction-service
                     - user-service
                     - crawler-service
+                    - moderation-service
+                    - email-service
+                    - scheduler-service
+                    - content-service
             revision:
                 description: "Revision number to rollback to (leave empty for previous)"
                 required: false
@@ -63,6 +67,10 @@ jobs:
                     kubectl rollout undo deployment/interaction-service -n ${{ env.NAMESPACE }}
                     kubectl rollout undo deployment/user-service -n ${{ env.NAMESPACE }}
                     kubectl rollout undo deployment/crawler-service -n ${{ env.NAMESPACE }}
+                    kubectl rollout undo deployment/moderation-service -n ${{ env.NAMESPACE }}
+                    kubectl rollout undo deployment/email-service -n ${{ env.NAMESPACE }}
+                    kubectl rollout undo deployment/scheduler-service -n ${{ env.NAMESPACE }}
+                    kubectl rollout undo deployment/content-service -n ${{ env.NAMESPACE }}
                   else
                     echo "Rolling back ${{ inputs.service }}..."
                     if [ -n "${{ inputs.revision }}" ]; then
@@ -80,6 +88,10 @@ jobs:
                     kubectl rollout status deployment/interaction-service -n ${{ env.NAMESPACE }} --timeout=5m
                     kubectl rollout status deployment/user-service -n ${{ env.NAMESPACE }} --timeout=5m
                     kubectl rollout status deployment/crawler-service -n ${{ env.NAMESPACE }} --timeout=5m
+                    kubectl rollout status deployment/moderation-service -n ${{ env.NAMESPACE }} --timeout=5m
+                    kubectl rollout status deployment/email-service -n ${{ env.NAMESPACE }} --timeout=5m
+                    kubectl rollout status deployment/scheduler-service -n ${{ env.NAMESPACE }} --timeout=5m
+                    kubectl rollout status deployment/content-service -n ${{ env.NAMESPACE }} --timeout=5m
                   else
                     kubectl rollout status deployment/${{ inputs.service }} -n ${{ env.NAMESPACE }} --timeout=5m
                   fi

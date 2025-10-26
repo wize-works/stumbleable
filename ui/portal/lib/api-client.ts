@@ -13,6 +13,7 @@ const MODERATION_API_URL = process.env.NEXT_PUBLIC_MODERATION_API_URL || 'http:/
 const EMAIL_API_URL = process.env.NEXT_PUBLIC_EMAIL_API_URL || 'http://localhost:7006';
 const CRAWLER_API_URL = process.env.NEXT_PUBLIC_CRAWLER_API_URL || 'http://localhost:7004';
 const SCHEDULER_API_URL = process.env.NEXT_PUBLIC_SCHEDULER_API_URL || 'http://localhost:7007';
+const CONTENT_API_URL = process.env.NEXT_PUBLIC_CONTENT_API_URL || 'http://localhost:7008';
 const DISCOVERY_API = `${DISCOVERY_API_URL}/api`;
 const INTERACTION_API = `${INTERACTION_API_URL}/api`; // Direct access to service endpoints
 const USER_API = `${USER_API_URL}/api`;
@@ -20,6 +21,7 @@ const MODERATION_API = `${MODERATION_API_URL}/api`;
 const EMAIL_API = `${EMAIL_API_URL}/api`;
 const CRAWLER_API = `${CRAWLER_API_URL}/api`;
 const SCHEDULER_API = `${SCHEDULER_API_URL}/api`;
+const CONTENT_API = `${CONTENT_API_URL}/api`;
 
 // Custom error class for API errors
 export class ApiError extends Error {
@@ -2442,6 +2444,7 @@ export async function checkServiceHealth(): Promise<{
     moderation: boolean;
     email: boolean;
     crawler: boolean;
+    content: boolean;
 }> {
     try {
         const discoveryHealthy = await fetch(`${DISCOVERY_API_URL}/health`).then(() => true).catch(() => false);
@@ -2450,6 +2453,7 @@ export async function checkServiceHealth(): Promise<{
         const moderationHealthy = await fetch(`${MODERATION_API_URL}/health`).then(() => true).catch(() => false);
         const emailHealthy = await fetch(`${EMAIL_API_URL}/health`).then(() => true).catch(() => false);
         const crawlerHealthy = await fetch(`${CRAWLER_API_URL}/health`).then(() => true).catch(() => false);
+        const contentHealthy = await fetch(`${CONTENT_API_URL}/health`).then(() => true).catch(() => false);
 
         return {
             discovery: discoveryHealthy,
@@ -2458,6 +2462,7 @@ export async function checkServiceHealth(): Promise<{
             moderation: moderationHealthy,
             email: emailHealthy,
             crawler: crawlerHealthy,
+            content: contentHealthy,
         };
     } catch {
         return {
@@ -2467,6 +2472,188 @@ export async function checkServiceHealth(): Promise<{
             moderation: false,
             email: false,
             crawler: false,
+            content: false,
         };
+    }
+}
+
+/**
+ * Content Service API Types
+ */
+export interface LaunchPlatform {
+    id: string;
+    name: string;
+    slug: string;
+    display_name: string;
+    launch_date: string;
+    url: string;
+    description: string;
+    tagline: string;
+    color: string;
+    icon: string;
+    badge_icon: string;
+    stats: {
+        followers?: string;
+        upvotes?: string;
+        comments?: string;
+        views?: string;
+    };
+    testimonials: Array<{
+        text: string;
+        author: string;
+        role: string;
+        platform: string;
+    }>;
+    cta_primary: string;
+    cta_secondary: string;
+    seo_title: string;
+    seo_description: string;
+    seo_keywords: string[];
+    is_active: boolean;
+    sort_order: number;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface CreatePlatformRequest {
+    name: string;
+    slug: string;
+    display_name: string;
+    launch_date: string;
+    url: string;
+    description: string;
+    tagline: string;
+    color: string;
+    icon: string;
+    badge_icon: string;
+    stats?: Record<string, string>;
+    testimonials?: Array<{
+        text: string;
+        author: string;
+        role: string;
+        platform: string;
+    }>;
+    cta_primary: string;
+    cta_secondary: string;
+    seo_title: string;
+    seo_description: string;
+    seo_keywords: string[];
+    is_active?: boolean;
+    sort_order?: number;
+}
+
+export interface UpdatePlatformRequest {
+    name?: string;
+    display_name?: string;
+    launch_date?: string;
+    url?: string;
+    description?: string;
+    tagline?: string;
+    color?: string;
+    icon?: string;
+    badge_icon?: string;
+    stats?: Record<string, string>;
+    testimonials?: Array<{
+        text: string;
+        author: string;
+        role: string;
+        platform: string;
+    }>;
+    cta_primary?: string;
+    cta_secondary?: string;
+    seo_title?: string;
+    seo_description?: string;
+    seo_keywords?: string[];
+    is_active?: boolean;
+    sort_order?: number;
+}
+
+/**
+ * Content Service API - Launch platforms and marketing content management
+ */
+export class ContentAPI {
+    /**
+     * Get all active launch platforms (public endpoint)
+     */
+    static async getAllPlatforms(): Promise<LaunchPlatform[]> {
+        const response = await apiRequest<{ platforms: LaunchPlatform[]; count: number }>(
+            `${CONTENT_API}/platforms`
+        );
+        return response.platforms;
+    }
+
+    /**
+     * Get platform slugs for static generation
+     */
+    static async getPlatformSlugs(): Promise<string[]> {
+        const response = await apiRequest<{ slugs: string[] }>(
+            `${CONTENT_API}/platforms/slugs`
+        );
+        return response.slugs;
+    }
+
+    /**
+     * Get a specific platform by slug (public endpoint)
+     */
+    static async getPlatformBySlug(slug: string): Promise<LaunchPlatform> {
+        const response = await apiRequest<{ platform: LaunchPlatform }>(
+            `${CONTENT_API}/platforms/${slug}`
+        );
+        return response.platform;
+    }
+
+    /**
+     * Get all platforms including inactive (admin only)
+     */
+    static async getAllPlatformsAdmin(token: string): Promise<LaunchPlatform[]> {
+        const response = await apiRequest<{ platforms: LaunchPlatform[]; count: number }>(
+            `${CONTENT_API}/admin/platforms`,
+            {},
+            token
+        );
+        return response.platforms;
+    }
+
+    /**
+     * Create a new platform (admin only)
+     */
+    static async createPlatform(data: CreatePlatformRequest, token: string): Promise<LaunchPlatform> {
+        const response = await apiRequest<{ platform: LaunchPlatform }>(
+            `${CONTENT_API}/admin/platforms`,
+            {
+                method: 'POST',
+                body: JSON.stringify(data),
+            },
+            token
+        );
+        return response.platform;
+    }
+
+    /**
+     * Update a platform (admin only)
+     */
+    static async updatePlatform(id: string, data: UpdatePlatformRequest, token: string): Promise<LaunchPlatform> {
+        const response = await apiRequest<{ platform: LaunchPlatform }>(
+            `${CONTENT_API}/admin/platforms/${id}`,
+            {
+                method: 'PUT',
+                body: JSON.stringify(data),
+            },
+            token
+        );
+        return response.platform;
+    }
+
+    /**
+     * Delete a platform (admin only)
+     */
+    static async deletePlatform(id: string, token: string): Promise<void> {
+        await apiRequest<{ success: boolean }>(
+            `${CONTENT_API}/admin/platforms/${id}`,
+            {
+                method: 'DELETE',
+            },
+            token
+        );
     }
 }

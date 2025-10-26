@@ -1,0 +1,121 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: content-service
+  namespace: stumbleable
+  labels:
+    app: content-service
+    component: api
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: content-service
+  template:
+    metadata:
+      labels:
+        app: content-service
+        component: api
+      annotations:
+        deployment.timestamp: "${DEPLOYMENT_TIMESTAMP}"
+    spec:
+      containers:
+      - name: content-service
+        image: ${ACR_NAME}.azurecr.io/stumbleable-content:${IMAGE_TAG}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: stumbleable-config
+              key: NODE_ENV
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: stumbleable-config
+              key: LOG_LEVEL
+        - name: SUPABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: stumbleable-secrets
+              key: SUPABASE_URL
+        - name: SUPABASE_SERVICE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: stumbleable-secrets
+              key: SUPABASE_SERVICE_KEY
+        - name: CLERK_PUBLISHABLE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: stumbleable-secrets
+              key: CLERK_PUBLISHABLE_KEY
+        - name: CLERK_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: stumbleable-secrets
+              key: CLERK_SECRET_KEY
+        - name: ALLOWED_ORIGINS
+          valueFrom:
+            configMapKeyRef:
+              name: stumbleable-config
+              key: ALLOWED_ORIGINS
+        - name: RATE_LIMIT_MAX
+          valueFrom:
+            configMapKeyRef:
+              name: stumbleable-config
+              key: RATE_LIMIT_MAX
+        - name: RATE_LIMIT_WINDOW
+          valueFrom:
+            configMapKeyRef:
+              name: stumbleable-config
+              key: RATE_LIMIT_WINDOW
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 5
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 8
+          failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: content-service
+  namespace: stumbleable
+  labels:
+    app: content-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 7008
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: content-service

@@ -48,6 +48,9 @@ jobs:
                     - name: scheduler
                       context: ./apis/scheduler-service
                       dockerfile: ./apis/scheduler-service/Dockerfile
+                    - name: content
+                      context: ./apis/content-service
+                      dockerfile: ./apis/content-service/Dockerfile
 
         steps:
             - name: Checkout code
@@ -96,6 +99,7 @@ jobs:
                       NEXT_PUBLIC_MODERATION_API_URL=https://api.stumbleable.com/moderation
                       NEXT_PUBLIC_EMAIL_API_URL=https://api.stumbleable.com/email
                       NEXT_PUBLIC_SCHEDULER_API_URL=https://api.stumbleable.com/scheduler
+                      NEXT_PUBLIC_CONTENT_API_URL=https://api.stumbleable.com/content
                       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
 
     # Deploy to AKS
@@ -192,6 +196,7 @@ jobs:
                   kubectl rollout status deployment/moderation-service -n ${{ env.NAMESPACE }} --timeout=5m
                   kubectl rollout status deployment/email-service -n ${{ env.NAMESPACE }} --timeout=5m
                   kubectl rollout status deployment/scheduler-service -n ${{ env.NAMESPACE }} --timeout=5m
+                  kubectl rollout status deployment/content-service -n ${{ env.NAMESPACE }} --timeout=5m
 
             - name: Verify deployments
               run: |
@@ -226,6 +231,9 @@ jobs:
 
                   kubectl run curl-test-scheduler --image=curlimages/curl:latest --restart=Never -n ${{ env.NAMESPACE }} -- \
                     curl -f http://scheduler-service:7007/health || true
+
+                  kubectl run curl-test-content --image=curlimages/curl:latest --restart=Never -n ${{ env.NAMESPACE }} -- \
+                    curl -f http://content-service:7008/health || true
 
                   # Cleanup test pods
                   kubectl delete pod curl-test curl-test-discovery curl-test-interaction curl-test-user curl-test-moderation curl-test-email curl-test-scheduler -n ${{ env.NAMESPACE }} --ignore-not-found=true

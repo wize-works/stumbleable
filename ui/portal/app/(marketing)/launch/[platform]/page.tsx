@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getAllPlatformSlugs, getPlatform, isValidPlatform } from '../platform-config';
+import { getAllPlatformSlugs, getPlatform } from '../platform-config';
 
 /**
  * Dynamic Launch Landing Page
@@ -25,7 +25,7 @@ interface LaunchPageProps {
  */
 export async function generateMetadata({ params }: LaunchPageProps): Promise<Metadata> {
     const { platform: platformSlug } = await params;
-    const platform = getPlatform(platformSlug);
+    const platform = await getPlatform(platformSlug);
 
     if (!platform) {
         return {
@@ -70,7 +70,8 @@ export async function generateMetadata({ params }: LaunchPageProps): Promise<Met
  * Generate static paths for all platforms
  */
 export async function generateStaticParams() {
-    return getAllPlatformSlugs().map((slug) => ({
+    const slugs = await getAllPlatformSlugs();
+    return slugs.map((slug) => ({
         platform: slug,
     }));
 }
@@ -78,11 +79,11 @@ export async function generateStaticParams() {
 export default async function LaunchPage({ params }: LaunchPageProps) {
     const { platform: platformSlug } = await params;
 
-    if (!isValidPlatform(platformSlug)) {
+    const platform = await getPlatform(platformSlug);
+
+    if (!platform) {
         notFound();
     }
-
-    const platform = getPlatform(platformSlug)!;
 
     // Structured data for SEO
     const structuredData = {

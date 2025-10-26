@@ -522,6 +522,13 @@ export default function AdminDashboard() {
                                     Crawler Sources
                                 </Link>
                                 <Link
+                                    href="/admin/launch-platforms"
+                                    className="btn btn-block btn-outline justify-start"
+                                >
+                                    <i className="fa-solid fa-duotone fa-rocket-launch text-primary"></i>
+                                    Launch Platforms
+                                </Link>
+                                <Link
                                     href="/admin/deletion-requests"
                                     className="btn btn-block btn-outline justify-start"
                                 >

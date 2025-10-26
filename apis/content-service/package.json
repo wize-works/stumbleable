@@ -1,0 +1,23 @@
+{
+    "name": "content-service",
+    "version": "1.0.0",
+    "description": "Content management service for launch platforms, blog posts, and marketing content",
+    "main": "dist/server.js",
+    "scripts": {
+        "dev": "tsx watch src/server.ts",
+        "build": "tsc",
+        "start": "node dist/server.js"
+    },
+    "dependencies": {
+        "fastify": "^4.28.1",
+        "@fastify/cors": "^9.0.1",
+        "@supabase/supabase-js": "^2.45.4",
+        "dotenv": "^16.4.5",
+        "zod": "^3.23.8"
+    },
+    "devDependencies": {
+        "tsx": "^4.19.1",
+        "typescript": "^5.6.2",
+        "@types/node": "^20.16.10"
+    }
+}

@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { platforms } from './platform-config';
+import { getAllPlatforms } from './platform-config';
 
 export const metadata: Metadata = {
     title: 'Launch Announcements | Stumbleable - Featured Across the Web',
@@ -24,8 +24,8 @@ export const metadata: Metadata = {
     },
 };
 
-export default function LaunchIndexPage() {
-    const platformList = Object.values(platforms);
+export default async function LaunchIndexPage() {
+    const platformList = await getAllPlatforms();
 
     return (
         <div className="container mx-auto px-4 py-12 md:py-20">

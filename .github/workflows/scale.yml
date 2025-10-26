@@ -13,6 +13,10 @@ on:
                     - interaction-service
                     - user-service
                     - crawler-service
+                    - moderation-service
+                    - email-service
+                    - scheduler-service
+                    - content-service
             replicas:
                 description: "Number of replicas"
                 required: true

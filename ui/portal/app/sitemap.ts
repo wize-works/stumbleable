@@ -1,11 +1,11 @@
 import { MetadataRoute } from 'next';
 import { getAllPlatformSlugs } from './(marketing)/launch/platform-config';
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://stumbleable.com';
 
-    // Get all launch platform slugs dynamically
-    const platformSlugs = getAllPlatformSlugs();
+    // Get all launch platform slugs dynamically from API
+    const platformSlugs = await getAllPlatformSlugs();
 
     return [
         // Homepage

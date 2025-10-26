@@ -1,11 +1,11 @@
 /**
  * Platform Configuration for Launch Landing Pages
  * 
- * Each platform gets unique content, CTAs, and tracking for:
- * - SEO optimization (unique content avoids duplicate penalties)
- * - Conversion tracking (measure ROI per platform)
- * - Social proof (platform-specific testimonials)
+ * Now powered by the Content Service API - platforms are managed in Supabase
+ * Admin users can add/edit platforms without code deployments
  */
+
+import { ContentAPI, type LaunchPlatform } from '@/lib/api-client';
 
 export interface PlatformConfig {
     name: string;
@@ -39,214 +39,95 @@ export interface PlatformConfig {
     };
 }
 
-export const platforms: Record<string, PlatformConfig> = {
-    'product-hunt': {
-        name: 'Product Hunt',
-        slug: 'product-hunt',
-        displayName: 'Product Hunt',
-        launchDate: 'October 23, 2025',
-        url: 'https://www.producthunt.com/products/stumbleable',
-        description: 'We launched on Product Hunt! Join thousands of early adopters discovering amazing content with one click. Vote for us and be part of the discovery revolution.',
-        tagline: 'Launched on Product Hunt - Join the Discovery Revolution',
-        color: '#DA552F',
-        icon: 'fa-brands fa-product-hunt',
-        badgeIcon: 'fa-solid fa-duotone fa-rocket-launch',
-        stats: [
-            { label: 'Upvotes', value: '500+' },
-            { label: 'Comments', value: '100+' },
-            { label: 'Ranking', value: '#3 Product of the Day' }
-        ],
-        cta: {
-            primary: 'Start Discovering Now',
-            secondary: 'Vote on Product Hunt'
-        },
-        seo: {
-            title: 'Stumbleable - Launched on Product Hunt | StumbleUpon Alternative',
-            description: 'Join 1,000+ Product Hunt users who discovered Stumbleable - the modern way to explore amazing websites. One click discovery, no algorithms, pure serendipity.',
-            keywords: ['product hunt launch', 'stumbleable product hunt', 'stumbleupon alternative', 'content discovery', 'web discovery tool']
-        }
-    },
+/**
+ * Transform API platform data to PlatformConfig format
+ */
+function transformPlatform(platform: LaunchPlatform): PlatformConfig {
+    // Transform stats object to array format
+    const stats = platform.stats ? Object.entries(platform.stats).map(([label, value]) => ({
+        label: label.charAt(0).toUpperCase() + label.slice(1), // Capitalize first letter
+        value
+    })) : undefined;
 
-    'launching-next': {
-        name: 'LaunchingNext',
-        slug: 'launching-next',
-        displayName: 'LaunchingNext',
-        launchDate: 'October 2025',
-        url: 'https://www.launchingnext.com',
-        description: 'Featured on LaunchingNext as one of the most anticipated launches this month. Discover the future of web exploration - no algorithms, no ads, just pure discovery.',
-        tagline: 'Featured on LaunchingNext - The Future of Discovery',
-        color: '#6366F1',
-        icon: 'fa-solid fa-rocket',
-        badgeIcon: 'fa-solid fa-duotone fa-sparkles',
-        stats: [
-            { label: 'Followers', value: '200+' },
-            { label: 'Featured', value: 'Upcoming Launch' },
-            { label: 'Category', value: 'Top Productivity' }
-        ],
-        cta: {
-            primary: 'Try It Now',
-            secondary: 'Follow on LaunchingNext'
-        },
-        seo: {
-            title: 'Stumbleable Featured on LaunchingNext | Web Discovery Platform',
-            description: 'Featured as a top upcoming launch on LaunchingNext. Rediscover the joy of web exploration with Stumbleable - the StumbleUpon successor everyone is talking about.',
-            keywords: ['launching next', 'new startup launch', 'web discovery platform', 'content curation tool', 'stumbleable launch']
-        }
-    },
+    // Transform testimonials to match expected format
+    const testimonials = platform.testimonials?.map(t => ({
+        author: t.author,
+        role: t.role,
+        content: t.text,
+        avatar: undefined
+    }));
 
-    'betalist': {
-        name: 'BetaList',
-        slug: 'betalist',
-        displayName: 'BetaList',
-        launchDate: 'October 2025',
-        url: 'https://betalist.com',
-        description: 'Join early adopters on BetaList who are already exploring thousands of amazing websites. Get early access to features before everyone else.',
-        tagline: 'Early Access on BetaList - Be Among the First',
-        color: '#10B981',
-        icon: 'fa-solid fa-flask',
-        badgeIcon: 'fa-solid fa-duotone fa-flask-vial',
-        stats: [
-            { label: 'Beta Users', value: '500+' },
-            { label: 'Status', value: 'Public Beta' },
-            { label: 'Rating', value: '4.8/5.0' }
-        ],
+    return {
+        name: platform.name,
+        slug: platform.slug,
+        displayName: platform.display_name,
+        launchDate: platform.launch_date,
+        url: platform.url,
+        description: platform.description,
+        tagline: platform.tagline,
+        color: platform.color,
+        icon: platform.icon,
+        badgeIcon: platform.badge_icon,
+        stats,
+        testimonials,
         cta: {
-            primary: 'Get Early Access',
-            secondary: 'View on BetaList'
+            primary: platform.cta_primary,
+            secondary: platform.cta_secondary
         },
         seo: {
-            title: 'Stumbleable Beta - Early Access via BetaList | Web Discovery',
-            description: 'Get early access to Stumbleable through BetaList. Join hundreds of beta testers discovering the best content on the web. Limited spots available.',
-            keywords: ['betalist startup', 'early access beta', 'web discovery beta', 'stumbleable beta', 'content discovery tool']
+            title: platform.seo_title,
+            description: platform.seo_description,
+            keywords: platform.seo_keywords
         }
-    },
+    };
+}
 
-    'hacker-news': {
-        name: 'Hacker News',
-        slug: 'hacker-news',
-        displayName: 'Hacker News',
-        launchDate: 'October 2025',
-        url: 'https://news.ycombinator.com',
-        description: 'Discussed on Hacker News by developers and tech enthusiasts. Built with Next.js, TypeScript, and modern web technologies - open to feedback from the HN community.',
-        tagline: 'Show HN: Stumbleable - StumbleUpon for Modern Web',
-        color: '#FF6600',
-        icon: 'fa-brands fa-hacker-news',
-        badgeIcon: 'fa-solid fa-duotone fa-laptop-code',
-        stats: [
-            { label: 'Points', value: '150+' },
-            { label: 'Comments', value: '75+' },
-            { label: 'Rank', value: 'Front Page' }
-        ],
-        cta: {
-            primary: 'Try the Demo',
-            secondary: 'Join HN Discussion'
-        },
-        seo: {
-            title: 'Show HN: Stumbleable - Web Discovery Platform | Hacker News',
-            description: 'Featured on Hacker News: A modern take on web discovery. Built with Next.js and TypeScript. No algorithms, no tracking - just pure exploration.',
-            keywords: ['hacker news launch', 'show hn', 'web discovery', 'stumbleupon clone', 'nextjs project']
-        }
-    },
-
-    'indie-hackers': {
-        name: 'Indie Hackers',
-        slug: 'indie-hackers',
-        displayName: 'Indie Hackers',
-        launchDate: 'October 2025',
-        url: 'https://www.indiehackers.com',
-        description: 'Building in public with the Indie Hackers community. Follow our journey from idea to launch, revenue metrics, and lessons learned along the way.',
-        tagline: 'Building with Indie Hackers - Our Journey',
-        color: '#0E2439',
-        icon: 'fa-solid fa-code',
-        badgeIcon: 'fa-solid fa-duotone fa-hammer',
-        stats: [
-            { label: 'Followers', value: '100+' },
-            { label: 'Posts', value: '10+' },
-            { label: 'Category', value: 'Discovery' }
-        ],
-        cta: {
-            primary: 'Start Discovering',
-            secondary: 'Follow Our Journey'
-        },
-        seo: {
-            title: 'Stumbleable on Indie Hackers | Building a Discovery Platform',
-            description: 'Follow Stumbleable\'s indie hacker journey. Learn how we built a modern StumbleUpon alternative and the lessons we learned along the way.',
-            keywords: ['indie hackers project', 'build in public', 'startup journey', 'web discovery startup', 'stumbleable indie hackers']
-        }
-    },
-
-    'alternativeto': {
-        name: 'AlternativeTo',
-        slug: 'alternativeto',
-        displayName: 'AlternativeTo.net',
-        launchDate: 'October 2025',
-        url: 'https://alternativeto.net/software/stumbleable/',
-        description: 'Featured on AlternativeTo as the best modern alternative to StumbleUpon. Join thousands who switched from Mix, Pocket, and other discovery tools to rediscover the joy of serendipity.',
-        tagline: 'The StumbleUpon Alternative Everyone Is Switching To',
-        color: '#2563EB',
-        icon: 'fa-solid fa-arrow-right-arrow-left',
-        badgeIcon: 'fa-solid fa-duotone fa-repeat',
-        stats: [
-            { label: 'Likes', value: '300+' },
-            { label: 'Rating', value: '4.7/5.0' },
-            { label: 'Category', value: 'Top Alternative' }
-        ],
-        cta: {
-            primary: 'Try Stumbleable Free',
-            secondary: 'View on AlternativeTo'
-        },
-        seo: {
-            title: 'Stumbleable - Best StumbleUpon Alternative | AlternativeTo',
-            description: 'Looking for a StumbleUpon alternative? Stumbleable brings back the joy of web discovery. Featured on AlternativeTo as the top alternative to Mix, Pocket, and StumbleUpon.',
-            keywords: ['stumbleupon alternative', 'alternativeto', 'mix alternative', 'pocket alternative', 'web discovery tool', 'stumbleable vs stumbleupon']
-        }
-    },
-
-    'proofstories': {
-        name: 'ProofStories',
-        slug: 'proofstories',
-        displayName: 'ProofStories.io',
-        launchDate: 'October 2025',
-        url: 'https://proofstories.io/stories/stumbleable',
-        description: 'Featured on ProofStories showcasing real stories from users who rediscovered the joy of web exploration. See how Stumbleable is bringing back serendipity for curious minds worldwide.',
-        tagline: 'Real Stories from Discovery Enthusiasts',
-        color: '#8B5CF6',
-        icon: 'fa-solid fa-book-open',
-        badgeIcon: 'fa-solid fa-duotone fa-book-bookmark',
-        stats: [
-            { label: 'Stories', value: '50+' },
-            { label: 'Readers', value: '1,000+' },
-            { label: 'Category', value: 'Productivity' }
-        ],
-        cta: {
-            primary: 'Start Your Discovery Journey',
-            secondary: 'Read Our Stories'
-        },
-        seo: {
-            title: 'Stumbleable on ProofStories | Real User Discovery Stories',
-            description: 'Read real stories from Stumbleable users on ProofStories. Discover how people are rediscovering the web, breaking free from algorithms, and finding amazing content.',
-            keywords: ['proofstories', 'user testimonials', 'stumbleable stories', 'web discovery reviews', 'customer success stories', 'stumbleable reviews']
-        }
+/**
+ * Get platform configuration by slug (async - fetches from API)
+ */
+export async function getPlatform(slug: string): Promise<PlatformConfig | null> {
+    try {
+        const platform = await ContentAPI.getPlatformBySlug(slug);
+        return transformPlatform(platform);
+    } catch (error) {
+        console.error(`Error fetching platform ${slug}:`, error);
+        return null;
     }
-};
-
-/**
- * Get platform configuration by slug
- */
-export function getPlatform(slug: string): PlatformConfig | null {
-    return platforms[slug] || null;
 }
 
 /**
- * Get all platform slugs for static path generation
+ * Get all platform slugs for static path generation (async - fetches from API)
  */
-export function getAllPlatformSlugs(): string[] {
-    return Object.keys(platforms);
+export async function getAllPlatformSlugs(): Promise<string[]> {
+    try {
+        return await ContentAPI.getPlatformSlugs();
+    } catch (error) {
+        console.error('Error fetching platform slugs:', error);
+        return [];
+    }
 }
 
 /**
- * Check if a platform slug is valid
+ * Check if a platform slug is valid (async - checks against API)
  */
-export function isValidPlatform(slug: string): boolean {
-    return slug in platforms;
+export async function isValidPlatform(slug: string): Promise<boolean> {
+    try {
+        const platform = await ContentAPI.getPlatformBySlug(slug);
+        return !!platform;
+    } catch (error) {
+        return false;
+    }
+}
+
+/**
+ * Get all platforms (async - fetches from API)
+ */
+export async function getAllPlatforms(): Promise<PlatformConfig[]> {
+    try {
+        const platforms = await ContentAPI.getAllPlatforms();
+        return platforms.map(transformPlatform);
+    } catch (error) {
+        console.error('Error fetching all platforms:', error);
+        return [];
+    }
 }
