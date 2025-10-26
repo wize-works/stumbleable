@@ -8,8 +8,11 @@ dotenv.config();
 const PORT = parseInt(process.env.PORT || '8080', 10);
 const HOST = process.env.HOST || '0.0.0.0';
 
-const app = Fastify({
-    logger: {
+// Configure logger: enable pino-pretty only in non-production (avoid transport errors in containers)
+const isProd = process.env.NODE_ENV === 'production';
+const loggerConfig = isProd
+    ? { level: process.env.LOG_LEVEL || 'info' }
+    : {
         level: process.env.LOG_LEVEL || 'info',
         transport: {
             target: 'pino-pretty',
@@ -19,8 +22,9 @@ const app = Fastify({
                 ignore: 'pid,hostname',
             },
         },
-    },
-});
+    };
+
+const app = Fastify({ logger: loggerConfig });
 
 async function start() {
     // Register CORS
