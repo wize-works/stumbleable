@@ -1,44 +1,48 @@
-# Build stage
-FROM node:20-alpine AS builder
-
+# Multi-stage build for Fastify TypeScript service
+# Stage 1: Dependencies (production only)
+FROM node:20-alpine AS deps
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copy package files
 COPY package*.json ./
-COPY tsconfig.json ./
+RUN npm install --omit=dev
 
-# Install dependencies
-RUN npm ci
+# Stage 2: Builder (all dependencies including dev)
+FROM node:20-alpine AS builder
+WORKDIR /app
 
-# Copy source code
+COPY package*.json tsconfig.json ./
+RUN npm install
+
 COPY src ./src
-
-# Build TypeScript
 RUN npm run build
 
-# Production stage
-FROM node:20-alpine
-
+# Stage 3: Runner
+FROM node:20-alpine AS runner
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-
-# Install production dependencies only
-RUN npm ci --only=production
-
-# Copy built files from builder
-COPY --from=builder /app/dist ./dist
+ENV NODE_ENV=production
 
 # Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 apiuser
 
-USER nodejs
+# Copy dependencies and built files
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY package*.json ./
 
-# Use internal port 8080 (mapped externally via K8s Service)
-ENV PORT=8080
-ENV HOST=0.0.0.0
+# Set correct permissions
+RUN chown -R apiuser:nodejs /app
+
+USER apiuser
+
 EXPOSE 8080
+
+ENV PORT=8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:8080/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
 CMD ["node", "dist/server.js"]
