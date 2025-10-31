@@ -84,6 +84,11 @@ spec:
             configMapKeyRef:
               name: stumbleable-config
               key: NEXT_PUBLIC_SCHEDULER_API_URL
+        - name: NEXT_PUBLIC_CONTENT_API_URL
+          valueFrom:
+            configMapKeyRef:
+              name: stumbleable-config
+              key: NEXT_PUBLIC_CONTENT_API_URL
         - name: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
           valueFrom:
             secretKeyRef:
