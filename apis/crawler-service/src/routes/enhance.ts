@@ -2,6 +2,7 @@ import * as cheerio from 'cheerio';
 import { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { supabase } from '../lib/supabase';
+import { syncTopicsToJunction } from '../lib/sync-topics';
 
 // Validation schemas
 const EnhanceRequestSchema = z.object({
@@ -156,6 +157,11 @@ export const enhanceRoute: FastifyPluginAsync = async (fastify) => {
                             if (error) {
                                 fastify.log.error(error, `Database update failed for ${record.url}`);
                                 throw error;
+                            }
+
+                            // CRITICAL: Sync topics to junction table if topics were updated
+                            if (fieldsToUpdate.topics) {
+                                await syncTopicsToJunction(record.id, fieldsToUpdate.topics);
                             }
 
                             enhanced++;
@@ -352,6 +358,12 @@ export const enhanceRoute: FastifyPluginAsync = async (fastify) => {
                                 .eq('id', record.id);
 
                             if (updateError) throw updateError;
+
+                            // CRITICAL: Sync topics to junction table if topics were updated
+                            if (fieldsToUpdate.topics) {
+                                await syncTopicsToJunction(record.id, fieldsToUpdate.topics);
+                            }
+
                             succeeded++;
                         } else {
                             // Just mark as scraped

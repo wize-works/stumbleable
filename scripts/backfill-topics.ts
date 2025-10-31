@@ -13,7 +13,11 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { config } from 'dotenv';
-import { resolve } from 'path';
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Load environment variables from discovery-service
 config({ path: resolve(__dirname, '../apis/discovery-service/.env') });
@@ -33,57 +37,69 @@ function classifyContent(url: string, title?: string, description?: string): str
     const content = `${url} ${title || ''} ${description || ''}`.toLowerCase();
     const topics: string[] = [];
 
-    // Enhanced keyword-based classification
+    // Enhanced keyword-based classification - ONLY using valid 44 topics from database
     const topicKeywords: Record<string, string[]> = {
-        // Core anchors
-        'technology': ['tech', 'software', 'computer', 'programming', 'code', 'digital', 'app', 'startup'],
+        // Core topics
+        'technology': ['tech', 'software', 'computer', 'programming', 'code', 'digital', 'app', 'startup', 'developer', 'coding'],
         'ai': ['ai', 'artificial intelligence', 'machine learning', 'ml', 'neural network', 'deep learning', 'gpt', 'llm', 'chatbot', 'transformer'],
-        'science': ['science', 'research', 'study', 'discovery', 'lab', 'experiment', 'nature'],
-        'business': ['business', 'finance', 'market', 'economy', 'company', 'entrepreneur', 'investment'],
-        'culture': ['art', 'film', 'culture', 'creative', 'fashion', 'entertainment'],
-        'education': ['learn', 'education', 'course', 'tutorial', 'guide', 'how-to', 'university', 'school'],
-        'health': ['health', 'fitness', 'medical', 'wellness', 'nutrition', 'exercise', 'mental'],
-        'politics': ['politics', 'government', 'policy', 'election', 'democracy', 'law', 'legal'],
-        'sports': ['sport', 'team', 'player', 'match', 'competition', 'athletics'],
-        'food': ['food', 'recipe', 'cooking', 'restaurant', 'chef', 'kitchen', 'meal'],
-        'travel': ['travel', 'trip', 'vacation', 'destination', 'tourism', 'journey'],
+        'science': ['science', 'research', 'study', 'discovery', 'lab', 'experiment', 'scientific'],
+        'business': ['business', 'finance', 'market', 'economy', 'company', 'entrepreneur', 'investment', 'startup', 'commerce'],
+        'culture': ['culture', 'cultural', 'art', 'artist', 'creative', 'fashion', 'entertainment', 'media'],
+        'education': ['learn', 'education', 'course', 'tutorial', 'guide', 'how-to', 'university', 'school', 'teach'],
+        'health': ['health', 'fitness', 'medical', 'wellness', 'nutrition', 'exercise', 'mental health'],
+        'politics': ['politics', 'government', 'policy', 'election', 'democracy', 'law', 'legal', 'vote'],
+        'sports': ['sport', 'team', 'player', 'match', 'competition', 'athletics', 'game', 'nfl', 'nba', 'soccer'],
+        'food': ['food', 'recipe', 'cooking', 'restaurant', 'chef', 'kitchen', 'meal', 'cuisine'],
+        'travel': ['travel', 'trip', 'vacation', 'destination', 'tourism', 'journey', 'explore'],
 
         // Creativity & Expression
-        'digital-art': ['digital art', 'glitch', 'generative', 'interactive art', 'ai art', 'creative coding'],
-        'music-sound': ['music', 'sound', 'audio', 'instrument', 'compose', 'synthesizer', 'beat', 'song', 'album', 'artist', 'band', 'concert', 'spotify', 'soundcloud'],
-        'literature-writing': ['writing', 'poetry', 'story', 'literature', 'zine', 'fanfiction', 'creative writing'],
-        'design-typography': ['design', 'typography', 'font', 'ui', 'ux', 'interface', 'layout'],
+        'digital-art': ['digital art', 'glitch', 'generative', 'interactive art', 'ai art', 'creative coding', 'glitch art'],
+        'music-sound': ['music', 'sound', 'audio', 'instrument', 'compose', 'synthesizer', 'beat', 'song', 'album', 'artist', 'band', 'concert'],
+        'music': ['spotify', 'soundcloud', 'bandcamp', 'playlist', 'musician'],
+        'literature-writing': ['writing', 'poetry', 'story', 'literature', 'zine', 'fanfiction', 'creative writing', 'author', 'book'],
+        'design-typography': ['typography', 'font', 'ui', 'ux', 'interface', 'layout', 'graphic design'],
+        'photography': ['photography', 'photo', 'camera', 'photographer', 'instagram'],
 
         // Curiosity & Oddities
-        'random-generators': ['generator', 'random', 'generate', 'create', 'maker', 'builder'],
-        'weird-web': ['weird', 'strange', 'unusual', 'quirky', 'odd', 'bizarre', 'useless'],
-        'retro-internet': ['retro', 'vintage', 'old web', 'geocities', 'nostalgia', '90s', 'early internet'],
-        'mysteries-conspiracies': ['mystery', 'conspiracy', 'unexplained', 'secret', 'hidden', 'paranormal'],
-        'quizzes-puzzles': ['quiz', 'puzzle', 'riddle', 'brain teaser', 'challenge', 'test', 'trivia'],
+        'random-generators': ['generator', 'random', 'generate', 'create', 'maker', 'builder', 'procedural'],
+        'weird-web': ['weird', 'strange', 'unusual', 'quirky', 'odd', 'bizarre', 'useless', 'experimental'],
+        'retro-internet': ['retro', 'vintage', 'old web', 'geocities', '90s', 'early internet', 'web 1.0'],
+        'nostalgia': ['nostalgia', 'nostalgic', 'childhood', 'throwback', '80s', '70s', 'classic'],
+        'mysteries-conspiracies': ['mystery', 'conspiracy', 'unexplained', 'secret', 'hidden', 'paranormal', 'ufo'],
+        'quizzes-puzzles': ['quiz', 'puzzle', 'riddle', 'brain teaser', 'challenge', 'test', 'trivia', 'word game'],
 
         // Play & Interaction
-        'browser-games': ['game', 'play', 'browser game', 'web game', 'interactive', 'arcade'],
+        'browser-games': ['game', 'play', 'browser game', 'web game', 'arcade', 'flash game', 'html5 game'],
         'simulations': ['simulation', 'simulator', 'model', 'physics', 'virtual', 'sandbox'],
-        'vr-ar-experiments': ['vr', 'ar', 'virtual reality', 'augmented reality', 'immersive', '3d'],
-        'interactive-storytelling': ['interactive story', 'choose your own', 'narrative', 'branching'],
+        'vr-ar-experiments': ['vr', 'ar', 'virtual reality', 'augmented reality', 'immersive', '3d', 'webxr'],
+        'interactive-storytelling': ['interactive story', 'choose your own', 'narrative', 'branching', 'text adventure'],
 
         // Human Experience
-        'history': ['history', 'historical', 'archive', 'timeline', 'past', 'heritage'],
-        'folklore-myth': ['folklore', 'myth', 'legend', 'story', 'tradition', 'cultural'],
-        'global-voices': ['global', 'international', 'perspective', 'voice', 'world', 'culture'],
-        'nostalgia': ['nostalgia', 'nostalgic', 'childhood', 'retro', 'memory', 'throwback'],
+        'history': ['history', 'historical', 'archive', 'timeline', 'past', 'heritage', 'ancient'],
+        'folklore-myth': ['folklore', 'myth', 'legend', 'fairy tale', 'tradition', 'mythology'],
+        'global-voices': ['global', 'international', 'perspective', 'world', 'multicultural'],
+        'philosophy-thought': ['philosophy', 'philosophical', 'ethics', 'meaning', 'existence', 'thought', 'existential'],
 
         // Knowledge Frontiers
-        'space-astronomy': ['space', 'astronomy', 'cosmic', 'universe', 'planet', 'nasa', 'telescope'],
+        'space-astronomy': ['space', 'astronomy', 'cosmic', 'universe', 'planet', 'nasa', 'telescope', 'mars', 'moon'],
         'future-scifi': ['future', 'sci-fi', 'science fiction', 'futuristic', 'cyberpunk', 'speculative'],
-        'mathematical-playgrounds': ['math', 'mathematics', 'fractal', 'geometry', 'equation', 'proof'],
-        'biology-oddities': ['biology', 'creature', 'organism', 'microscopic', 'species', 'nature'],
+        'mathematical-playgrounds': ['math', 'mathematics', 'fractal', 'geometry', 'equation', 'proof', 'algorithm'],
+        'biology-oddities': ['biology', 'creature', 'organism', 'microscopic', 'species', 'evolution'],
+        'nature-wildlife': ['nature', 'wildlife', 'animal', 'environment', 'ecosystem', 'conservation'],
 
         // Personal & Social
-        'self-improvement': ['productivity', 'self improvement', 'habit', 'goal', 'motivation', 'growth'],
-        'philosophy-thought': ['philosophy', 'philosophical', 'ethics', 'meaning', 'existence', 'thought'],
-        'memes-humor': ['meme', 'funny', 'humor', 'comedy', 'joke', 'lol', 'internet humor'],
-        'communities-forums': ['community', 'forum', 'discussion', 'group', 'social', 'chat']
+        'self-improvement': ['productivity', 'self improvement', 'habit', 'goal', 'motivation', 'growth', 'mindfulness'],
+        'memes-humor': ['meme', 'funny', 'humor', 'comedy', 'joke', 'lol', 'internet humor', 'parody'],
+        'communities-forums': ['community', 'forum', 'discussion', 'group', 'social', 'chat', 'reddit'],
+
+        // Media & Entertainment
+        'movies': ['movie', 'film', 'cinema', 'hollywood', 'documentary'],
+        'tv-shows': ['tv show', 'television', 'series', 'episode', 'streaming'],
+        'streaming': ['netflix', 'hulu', 'disney+', 'stream', 'watch online'],
+        'reading': ['read', 'ebook', 'kindle', 'goodreads', 'literary'],
+
+        // DIY & Making
+        'diy-making': ['diy', 'maker', 'craft', 'handmade', 'build', 'create', 'tinker']
     };
 
     // Check for domain-based classification
@@ -189,24 +205,18 @@ async function backfillTopics() {
         // Step 3: Classify and update each content item
         let processed = 0;
         let updated = 0;
-        let skipped = 0;
+        let reclassified = 0;
         let failed = 0;
 
         for (const item of content) {
             processed++;
 
             try {
-                // Skip if already has topics
-                if (item.topics && Array.isArray(item.topics) && item.topics.length > 0) {
-                    skipped++;
-                    if (processed % 100 === 0) {
-                        console.log(`⏩ Progress: ${processed}/${content.length} (${updated} updated, ${skipped} skipped, ${failed} failed)`);
-                    }
-                    continue;
-                }
+                // Track if this is a reclassification (had invalid topics)
+                const hadTopics = item.topics && Array.isArray(item.topics) && item.topics.length > 0;
 
-                // Classify content
-                const topics = classifyContent(item.url, item.title, item.description);
+                // Classify content (will overwrite any existing invalid topics)
+                const topics = await classifyContent(item.url, item.title, item.description);
 
                 if (topics.length === 0) {
                     // Assign default topic
@@ -224,6 +234,12 @@ async function backfillTopics() {
                     failed++;
                     continue;
                 }
+
+                // Delete old junction table entries (in case they had invalid topics)
+                await supabase
+                    .from('content_topics')
+                    .delete()
+                    .eq('content_id', item.id);
 
                 // Insert into content_topics junction table
                 const topicIds = topics
@@ -248,10 +264,13 @@ async function backfillTopics() {
                 }
 
                 updated++;
+                if (hadTopics) {
+                    reclassified++;
+                }
 
                 // Progress update every 100 items
                 if (processed % 100 === 0) {
-                    console.log(`⏩ Progress: ${processed}/${content.length} (${updated} updated, ${skipped} skipped, ${failed} failed)`);
+                    console.log(`⏩ Progress: ${processed}/${content.length} (${updated} updated, ${reclassified} reclassified, ${failed} failed)`);
                 }
 
             } catch (error) {
@@ -264,7 +283,7 @@ async function backfillTopics() {
         console.log(`📊 Summary:`);
         console.log(`   - Total processed: ${processed}`);
         console.log(`   - Updated: ${updated}`);
-        console.log(`   - Skipped (already had topics): ${skipped}`);
+        console.log(`   - Reclassified (had invalid topics): ${reclassified}`);
         console.log(`   - Failed: ${failed}`);
 
     } catch (error) {

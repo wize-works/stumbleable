@@ -890,6 +890,18 @@ export class AdminAPI {
         );
         return response;
     }
+
+    /**
+     * Get topics analytics (content distribution and quality metrics)
+     */
+    static async getTopicsAnalytics(token: string): Promise<any> {
+        const response = await apiRequest<any>(
+            `${DISCOVERY_API}/admin/topics-analytics`,
+            {},
+            token
+        );
+        return response;
+    }
 }
 
 /**

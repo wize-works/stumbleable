@@ -12,6 +12,7 @@ import requestLoggingPlugin from './middleware/request-logging';
 
 // DISCOVERY SERVICE - CORE ROUTES ONLY
 // Focused on fast, read-only discovery operations
+import adminRoutes from './routes/admin'; // Admin analytics
 import { contentRoute } from './routes/content'; // Content retrieval (saved items & sharing)
 import { exploreDiscoveryRoute } from './routes/explore';
 import { nextDiscoveryRoute } from './routes/next';
@@ -181,6 +182,7 @@ async function buildApp() {
     await fastify.register(trendingDiscoveryRoute, { prefix: '/api' });
     await fastify.register(similarContentRoute, { prefix: '/api' });
     await fastify.register(contentRoute, { prefix: '/api' }); // Content retrieval for saved items & sharing
+    await fastify.register(adminRoutes, { prefix: '/api' }); // Admin analytics and management
 
     // Global error handler
     fastify.setErrorHandler((error, request, reply) => {

@@ -543,6 +543,13 @@ export default function AdminDashboard() {
                                     Analytics Dashboard
                                 </Link>
                                 <Link
+                                    href="/admin/topics"
+                                    className="btn btn-block btn-outline justify-start"
+                                >
+                                    <i className="fa-solid fa-duotone fa-tags text-primary"></i>
+                                    Topics Analytics
+                                </Link>
+                                <Link
                                     href="/admin/email-queue"
                                     className="btn btn-block btn-outline justify-start"
                                 >

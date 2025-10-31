@@ -2,7 +2,98 @@
 
 Utility scripts for database migrations, testing, and maintenance.
 
+## 🚨 URGENT: Content-to-Topic Alignment Issue
+
+**Current State:** Only 3.86% of content (1,601 out of 41,478 items) has topic assignments!
+
+**Impact:** 
+- Discovery system can only find ~1,600 items
+- 96% of content is invisible to users
+- Topic filtering returns very few results
+
+**Fix Available:** Complete alignment and backfill scripts ready to run.
+
+📖 **See: [TOPIC_ALIGNMENT_FIX.md](./TOPIC_ALIGNMENT_FIX.md)** for detailed analysis and step-by-step fix instructions.
+
+**Quick Fix (45-75 minutes):**
+```bash
+cd scripts
+npx tsx analyze-topic-alignment.ts          # Diagnose current state
+npx tsx sync-jsonb-to-junction.ts          # Sync 906 items (2 min)
+npx tsx sync-junction-to-jsonb.ts          # Sync 629 items (2 min)
+npx tsx backfill-topics.ts                 # Classify 39,877 items (30-60 min)
+npx tsx analyze-topic-alignment.ts          # Verify 100% alignment
+```
+
+---
+
 ## Database Repair Scripts
+
+### `repair-topic-mismatches.cjs` ⭐ NEW
+
+**Purpose**: Fixes ALL existing mismatches between content.topics TEXT[] and content_topics junction table.
+
+**How it works**:
+1. Fetches ALL content items with topics (handles 40k+ items)
+2. Fetches ALL junction table entries
+3. Compares TEXT[] array to junction table for each content item
+4. Syncs TEXT[] → junction (TEXT[] is source of truth)
+5. Adds missing junction entries
+6. Removes orphaned junction entries
+
+**Features**:
+- Handles bidirectional mismatches (both missing and orphaned entries)
+- Batch processing for performance
+- Filters out invalid topic names automatically
+- Shows detailed breakdown by topic before executing
+- Uses upsert to handle duplicates gracefully
+
+**Usage**:
+```bash
+cd scripts
+node repair-topic-mismatches.cjs        # Interactive mode (asks for confirmation)
+node repair-topic-mismatches.cjs --yes  # Auto-confirm mode
+```
+
+**Expected Output**:
+```
+📊 Missing in junction table: 0 entries
+📊 Orphaned in junction table: 738 entries
+✅ Topics are now in sync!
+```
+
+**Note**: Invalid topics in TEXT[] (URLs, dates, etc.) are skipped. This is correct behavior. The junction table should only contain valid topic IDs.
+
+---
+
+### `test-topic-sync.cjs` ⭐ NEW
+
+**Purpose**: Verifies that the topic synchronization system is working correctly.
+
+**Tests**:
+- Database trigger automatically syncs topics TEXT[] to junction table
+- Application-level sync function works correctly
+- No mismatches between TEXT[] and junction entries
+
+**How it works**:
+1. Finds a content item with topics
+2. Records current junction table state
+3. Updates the topics TEXT[] array
+4. Waits for database trigger to fire
+5. Verifies junction table was automatically synced
+6. Restores original state
+
+**Usage**:
+```bash
+cd scripts
+node test-topic-sync.cjs
+```
+
+**Expected Result**: `✅ SUCCESS! Database trigger is working correctly!`
+
+**See Also**: `docs/TOPIC_SYNC_SYSTEM.md` for complete sync system documentation.
+
+---
 
 ### `fix-allows-framing-bulk.js`
 
@@ -26,6 +117,57 @@ node fix-allows-framing-bulk.js
 **Detection Logic**:
 - ❌ **Blocks framing**: `X-Frame-Options: DENY|SAMEORIGIN` or `CSP frame-ancestors: 'none'|'self'|domain-specific`
 - ✅ **Allows framing**: No blocking headers detected
+
+---
+
+### `sync-topics-to-junction.cjs`
+
+**Purpose**: Synchronizes topic data from JSONB column to the relational junction table for proper query performance.
+
+**Background**: Content topics are stored in two places:
+- `content.topics` (JSONB array) - denormalized storage
+- `content_topics` junction table - for relational queries
+  
+These can become out of sync, causing discovery queries to miss content.
+
+**How it works**:
+1. Analyzes all content items with topics in JSONB column
+2. Looks up topic IDs from the `topics` table
+3. Inserts missing entries into `content_topics` junction table
+4. Uses upsert to avoid duplicate errors
+5. Reports data quality issues (mismatched counts)
+
+**Usage**:
+```bash
+cd scripts
+node sync-topics-to-junction.cjs --yes  # Auto-confirm
+node sync-topics-to-junction.cjs        # Interactive mode
+```
+
+**Output**: Shows counts, invalid topics, and data quality issues before syncing.
+
+**Note**: Invalid topics (URLs, dates, etc.) in JSONB are skipped. Run `count-topics.js` after to verify sync.
+
+---
+
+### `count-topics.js`
+
+**Purpose**: Analyzes content distribution across all topics and detects data integrity issues.
+
+**Shows**:
+- Content count per topic (from junction table)
+- JSONB array counts (for comparison)
+- Data quality mismatches between junction and JSONB
+- Empty topics with no content
+- Top 10 topics by content count
+
+**Usage**:
+```bash
+cd scripts
+node count-topics.js
+```
+
+**Use case**: Run after `sync-topics-to-junction.cjs` to verify sync worked correctly.
 
 ---
 
