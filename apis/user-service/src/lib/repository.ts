@@ -26,13 +26,17 @@ export class UserRepository {
 
         if (error || !user) return null;
 
-        const preferences = user.user_preferences?.[0];
+        // FIX: user_preferences comes back as an object, not an array!
+        // If it's an array, get the first element; otherwise use it directly
+        const preferences = Array.isArray(user.user_preferences)
+            ? user.user_preferences?.[0]
+            : user.user_preferences;
 
         return {
             id: user.clerk_user_id, // Return Clerk user ID, not internal database UUID
             email: user.email,
             preferredTopics: preferences?.preferred_topics || ['technology', 'culture', 'science'],
-            wildness: preferences?.wildness || 50,
+            wildness: preferences?.wildness ?? 50,  // Use ?? instead of || to handle 0
             role: user.role || 'user',
             guidelinesAcceptedAt: user.guidelines_accepted_at,
             createdAt: user.created_at,

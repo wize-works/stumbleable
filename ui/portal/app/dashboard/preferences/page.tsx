@@ -76,7 +76,8 @@ export default function PreferencesPage() {
         if (isLoaded && isSignedIn && user?.id) {
             loadData();
         }
-    }, [isLoaded, isSignedIn, user?.id, getToken, showToast]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isLoaded, isSignedIn, user?.id]);
 
     // Detect changes
     useEffect(() => {
@@ -104,18 +105,21 @@ export default function PreferencesPage() {
             const token = await getToken();
             if (!token) return;
 
-            await UserAPI.updatePreferences(user.id, {
+            // Call API and get the updated user data back
+            const updatedUser = await UserAPI.updatePreferences(user.id, {
                 preferredTopics: selectedTopics,
                 wildness
             }, token);
 
-            // Update original values
-            setOriginalTopics(selectedTopics);
-            setOriginalWildness(wildness);
+            // Update state with what was actually saved
+            setSelectedTopics(updatedUser.preferredTopics);
+            setOriginalTopics(updatedUser.preferredTopics);
+            setWildness(updatedUser.wildness);
+            setOriginalWildness(updatedUser.wildness);
 
             showToast('Preferences updated successfully!', 'success');
         } catch (error) {
-            console.error('Error updating preferences:', error);
+            console.error('❌ SAVE DEBUG - Error updating preferences:', error);
             if (error instanceof ApiError) {
                 showToast(`Error: ${error.message}`, 'error');
             } else {

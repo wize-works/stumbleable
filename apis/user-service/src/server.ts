@@ -250,14 +250,6 @@ async function start() {
         const host = process.env.HOST || '0.0.0.0';
 
         await app.listen({ port, host });
-
-        console.log(`🚀 User Service running on http://${host}:${port}`);
-        console.log(`📊 Health check: http://${host}:${port}/health`);
-        console.log(`👤 User management: GET/POST/PUT/DELETE http://${host}:${port}/api/users`);
-        console.log(`📚 Topics: GET http://${host}:${port}/api/topics`);
-        console.log(`🛡️  Roles: GET http://${host}:${port}/api/roles/check, /api/roles/me, PUT /api/roles/:userId`);
-        console.log(`🛡️  Rate limiting: ${process.env.RATE_LIMIT_MAX || 100} requests per ${(parseInt(process.env.RATE_LIMIT_WINDOW || '60000', 10) / 1000)} seconds`);
-
         // Register jobs with scheduler (with delay to ensure scheduler is ready)
         setTimeout(async () => {
             try {
