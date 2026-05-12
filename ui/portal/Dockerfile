@@ -1,7 +1,7 @@
 # Workspace-aware multi-stage build for the Next.js 15 portal.
 # Build context: repo root. Installs only this workspace via npm ci -w.
 
-FROM node:20-alpine AS pkg-files
+FROM node:22-alpine AS pkg-files
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY apis/content-service/package.json ./apis/content-service/
@@ -15,7 +15,7 @@ COPY apis/scheduler-service/package.json ./apis/scheduler-service/
 COPY apis/user-service/package.json ./apis/user-service/
 COPY ui/portal/package.json ./ui/portal/
 
-FROM node:20-alpine AS node-base
+FROM node:22-alpine AS node-base
 RUN apk add --no-cache libc6-compat && npm install -g npm@11.6.4
 WORKDIR /app
 
@@ -58,7 +58,7 @@ COPY ui/portal ./ui/portal
 
 RUN npm run build -w ui/portal
 
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production

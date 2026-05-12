@@ -1,7 +1,7 @@
 # Workspace-aware multi-stage build for Fastify TypeScript service.
 # Build context: repo root. Installs only this workspace via npm ci -w.
 
-FROM node:20-alpine AS pkg-files
+FROM node:22-alpine AS pkg-files
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY apis/content-service/package.json ./apis/content-service/
@@ -15,7 +15,7 @@ COPY apis/scheduler-service/package.json ./apis/scheduler-service/
 COPY apis/user-service/package.json ./apis/user-service/
 COPY ui/portal/package.json ./ui/portal/
 
-FROM node:20-alpine AS node-base
+FROM node:22-alpine AS node-base
 RUN apk add --no-cache libc6-compat && npm install -g npm@11.6.4
 WORKDIR /app
 
@@ -32,7 +32,7 @@ FROM node-base AS prod-deps
 COPY --from=pkg-files /app /app
 RUN npm ci --omit=dev -w apis/interaction-service
 
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
