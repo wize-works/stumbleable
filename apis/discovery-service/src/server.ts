@@ -5,7 +5,7 @@ import fastifyEnv from '@fastify/env';
 import fastifyHelmet from '@fastify/helmet';
 import fastifyRateLimit from '@fastify/rate-limit';
 import 'dotenv/config';
-import Fastify from 'fastify';
+import Fastify, { FastifyError } from 'fastify';
 
 import { getLogLevel } from './lib/logger';
 import requestLoggingPlugin from './middleware/request-logging';
@@ -185,7 +185,7 @@ async function buildApp() {
     await fastify.register(adminRoutes, { prefix: '/api' }); // Admin analytics and management
 
     // Global error handler
-    fastify.setErrorHandler((error, request, reply) => {
+    fastify.setErrorHandler((error: FastifyError, request, reply) => {
         fastify.log.error(error);
 
         const statusCode = error.statusCode || 500;

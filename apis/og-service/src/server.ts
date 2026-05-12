@@ -3,7 +3,7 @@ import fastifyEnv from '@fastify/env';
 import fastifyHelmet from '@fastify/helmet';
 import fastifyRateLimit from '@fastify/rate-limit';
 import 'dotenv/config';
-import Fastify from 'fastify';
+import Fastify, { FastifyError } from 'fastify';
 
 import { ogRoutes } from './routes/og';
 
@@ -109,7 +109,7 @@ async function buildApp() {
     await fastify.register(ogRoutes, { prefix: '/api' });
 
     // Global error handler
-    fastify.setErrorHandler((error, request, reply) => {
+    fastify.setErrorHandler((error: FastifyError, request, reply) => {
         fastify.log.error(error);
 
         const statusCode = error.statusCode || 500;

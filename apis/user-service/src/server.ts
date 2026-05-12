@@ -4,7 +4,7 @@ import fastifyEnv from '@fastify/env';
 import fastifyHelmet from '@fastify/helmet';
 import fastifyRateLimit from '@fastify/rate-limit';
 import 'dotenv/config';
-import Fastify from 'fastify';
+import Fastify, { FastifyError } from 'fastify';
 
 import { adminRoutes } from './routes/admin';
 import { jobRoutes } from './routes/jobs';
@@ -160,7 +160,7 @@ async function buildApp() {
     await fastify.register(jobRoutes, { prefix: '/api' });
 
     // Global error handler
-    fastify.setErrorHandler((error, request, reply) => {
+    fastify.setErrorHandler((error: FastifyError, request, reply) => {
         fastify.log.error(error);
 
         const statusCode = error.statusCode || 500;
