@@ -7,7 +7,7 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 # Install all dependencies (including devDependencies needed for build)
-RUN npm install
+RUN npm ci
 
 # Stage 2: Builder
 FROM node:20-alpine AS builder
@@ -56,7 +56,7 @@ WORKDIR /app
 
 # Copy package files and install only production dependencies
 COPY package*.json ./
-RUN npm install --only=production
+RUN npm ci --omit=dev
 
 # Stage 4: Runner
 FROM node:20-alpine AS runner
