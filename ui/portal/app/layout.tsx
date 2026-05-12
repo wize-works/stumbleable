@@ -7,7 +7,7 @@ import { Header } from '../components/header';
 import { ToasterProvider } from '../components/toaster';
 import { UserInitializer } from '../components/user-initializer';
 import { UserInitializationProvider } from '../lib/user-initialization-context';
-import './globals.css';
+require('./globals.css');
 
 // Force dynamic rendering to prevent static generation during Docker builds
 // This is necessary because ClerkProvider validates API keys during static generation
