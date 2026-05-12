@@ -1,47 +1,57 @@
-# Multi-stage build for Fastify TypeScript service
-# Stage 1: Dependencies (production only)
+# Workspace-aware multi-stage build for Fastify TypeScript service.
+# Build context: repo root. Installs only this workspace via npm ci -w.
+
+FROM node:20-alpine AS pkg-files
+WORKDIR /app
+COPY package.json package-lock.json ./
+COPY apis/content-service/package.json ./apis/content-service/
+COPY apis/crawler-service/package.json ./apis/crawler-service/
+COPY apis/discovery-service/package.json ./apis/discovery-service/
+COPY apis/email-service/package.json ./apis/email-service/
+COPY apis/interaction-service/package.json ./apis/interaction-service/
+COPY apis/moderation-service/package.json ./apis/moderation-service/
+COPY apis/og-service/package.json ./apis/og-service/
+COPY apis/scheduler-service/package.json ./apis/scheduler-service/
+COPY apis/user-service/package.json ./apis/user-service/
+COPY ui/portal/package.json ./ui/portal/
+
 FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
+COPY --from=pkg-files /app /app
+RUN npm ci -w apis/scheduler-service
 
-COPY package*.json ./
-RUN npm install --omit=dev
+FROM deps AS builder
+COPY apis/scheduler-service/src ./apis/scheduler-service/src
+COPY apis/scheduler-service/tsconfig.json ./apis/scheduler-service/
+RUN npm run build -w apis/scheduler-service
 
-# Stage 2: Builder (all dependencies including dev)
-FROM node:20-alpine AS builder
+FROM node:20-alpine AS prod-deps
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
+COPY --from=pkg-files /app /app
+RUN npm ci --omit=dev -w apis/scheduler-service
 
-COPY package*.json tsconfig.json ./
-RUN npm install
-
-COPY src ./src
-RUN npm run build
-
-# Stage 3: Runner
 FROM node:20-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Create non-root user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 apiuser
+RUN addgroup --system --gid 1001 nodejs \
+ && adduser --system --uid 1001 apiuser
 
-# Copy dependencies and built files
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
-COPY package*.json ./
+COPY --from=prod-deps /app/node_modules ./node_modules
+COPY --from=prod-deps /app/apis/scheduler-service ./apis/scheduler-service
+COPY --from=builder /app/apis/scheduler-service/dist ./apis/scheduler-service/dist
 
-# Set correct permissions
 RUN chown -R apiuser:nodejs /app
 
 USER apiuser
+WORKDIR /app/apis/scheduler-service
 
 EXPOSE 8080
-
 ENV PORT=8080
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
   CMD node -e "require('http').get('http://localhost:8080/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 

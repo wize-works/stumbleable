@@ -24,31 +24,22 @@ jobs:
             matrix:
                 service:
                     - name: ui
-                      context: ./ui/portal
                       dockerfile: ./ui/portal/Dockerfile
                     - name: discovery
-                      context: ./apis/discovery-service
                       dockerfile: ./apis/discovery-service/Dockerfile
                     - name: interaction
-                      context: ./apis/interaction-service
                       dockerfile: ./apis/interaction-service/Dockerfile
                     - name: user
-                      context: ./apis/user-service
                       dockerfile: ./apis/user-service/Dockerfile
                     - name: crawler
-                      context: ./apis/crawler-service
                       dockerfile: ./apis/crawler-service/Dockerfile
                     - name: moderation
-                      context: ./apis/moderation-service
                       dockerfile: ./apis/moderation-service/Dockerfile
                     - name: email
-                      context: ./apis/email-service
                       dockerfile: ./apis/email-service/Dockerfile
                     - name: scheduler
-                      context: ./apis/scheduler-service
                       dockerfile: ./apis/scheduler-service/Dockerfile
                     - name: content
-                      context: ./apis/content-service
                       dockerfile: ./apis/content-service/Dockerfile
 
         steps:
@@ -80,7 +71,7 @@ jobs:
             - name: Build and push Docker image
               uses: docker/build-push-action@v5
               with:
-                  context: ${{ matrix.service.context }}
+                  context: .
                   file: ${{ matrix.service.dockerfile }}
                   push: true
                   tags: ${{ steps.meta.outputs.tags }}
