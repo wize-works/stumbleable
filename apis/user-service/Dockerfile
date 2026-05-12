@@ -15,9 +15,11 @@ COPY apis/scheduler-service/package.json ./apis/scheduler-service/
 COPY apis/user-service/package.json ./apis/user-service/
 COPY ui/portal/package.json ./ui/portal/
 
-FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat
+FROM node:20-alpine AS node-base
+RUN apk add --no-cache libc6-compat && npm install -g npm@11.6.4
 WORKDIR /app
+
+FROM node-base AS deps
 COPY --from=pkg-files /app /app
 RUN npm ci -w apis/user-service
 
@@ -26,9 +28,7 @@ COPY apis/user-service/src ./apis/user-service/src
 COPY apis/user-service/tsconfig.json ./apis/user-service/
 RUN npm run build -w apis/user-service
 
-FROM node:20-alpine AS prod-deps
-RUN apk add --no-cache libc6-compat
-WORKDIR /app
+FROM node-base AS prod-deps
 COPY --from=pkg-files /app /app
 RUN npm ci --omit=dev -w apis/user-service
 

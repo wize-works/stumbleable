@@ -16,10 +16,13 @@ COPY apis/scheduler-service/package.json ./apis/scheduler-service/
 COPY apis/user-service/package.json ./apis/user-service/
 COPY ui/portal/package.json ./ui/portal/
 
-# Stage 2: All deps (incl. dev) for building
-FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat
+# Stage 2: Node base with npm pinned to match local (lockfile compat)
+FROM node:20-alpine AS node-base
+RUN apk add --no-cache libc6-compat && npm install -g npm@11.6.4
 WORKDIR /app
+
+# Stage 3: All deps (incl. dev) for building
+FROM node-base AS deps
 COPY --from=pkg-files /app /app
 RUN npm ci -w apis/moderation-service
 
@@ -29,10 +32,8 @@ COPY apis/moderation-service/src ./apis/moderation-service/src
 COPY apis/moderation-service/tsconfig.json ./apis/moderation-service/
 RUN npm run build -w apis/moderation-service
 
-# Stage 4: Production deps only
-FROM node:20-alpine AS prod-deps
-RUN apk add --no-cache libc6-compat
-WORKDIR /app
+# Stage 5: Production deps only
+FROM node-base AS prod-deps
 COPY --from=pkg-files /app /app
 RUN npm ci --omit=dev -w apis/moderation-service
 
