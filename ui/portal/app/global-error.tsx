@@ -16,6 +16,7 @@ export default function GlobalError({ error }: { error: Error & { digest?: strin
         definition requires a `statusCode` prop. However, since the App Router
         does not expose status codes for errors, we simply pass 0 to render a
         generic error message. */}
+        {/* @ts-expect-error - NextError is a legacy class component typed for React 18; works at runtime under React 19 */}
         <NextError statusCode={0} />
       </body>
     </html>

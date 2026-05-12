@@ -11,6 +11,7 @@ export function AnimatedShuffleHero() {
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5" />
 
             {/* CSS Animation Styles */}
+            {/* @ts-expect-error - styled-jsx `jsx` attribute isn't in @types/react JSX types but is supported by Next.js at runtime */}
             <style jsx>{`
                 @keyframes drawPath {
                     0% {

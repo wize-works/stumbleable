@@ -1,7 +1,18 @@
 import { ClerkProvider } from '@clerk/nextjs';
-import Script from 'next/script';
-import { ReactNode } from 'react';
+import NextScript from 'next/script';
+import React, { ReactNode } from 'react';
 import { CookieConsent } from '../components/cookie-consent';
+
+// Next.js 15.5.18's `ScriptProps` declares `extends ScriptHTMLAttributes<HTMLScriptElement>`
+// via named import from 'react', but @types/react@19 uses `export = React` namespace style
+// which breaks that named import. Cast to a permissive type until Next.js patches its types.
+const Script = NextScript as React.FC<
+    React.ScriptHTMLAttributes<HTMLScriptElement> & {
+        strategy?: 'beforeInteractive' | 'afterInteractive' | 'lazyOnload' | 'worker';
+        id?: string;
+        children?: React.ReactNode;
+    }
+>;
 import { Footer } from '../components/footer';
 import { Header } from '../components/header';
 import { ToasterProvider } from '../components/toaster';

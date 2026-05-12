@@ -135,8 +135,8 @@ export class TrendingCalculator {
                             calculated_at: now.toISOString()
                         };
                     })
-                    .filter(item => item !== null && item.trending_score > 0.05) // Only keep items with meaningful scores
-                    .sort((a, b) => (b?.trending_score || 0) - (a?.trending_score || 0))
+                    .filter((item): item is NonNullable<typeof item> => item !== null && item.trending_score > 0.05)
+                    .sort((a, b) => b.trending_score - a.trending_score)
                     .slice(0, 100); // Keep top 100 per window
 
                 if (trendingItems.length === 0) {

@@ -25,7 +25,7 @@ export default function SignUpPage() {
 
                     {!isSignedIn && (
                         <SignUp.Root>
-                            <SignUp.Step name="start" className="space-y-4">
+                            <SignUp.Step name="start">
                                 <div className="card bg-base-100 shadow-xl rounded-2xl p-6">
                                     <h1 className="text-2xl font-bold mb-1">Create your account</h1>
                                     <p className="text-base-content/60 mb-6">Fast with Google or Microsoft. Email works too.</p>
@@ -75,7 +75,7 @@ export default function SignUpPage() {
                                 </div>
                             </SignUp.Step>
 
-                            <SignUp.Step name="verifications" className="space-y-4">
+                            <SignUp.Step name="verifications">
                                 <div className="card bg-base-100 shadow-xl rounded-2xl p-6">
                                     <h1 className="text-2xl font-bold mb-1">Verify your account</h1>
                                     <p className="text-base-content/60 mb-6">Check your email for the confirmation code</p>

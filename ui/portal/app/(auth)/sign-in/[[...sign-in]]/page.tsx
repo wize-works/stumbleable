@@ -29,7 +29,7 @@ export default function SignInPage() {
                         <p className="text-base-content/60 mb-6">Sign in to continue</p>
 
                         <SignIn.Root>
-                            <SignIn.Step name="start" className="space-y-4">
+                            <SignIn.Step name="start">
                                 <Clerk.GlobalError />
                                 <Clerk.Field name="identifier" className="fieldset">
                                     <Clerk.Label>What is your email?</Clerk.Label>
@@ -58,7 +58,7 @@ export default function SignInPage() {
                             <SignIn.Step name="sso-callback">
                                 <SignIn.Captcha className="w-full" />
                             </SignIn.Step>
-                            <SignIn.Step name="forgot-password" className="space-y-4">
+                            <SignIn.Step name="forgot-password">
                                 <Clerk.GlobalError />
                                 <Clerk.Field name="emailAddress" className="fieldset">
                                     <Clerk.Label>Enter your email to reset password</Clerk.Label>
@@ -72,7 +72,7 @@ export default function SignInPage() {
                                     Remembered your password? <a className="link link-primary" href="/sign-in">Sign in</a>
                                 </div>
                             </SignIn.Step>
-                            <SignIn.Step name="reset-password" className="space-y-4">
+                            <SignIn.Step name="reset-password">
                                 <Clerk.GlobalError />
                                 <Clerk.Field name="password" className="fieldset">
                                     <Clerk.Label>Enter your new password</Clerk.Label>

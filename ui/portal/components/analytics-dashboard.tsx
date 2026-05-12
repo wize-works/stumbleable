@@ -491,8 +491,8 @@ export default function AnalyticsDashboard() {
                                                 border: '1px solid hsl(var(--bc) / 0.2)',
                                                 borderRadius: '0.5rem'
                                             }}
-                                            formatter={(value: any, name: string) => {
-                                                if (name === 'count') return [value.toLocaleString(), 'Interactions'];
+                                            formatter={(value, name) => {
+                                                if (name === 'count') return [Number(value).toLocaleString(), 'Interactions'];
                                                 return [value + '%', 'Percentage'];
                                             }}
                                         />
